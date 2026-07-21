@@ -1,0 +1,3936 @@
+[
+  {
+    "id": "967",
+    "name": "Alžbětín",
+    "river": "Řezná",
+    "lat": 49.12513,
+    "lon": 13.21158
+  },
+  {
+    "id": "87365",
+    "name": "Hrozňatov",
+    "river": "Mohelnský potok",
+    "lat": 50.02403,
+    "lon": 12.39059
+  },
+  {
+    "id": "87366",
+    "name": "Leopoldovy Hamry",
+    "river": "Libocký potok",
+    "lat": 50.23502,
+    "lon": 12.50796
+  },
+  {
+    "id": "87372",
+    "name": "Libočany",
+    "river": "Liboc",
+    "lat": 50.09144,
+    "lon": 14.32178
+  },
+  {
+    "id": "306969",
+    "name": "VD Nová Říše",
+    "river": "Řečice (Olšanský potok)",
+    "lat": 49.15682,
+    "lon": 15.54461
+  },
+  {
+    "id": "306971",
+    "name": "Jemnice",
+    "river": "Želetavka",
+    "lat": 49.01898,
+    "lon": 15.56993
+  },
+  {
+    "id": "306973",
+    "name": "Padrty",
+    "river": "Chrudimka",
+    "lat": 49.83933,
+    "lon": 15.6789
+  },
+  {
+    "id": "306974",
+    "name": "Vranov - Hamry",
+    "river": "Dyje",
+    "lat": 48.8947,
+    "lon": 15.8127
+  },
+  {
+    "id": "306976",
+    "name": "Trávní Dvůr",
+    "river": "Dyje",
+    "lat": 48.84712,
+    "lon": 16.1165
+  },
+  {
+    "id": "306977",
+    "name": "Výrovice",
+    "river": "Jevišovka",
+    "lat": 48.92826,
+    "lon": 16.12029
+  },
+  {
+    "id": "306978",
+    "name": "Božice",
+    "river": "Jevišovka",
+    "lat": 48.83687,
+    "lon": 16.28875
+  },
+  {
+    "id": "306980",
+    "name": "Jimramov",
+    "river": "Fryšávka",
+    "lat": 49.63876,
+    "lon": 16.2241
+  },
+  {
+    "id": "306981",
+    "name": "Svídnice",
+    "river": "Chrudimka",
+    "lat": 49.88991,
+    "lon": 15.8137
+  },
+  {
+    "id": "306983",
+    "name": "Vír pod vyrovnávací nádrží",
+    "river": "Svratka",
+    "lat": 49.54288,
+    "lon": 16.33775
+  },
+  {
+    "id": "306984",
+    "name": "Dolní Loučky",
+    "river": "Bobrůvka",
+    "lat": 49.36099,
+    "lon": 16.35871
+  },
+  {
+    "id": "306985",
+    "name": "Rozhraní",
+    "river": "Svitava",
+    "lat": 49.60166,
+    "lon": 16.53337
+  },
+  {
+    "id": "306987",
+    "name": "Letovice",
+    "river": "Svitava",
+    "lat": 49.54709,
+    "lon": 16.57357
+  },
+  {
+    "id": "306988",
+    "name": "Boskovice pod přehradou",
+    "river": "Bělá",
+    "lat": 49.49388,
+    "lon": 16.6985
+  },
+  {
+    "id": "306989",
+    "name": "Bílovice nad Svitavou",
+    "river": "Svitava",
+    "lat": 49.24708,
+    "lon": 16.67247
+  },
+  {
+    "id": "306990",
+    "name": "Brankovice",
+    "river": "Litava",
+    "lat": 49.15598,
+    "lon": 17.13481
+  },
+  {
+    "id": "306991",
+    "name": "Rychmanov",
+    "river": "Litava",
+    "lat": 49.10347,
+    "lon": 16.76527
+  },
+  {
+    "id": "306992",
+    "name": "Batelov",
+    "river": "Jihlava",
+    "lat": 49.31425,
+    "lon": 15.39465
+  },
+  {
+    "id": "306995",
+    "name": "Bransouze",
+    "river": "Jihlava",
+    "lat": 49.30255,
+    "lon": 15.75195
+  },
+  {
+    "id": "306997",
+    "name": "Mohelno ",
+    "river": "Jihlava",
+    "lat": 49.11412,
+    "lon": 16.19022
+  },
+  {
+    "id": "306998",
+    "name": "Leštinka",
+    "river": "Žejbro",
+    "lat": 49.8488,
+    "lon": 15.95641
+  },
+  {
+    "id": "307000",
+    "name": "Oslavany",
+    "river": "Oslava",
+    "lat": 49.12335,
+    "lon": 16.33653
+  },
+  {
+    "id": "307001",
+    "name": "Příštpo",
+    "river": "Rokytná",
+    "lat": 49.07384,
+    "lon": 15.9349
+  },
+  {
+    "id": "307003",
+    "name": "Ivančice",
+    "river": "Jihlava",
+    "lat": 49.10144,
+    "lon": 16.37752
+  },
+  {
+    "id": "307004",
+    "name": "Přibice",
+    "river": "Jihlava",
+    "lat": 48.96162,
+    "lon": 16.57334
+  },
+  {
+    "id": "307005",
+    "name": "VD Nové Mlýny",
+    "river": "Dyje",
+    "lat": 48.884,
+    "lon": 16.68969
+  },
+  {
+    "id": "307006",
+    "name": "Rudník",
+    "river": "Čistá",
+    "lat": 50.57845,
+    "lon": 15.7373
+  },
+  {
+    "id": "307007",
+    "name": "Břeclav-Ladná",
+    "river": "Dyje",
+    "lat": 48.8054,
+    "lon": 16.87231
+  },
+  {
+    "id": "307008",
+    "name": "Koryčany pod přehradou",
+    "river": "Kyjovka",
+    "lat": 49.11678,
+    "lon": 17.18903
+  },
+  {
+    "id": "307009",
+    "name": "Kyjov",
+    "river": "Kyjovka",
+    "lat": 49.01018,
+    "lon": 17.12253
+  },
+  {
+    "id": "307010",
+    "name": "Úhřetice",
+    "river": "Novohradka",
+    "lat": 49.97915,
+    "lon": 15.86724
+  },
+  {
+    "id": "307011",
+    "name": "Přelouč",
+    "river": "Labe",
+    "lat": 50.03985,
+    "lon": 15.56031
+  },
+  {
+    "id": "307013",
+    "name": "Pařížov",
+    "river": "Doubrava",
+    "lat": 49.83457,
+    "lon": 15.56763
+  },
+  {
+    "id": "307014",
+    "name": "Žleby",
+    "river": "Doubrava",
+    "lat": 49.88958,
+    "lon": 15.48853
+  },
+  {
+    "id": "307015",
+    "name": "Vrchlice",
+    "river": "Vrchlice",
+    "lat": 49.93636,
+    "lon": 15.26716
+  },
+  {
+    "id": "307017",
+    "name": "Lázně Bělohrad",
+    "river": "Javorka",
+    "lat": 50.42564,
+    "lon": 15.58924
+  },
+  {
+    "id": "307018",
+    "name": "Nový Bydžov",
+    "river": "Cidlina",
+    "lat": 50.2415,
+    "lon": 15.49082
+  },
+  {
+    "id": "307019",
+    "name": "Rohoznice",
+    "river": "Bystřice",
+    "lat": 50.39158,
+    "lon": 15.69955
+  },
+  {
+    "id": "307020",
+    "name": "Roudnice",
+    "river": "Bystřice",
+    "lat": 50.17616,
+    "lon": 15.6517
+  },
+  {
+    "id": "307021",
+    "name": "Kopidlno",
+    "river": "Mrlina",
+    "lat": 50.33085,
+    "lon": 15.27029
+  },
+  {
+    "id": "307024",
+    "name": "Plaňany",
+    "river": "Výrovka",
+    "lat": 50.0501,
+    "lon": 15.02944
+  },
+  {
+    "id": "307027",
+    "name": "Dolní Štěpanice",
+    "river": "Jizerka",
+    "lat": 50.81848,
+    "lon": 15.34548
+  },
+  {
+    "id": "307028",
+    "name": "Dolní Sytová",
+    "river": "Jizera",
+    "lat": 50.61796,
+    "lon": 15.43387
+  },
+  {
+    "id": "307032",
+    "name": "Železný Brod",
+    "river": "Jizera",
+    "lat": 50.64274,
+    "lon": 15.25408
+  },
+  {
+    "id": "307036",
+    "name": "Vyšší Brod",
+    "river": "Vltava",
+    "lat": 48.61598,
+    "lon": 14.31182
+  },
+  {
+    "id": "307037",
+    "name": "Les Království",
+    "river": "Labe",
+    "lat": 50.4589,
+    "lon": 15.76473
+  },
+  {
+    "id": "307038",
+    "name": "Zátoň",
+    "river": "Vltava",
+    "lat": 48.72724,
+    "lon": 14.33665
+  },
+  {
+    "id": "307039",
+    "name": "Český Krumlov",
+    "river": "Vltava",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "307040",
+    "name": "Brloh",
+    "river": "Křemžský potok",
+    "lat": 48.92821,
+    "lon": 14.2106
+  },
+  {
+    "id": "307042",
+    "name": "Pořešín",
+    "river": "Malše",
+    "lat": 48.77524,
+    "lon": 14.51074
+  },
+  {
+    "id": "307043",
+    "name": "Římov",
+    "river": "Malše",
+    "lat": 48.85561,
+    "lon": 14.48684
+  },
+  {
+    "id": "307044",
+    "name": "Horní Maršov",
+    "river": "Úpa",
+    "lat": 50.65856,
+    "lon": 15.81975
+  },
+  {
+    "id": "307046",
+    "name": "Roudné",
+    "river": "Malše",
+    "lat": 48.93488,
+    "lon": 14.48744
+  },
+  {
+    "id": "307047",
+    "name": "Světlá nad Sázavou",
+    "river": "Sázava",
+    "lat": 49.66801,
+    "lon": 15.40393
+  },
+  {
+    "id": "307049",
+    "name": "České Budějovice",
+    "river": "Vltava",
+    "lat": 48.97447,
+    "lon": 14.47434
+  },
+  {
+    "id": "307053",
+    "name": "Špindlerův Mlýn",
+    "river": "Labe",
+    "lat": 50.72615,
+    "lon": 15.60944
+  },
+  {
+    "id": "307054",
+    "name": "Frahelž",
+    "river": "Lužnice",
+    "lat": 49.11713,
+    "lon": 14.73193
+  },
+  {
+    "id": "307055",
+    "name": "Tučapy",
+    "river": "Černovický potok",
+    "lat": 49.29129,
+    "lon": 14.80341
+  },
+  {
+    "id": "307056",
+    "name": "Rataje",
+    "river": "Smutná",
+    "lat": 49.84185,
+    "lon": 14.95672
+  },
+  {
+    "id": "307057",
+    "name": "Stodůlky",
+    "river": "Křemelná",
+    "lat": 50.03435,
+    "lon": 14.58074
+  },
+  {
+    "id": "307058",
+    "name": "Katovice",
+    "river": "Otava",
+    "lat": 49.27348,
+    "lon": 13.83035
+  },
+  {
+    "id": "307059",
+    "name": "Podedvory",
+    "river": "Blanice",
+    "lat": 49.03632,
+    "lon": 13.95294
+  },
+  {
+    "id": "307060",
+    "name": "Dolní Ostrovec",
+    "river": "Lomnice",
+    "lat": 49.42067,
+    "lon": 14.11709
+  },
+  {
+    "id": "307061",
+    "name": "Varvažov",
+    "river": "Skalice",
+    "lat": 49.48115,
+    "lon": 16.60358
+  },
+  {
+    "id": "307064",
+    "name": "Chlístov",
+    "river": "Sázava",
+    "lat": 49.80152,
+    "lon": 14.65471
+  },
+  {
+    "id": "307065",
+    "name": "Poříčí",
+    "river": "Želivka",
+    "lat": 49.83895,
+    "lon": 14.67446
+  },
+  {
+    "id": "307068",
+    "name": "Nespeky",
+    "river": "Sázava",
+    "lat": 49.85931,
+    "lon": 14.65936
+  },
+  {
+    "id": "307071",
+    "name": "Tasnovice",
+    "river": "Radbuza",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "307072",
+    "name": "Staňkov",
+    "river": "Radbuza",
+    "lat": 49.55348,
+    "lon": 13.06976
+  },
+  {
+    "id": "307073",
+    "name": "Tajanov",
+    "river": "Úhlava",
+    "lat": 49.4019,
+    "lon": 13.26388
+  },
+  {
+    "id": "307074",
+    "name": "Ždírec",
+    "river": "Úslava",
+    "lat": 49.55183,
+    "lon": 13.5721
+  },
+  {
+    "id": "307076",
+    "name": "Kostelec nad Orlicí",
+    "river": "Divoká Orlice",
+    "lat": 50.12267,
+    "lon": 16.21318
+  },
+  {
+    "id": "307078",
+    "name": "Hředle",
+    "river": "Stroupínský potok",
+    "lat": 49.90363,
+    "lon": 13.92215
+  },
+  {
+    "id": "307080",
+    "name": "Rychnov nad Kněžnou",
+    "river": "Kněžná",
+    "lat": 50.15902,
+    "lon": 16.27468
+  },
+  {
+    "id": "307081",
+    "name": "Mělník",
+    "river": "Labe",
+    "lat": 50.3505,
+    "lon": 14.47411
+  },
+  {
+    "id": "307083",
+    "name": "Lichkov",
+    "river": "Tichá Orlice",
+    "lat": 50.09778,
+    "lon": 16.66601
+  },
+  {
+    "id": "307091",
+    "name": "Česká Lípa",
+    "river": "Ploučnice",
+    "lat": 50.68657,
+    "lon": 14.53701
+  },
+  {
+    "id": "307092",
+    "name": "Hřensko",
+    "river": "Kamenice",
+    "lat": 50.8744,
+    "lon": 14.2425
+  },
+  {
+    "id": "307096",
+    "name": "Čermná nad Orlicí",
+    "river": "Tichá Orlice",
+    "lat": 50.07637,
+    "lon": 16.1321
+  },
+  {
+    "id": "307097",
+    "name": "Odry tok",
+    "river": "Odra",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "307098",
+    "name": "Petřvald",
+    "river": "Lubina",
+    "lat": 49.831,
+    "lon": 18.38941
+  },
+  {
+    "id": "307099",
+    "name": "Karlovice",
+    "river": "Opava",
+    "lat": 50.10564,
+    "lon": 17.44563
+  },
+  {
+    "id": "307100",
+    "name": "Opava",
+    "river": "Opava",
+    "lat": 49.93906,
+    "lon": 17.90269
+  },
+  {
+    "id": "307101",
+    "name": "Kružberk pod nádrží",
+    "river": "Moravice",
+    "lat": 49.82438,
+    "lon": 17.66673
+  },
+  {
+    "id": "307102",
+    "name": "Čeladná",
+    "river": "Čeladenka",
+    "lat": 49.54238,
+    "lon": 18.35111
+  },
+  {
+    "id": "307103",
+    "name": "Morávka pod nádrží",
+    "river": "Morávka",
+    "lat": 49.58608,
+    "lon": 18.52971
+  },
+  {
+    "id": "307105",
+    "name": "Ostrava",
+    "river": "Ostravice",
+    "lat": 49.83465,
+    "lon": 18.28204
+  },
+  {
+    "id": "307106",
+    "name": "Mitrov",
+    "river": "Dědina",
+    "lat": 49.85512,
+    "lon": 15.04809
+  },
+  {
+    "id": "307107",
+    "name": "Věřňovice",
+    "river": "Olše",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "307109",
+    "name": "Jindřichov",
+    "river": "Branná",
+    "lat": 50.09579,
+    "lon": 16.9849
+  },
+  {
+    "id": "307110",
+    "name": "Raškov",
+    "river": "Morava",
+    "lat": 50.03328,
+    "lon": 16.89937
+  },
+  {
+    "id": "307113",
+    "name": "Raabs an der Thaya",
+    "river": "Dyje",
+    "lat": 48.84849,
+    "lon": 15.48775
+  },
+  {
+    "id": "307114",
+    "name": "Chlumec nad Cidlinou",
+    "river": "Cidlina",
+    "lat": 50.1544,
+    "lon": 15.46026
+  },
+  {
+    "id": "307115",
+    "name": "Pilníkov - most",
+    "river": "Pilníkovský potok",
+    "lat": 50.55607,
+    "lon": 15.85249
+  },
+  {
+    "id": "307116",
+    "name": "Jablonec nad Jizerou",
+    "river": "Jizera",
+    "lat": 50.70347,
+    "lon": 15.42959
+  },
+  {
+    "id": "307118",
+    "name": "Bakov nad Jizerou",
+    "river": "Jizera",
+    "lat": 50.4823,
+    "lon": 14.94149
+  },
+  {
+    "id": "307119",
+    "name": "Černý Kříž",
+    "river": "Studená Vltava",
+    "lat": 48.86179,
+    "lon": 13.86035
+  },
+  {
+    "id": "307120",
+    "name": "Chvalšiny",
+    "river": "Třebovický potok",
+    "lat": 48.85401,
+    "lon": 14.21114
+  },
+  {
+    "id": "307121",
+    "name": "Ličov",
+    "river": "Černá",
+    "lat": 50.07881,
+    "lon": 14.41831
+  },
+  {
+    "id": "307122",
+    "name": "Borovany",
+    "river": "Stropnice",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "307123",
+    "name": "Želiv",
+    "river": "Želivka",
+    "lat": 49.52983,
+    "lon": 15.22181
+  },
+  {
+    "id": "307124",
+    "name": "Pilař",
+    "river": "Lužnice",
+    "lat": 49.06298,
+    "lon": 14.75618
+  },
+  {
+    "id": "307125",
+    "name": "Kamenice nad Lipou",
+    "river": "Kamenice",
+    "lat": 49.30303,
+    "lon": 15.07519
+  },
+  {
+    "id": "307126",
+    "name": "Bechyně",
+    "river": "Lužnice",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "307127",
+    "name": "Bohumilice",
+    "river": "Spůlka",
+    "lat": 49.6931,
+    "lon": 15.25377
+  },
+  {
+    "id": "307129",
+    "name": "Planá",
+    "river": "Hamerský potok",
+    "lat": 49.0552,
+    "lon": 13.5488
+  },
+  {
+    "id": "307132",
+    "name": "Hrádek",
+    "river": "Klabava",
+    "lat": 49.70992,
+    "lon": 13.6541
+  },
+  {
+    "id": "307133",
+    "name": "Labská",
+    "river": "Labe",
+    "lat": 50.05142,
+    "lon": 15.41017
+  },
+  {
+    "id": "307134",
+    "name": "Citice",
+    "river": "Ohře",
+    "lat": 50.16256,
+    "lon": 12.61333
+  },
+  {
+    "id": "307135",
+    "name": "Ostrov",
+    "river": "Bystřice",
+    "lat": 50.31197,
+    "lon": 12.89613
+  },
+  {
+    "id": "307136",
+    "name": "Trmice",
+    "river": "Bílina",
+    "lat": 50.64286,
+    "lon": 13.99449
+  },
+  {
+    "id": "307137",
+    "name": "Benešov nad Ploučnicí",
+    "river": "Ploučnice",
+    "lat": 50.74159,
+    "lon": 14.31239
+  },
+  {
+    "id": "307139",
+    "name": "Fulnek",
+    "river": "Husí potok",
+    "lat": 49.70574,
+    "lon": 17.91724
+  },
+  {
+    "id": "307140",
+    "name": "Mezina",
+    "river": "Černý potok",
+    "lat": 49.9585,
+    "lon": 17.47705
+  },
+  {
+    "id": "307142",
+    "name": "Český Těšín",
+    "river": "Olše",
+    "lat": 49.74614,
+    "lon": 18.62614
+  },
+  {
+    "id": "307143",
+    "name": "Horní Lánov",
+    "river": "Malé Labe",
+    "lat": 50.63842,
+    "lon": 15.65743
+  },
+  {
+    "id": "307145",
+    "name": "Kelč",
+    "river": "Juhyně",
+    "lat": 49.47844,
+    "lon": 17.81533
+  },
+  {
+    "id": "307146",
+    "name": "Vyškov",
+    "river": "Haná",
+    "lat": 49.27747,
+    "lon": 16.99898
+  },
+  {
+    "id": "307147",
+    "name": "Spytihněv",
+    "river": "Morava",
+    "lat": 49.14115,
+    "lon": 17.49809
+  },
+  {
+    "id": "307149",
+    "name": "VD Jevišovice",
+    "river": "Jevišovka",
+    "lat": 48.98966,
+    "lon": 15.97707
+  },
+  {
+    "id": "307150",
+    "name": "Veverská Bítýška",
+    "river": "Svratka",
+    "lat": 49.27591,
+    "lon": 16.43686
+  },
+  {
+    "id": "307151",
+    "name": "Židlochovice",
+    "river": "Svratka",
+    "lat": 49.03952,
+    "lon": 16.61881
+  },
+  {
+    "id": "307152",
+    "name": "Baliny",
+    "river": "Balinka",
+    "lat": 49.33547,
+    "lon": 15.95662
+  },
+  {
+    "id": "307153",
+    "name": "Bítovany",
+    "river": "Ležák",
+    "lat": 49.89721,
+    "lon": 15.86462
+  },
+  {
+    "id": "307155",
+    "name": "Vestec",
+    "river": "Mrlina",
+    "lat": 49.9805,
+    "lon": 14.50487
+  },
+  {
+    "id": "307156",
+    "name": "Březí",
+    "river": "Vltava",
+    "lat": 50.01466,
+    "lon": 14.69928
+  },
+  {
+    "id": "307157",
+    "name": "Nová Ves nad Lužnicí",
+    "river": "Lužnice",
+    "lat": 48.81064,
+    "lon": 14.92558
+  },
+  {
+    "id": "307158",
+    "name": "Maršov nad Metují",
+    "river": "Metuje",
+    "lat": 50.52954,
+    "lon": 16.19048
+  },
+  {
+    "id": "307161",
+    "name": "Mláka",
+    "river": "Nová řeka",
+    "lat": 49.03693,
+    "lon": 14.85643
+  },
+  {
+    "id": "307162",
+    "name": "Rejštejn",
+    "river": "Otava",
+    "lat": 49.14053,
+    "lon": 13.51517
+  },
+  {
+    "id": "307163",
+    "name": "Strakonice",
+    "river": "Otava",
+    "lat": 49.26141,
+    "lon": 13.90237
+  },
+  {
+    "id": "307164",
+    "name": "Heřmaň",
+    "river": "Blanice",
+    "lat": 49.23247,
+    "lon": 14.13545
+  },
+  {
+    "id": "307165",
+    "name": "Radíč",
+    "river": "Mastník",
+    "lat": 49.71466,
+    "lon": 14.41739
+  },
+  {
+    "id": "307171",
+    "name": "Trpísty",
+    "river": "Úterský potok",
+    "lat": 49.83594,
+    "lon": 13.05108
+  },
+  {
+    "id": "307174",
+    "name": "Nová Huť",
+    "river": "Klabava",
+    "lat": 49.78022,
+    "lon": 13.50979
+  },
+  {
+    "id": "307176",
+    "name": "Hořovice",
+    "river": "Červený potok",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "307178",
+    "name": "Velvary",
+    "river": "Bakovský potok",
+    "lat": 50.28152,
+    "lon": 14.23616
+  },
+  {
+    "id": "307179",
+    "name": "Vědlice",
+    "river": "Úštěcký potok",
+    "lat": 50.52691,
+    "lon": 14.34676
+  },
+  {
+    "id": "307181",
+    "name": "Letohrad - Kunčice",
+    "river": "Tichá Orlice",
+    "lat": 49.56999,
+    "lon": 18.22148
+  },
+  {
+    "id": "307183",
+    "name": "Mimoň",
+    "river": "Ploučnice",
+    "lat": 50.65869,
+    "lon": 14.72473
+  },
+  {
+    "id": "307184",
+    "name": "Srbská Kamenice",
+    "river": "Kamenice",
+    "lat": 50.82035,
+    "lon": 14.35272
+  },
+  {
+    "id": "307185",
+    "name": "Meziměstí",
+    "river": "Stěnava",
+    "lat": 50.62461,
+    "lon": 16.24207
+  },
+  {
+    "id": "307186",
+    "name": "Varnsdorf",
+    "river": "Mandava",
+    "lat": 50.90803,
+    "lon": 14.6224
+  },
+  {
+    "id": "307188",
+    "name": "Krnov",
+    "river": "Opavice",
+    "lat": 50.08967,
+    "lon": 17.70384
+  },
+  {
+    "id": "307189",
+    "name": "Týniště nad Orlicí",
+    "river": "Orlice",
+    "lat": 50.15136,
+    "lon": 16.0777
+  },
+  {
+    "id": "307190",
+    "name": "Radvanice",
+    "river": "Lučina",
+    "lat": 50.56745,
+    "lon": 16.06171
+  },
+  {
+    "id": "307192",
+    "name": "Hradec Králové",
+    "river": "Labe",
+    "lat": 50.20923,
+    "lon": 15.83277
+  },
+  {
+    "id": "307193",
+    "name": "Schwarzenau",
+    "river": "Dyje",
+    "lat": 48.84712,
+    "lon": 16.1165
+  },
+  {
+    "id": "307196",
+    "name": "Vsetín",
+    "river": "Vsetínská Bečva",
+    "lat": 49.33871,
+    "lon": 17.9962
+  },
+  {
+    "id": "307197",
+    "name": "Valašské Meziříčí",
+    "river": "Rožnovská Bečva",
+    "lat": 49.47181,
+    "lon": 17.97113
+  },
+  {
+    "id": "307199",
+    "name": "Kroměříž",
+    "river": "Morava",
+    "lat": 49.29785,
+    "lon": 17.39312
+  },
+  {
+    "id": "307200",
+    "name": "VD Fryšták",
+    "river": "Fryštácký potok",
+    "lat": 49.268,
+    "lon": 17.68588
+  },
+  {
+    "id": "307201",
+    "name": "Uherský Brod",
+    "river": "Olšava",
+    "lat": 49.02513,
+    "lon": 17.64715
+  },
+  {
+    "id": "307203",
+    "name": "Znojmo",
+    "river": "Dyje",
+    "lat": 48.84712,
+    "lon": 16.1165
+  },
+  {
+    "id": "307204",
+    "name": "Borovnice",
+    "river": "Svratka",
+    "lat": 49.66723,
+    "lon": 16.20255
+  },
+  {
+    "id": "307205",
+    "name": "Brno - Poříčí (dočasně přesunuto)",
+    "river": "Svratka",
+    "lat": 49.186,
+    "lon": 16.59148
+  },
+  {
+    "id": "307206",
+    "name": "Luže",
+    "river": "Novohradka",
+    "lat": 49.89341,
+    "lon": 16.0285
+  },
+  {
+    "id": "307207",
+    "name": "Hubenov pod přehradou",
+    "river": "Maršovský potok",
+    "lat": 49.39211,
+    "lon": 15.49228
+  },
+  {
+    "id": "307210",
+    "name": "Nemošice",
+    "river": "Chrudimka",
+    "lat": 50.01498,
+    "lon": 15.79669
+  },
+  {
+    "id": "307211",
+    "name": "Jičín",
+    "river": "Cidlina",
+    "lat": 50.43622,
+    "lon": 15.35234
+  },
+  {
+    "id": "307212",
+    "name": "Sány",
+    "river": "Cidlina",
+    "lat": 50.12465,
+    "lon": 15.24764
+  },
+  {
+    "id": "307215",
+    "name": "Lenora",
+    "river": "Teplá Vltava",
+    "lat": 48.92231,
+    "lon": 13.79327
+  },
+  {
+    "id": "307216",
+    "name": "Český Krumlov",
+    "river": "Polečnice (Kájovský potok)",
+    "lat": 48.81091,
+    "lon": 14.31521
+  },
+  {
+    "id": "307217",
+    "name": "Pašinovice",
+    "river": "Stropnice",
+    "lat": 48.87436,
+    "lon": 14.53083
+  },
+  {
+    "id": "307219",
+    "name": "Oldřiš",
+    "river": "Hamerský potok",
+    "lat": 49.72713,
+    "lon": 16.1937
+  },
+  {
+    "id": "307221",
+    "name": "Čakovice",
+    "river": "Želivka",
+    "lat": 50.10348,
+    "lon": 14.35293
+  },
+  {
+    "id": "307223",
+    "name": "Štěnovice",
+    "river": "Úhlava",
+    "lat": 49.67052,
+    "lon": 13.39963
+  },
+  {
+    "id": "307225",
+    "name": "Praha - Chuchle",
+    "river": "Vltava",
+    "lat": 50.08355,
+    "lon": 14.43414
+  },
+  {
+    "id": "307226",
+    "name": "Josefodol",
+    "river": "Sázavka",
+    "lat": 49.7344,
+    "lon": 15.41143
+  },
+  {
+    "id": "307228",
+    "name": "Ústí nad Labem",
+    "river": "Labe",
+    "lat": 50.66049,
+    "lon": 14.04069
+  },
+  {
+    "id": "307229",
+    "name": "Zbečno",
+    "river": "Berounka",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "307230",
+    "name": "Písek",
+    "river": "Otava",
+    "lat": 49.3088,
+    "lon": 14.1475
+  },
+  {
+    "id": "307231",
+    "name": "Beroun",
+    "river": "Litavka",
+    "lat": 49.96382,
+    "lon": 14.072
+  },
+  {
+    "id": "307232",
+    "name": "Krnov",
+    "river": "Opava",
+    "lat": 50.08967,
+    "lon": 17.70384
+  },
+  {
+    "id": "307233",
+    "name": "Strážnice",
+    "river": "Morava",
+    "lat": 48.90102,
+    "lon": 17.31681
+  },
+  {
+    "id": "307234",
+    "name": "Chlum",
+    "river": "Teplá Vltava",
+    "lat": 49.75687,
+    "lon": 15.52135
+  },
+  {
+    "id": "307235",
+    "name": "Kazdovna",
+    "river": "Lužnice",
+    "lat": 48.99478,
+    "lon": 14.84211
+  },
+  {
+    "id": "307236",
+    "name": "Rodvínov",
+    "river": "Nežárka",
+    "lat": 49.17099,
+    "lon": 15.05699
+  },
+  {
+    "id": "307237",
+    "name": "Lásenice",
+    "river": "Nežárka",
+    "lat": 49.07429,
+    "lon": 14.97018
+  },
+  {
+    "id": "307238",
+    "name": "Hamr",
+    "river": "Nežárka",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "307239",
+    "name": "Klenovice",
+    "river": "Lužnice",
+    "lat": 49.27877,
+    "lon": 14.71566
+  },
+  {
+    "id": "307241",
+    "name": "Modrava",
+    "river": "Vydra",
+    "lat": 49.02498,
+    "lon": 13.49649
+  },
+  {
+    "id": "307242",
+    "name": "Sušice",
+    "river": "Otava",
+    "lat": 49.23106,
+    "lon": 13.52018
+  },
+  {
+    "id": "307243",
+    "name": "Kolinec",
+    "river": "Ostružná",
+    "lat": 50.18511,
+    "lon": 17.05149
+  },
+  {
+    "id": "307244",
+    "name": "Sudslavice",
+    "river": "Volyňka",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "307245",
+    "name": "Němětice",
+    "river": "Volyňka",
+    "lat": 49.19462,
+    "lon": 13.87897
+  },
+  {
+    "id": "307246",
+    "name": "Husinec",
+    "river": "Blanice",
+    "lat": 49.05496,
+    "lon": 13.98697
+  },
+  {
+    "id": "307247",
+    "name": "Hracholusky",
+    "river": "Zlatý potok",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "307248",
+    "name": "Hronov",
+    "river": "Metuje",
+    "lat": 50.47985,
+    "lon": 16.18197
+  },
+  {
+    "id": "307249",
+    "name": "Zadní Poříčí",
+    "river": "Skalice",
+    "lat": 49.30337,
+    "lon": 14.6952
+  },
+  {
+    "id": "307250",
+    "name": "VD Orlík",
+    "river": "Vltava",
+    "lat": 49.53275,
+    "lon": 14.16713
+  },
+  {
+    "id": "307253",
+    "name": "Sázava",
+    "river": "Sázava",
+    "lat": 49.8773,
+    "lon": 14.89777
+  },
+  {
+    "id": "307254",
+    "name": "Krčín",
+    "river": "Metuje",
+    "lat": 50.35256,
+    "lon": 16.12949
+  },
+  {
+    "id": "307255",
+    "name": "Zruč nad Sázavou",
+    "river": "Sázava",
+    "lat": 49.7401,
+    "lon": 15.10606
+  },
+  {
+    "id": "307256",
+    "name": "Milotice",
+    "river": "Jankovský potok",
+    "lat": 49.81907,
+    "lon": 15.51959
+  },
+  {
+    "id": "307258",
+    "name": "Kácov",
+    "river": "Sázava",
+    "lat": 49.77787,
+    "lon": 15.02789
+  },
+  {
+    "id": "307259",
+    "name": "Louňovice pod Blaníkem",
+    "river": "Blanice",
+    "lat": 49.63723,
+    "lon": 14.84669
+  },
+  {
+    "id": "307262",
+    "name": "VD Vrané",
+    "river": "Vltava",
+    "lat": 49.93826,
+    "lon": 14.37485
+  },
+  {
+    "id": "307265",
+    "name": "Stříbro",
+    "river": "Úhlavka",
+    "lat": 49.71082,
+    "lon": 12.98698
+  },
+  {
+    "id": "307267",
+    "name": "VD Hracholusky",
+    "river": "Mže",
+    "lat": 49.79494,
+    "lon": 13.14182
+  },
+  {
+    "id": "307273",
+    "name": "Slatina nad Zdobnicí",
+    "river": "Zdobnice",
+    "lat": 50.13381,
+    "lon": 16.39787
+  },
+  {
+    "id": "307274",
+    "name": "Bílá Hora",
+    "river": "Berounka",
+    "lat": 49.62188,
+    "lon": 13.21319
+  },
+  {
+    "id": "307280",
+    "name": "Čichořice",
+    "river": "Střela",
+    "lat": 50.09631,
+    "lon": 13.26998
+  },
+  {
+    "id": "307282",
+    "name": "Čenkov",
+    "river": "Litavka",
+    "lat": 49.7777,
+    "lon": 14.00075
+  },
+  {
+    "id": "307283",
+    "name": "Jedlová v Orlických horách",
+    "river": "Bělá",
+    "lat": 50.29154,
+    "lon": 16.34565
+  },
+  {
+    "id": "307284",
+    "name": "Beroun",
+    "river": "Berounka",
+    "lat": 49.96382,
+    "lon": 14.072
+  },
+  {
+    "id": "307285",
+    "name": "Loděnice",
+    "river": "Loděnice",
+    "lat": 49.0116,
+    "lon": 16.46307
+  },
+  {
+    "id": "307287",
+    "name": "Praha - Na Františku",
+    "river": "Vltava",
+    "lat": 50.09304,
+    "lon": 14.42494
+  },
+  {
+    "id": "307289",
+    "name": "Vraňany",
+    "river": "Vltava",
+    "lat": 50.31721,
+    "lon": 14.36165
+  },
+  {
+    "id": "307291",
+    "name": "VD Skalka",
+    "river": "Ohře",
+    "lat": 50.08584,
+    "lon": 12.38501
+  },
+  {
+    "id": "307293",
+    "name": "Kraslice",
+    "river": "Svatava",
+    "lat": 50.32373,
+    "lon": 12.51747
+  },
+  {
+    "id": "307294",
+    "name": "Stará Role",
+    "river": "Rolava",
+    "lat": 50.24925,
+    "lon": 12.82994
+  },
+  {
+    "id": "307297",
+    "name": "Karlovy Vary - Drahovice",
+    "river": "Ohře",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "307299",
+    "name": "Třetí Mlýn",
+    "river": "Chomutovka",
+    "lat": 50.50086,
+    "lon": 13.32965
+  },
+  {
+    "id": "307300",
+    "name": "Louny",
+    "river": "Ohře",
+    "lat": 50.35699,
+    "lon": 13.79667
+  },
+  {
+    "id": "307301",
+    "name": "Bílina",
+    "river": "Bílina",
+    "lat": 50.54854,
+    "lon": 13.77535
+  },
+  {
+    "id": "307302",
+    "name": "Třebovice",
+    "river": "Třebovka",
+    "lat": 49.85925,
+    "lon": 16.50203
+  },
+  {
+    "id": "307303",
+    "name": "Stráž pod Ralskem",
+    "river": "Ploučnice",
+    "lat": 50.7028,
+    "lon": 14.80102
+  },
+  {
+    "id": "307304",
+    "name": "Zákupy",
+    "river": "Svitavka",
+    "lat": 49.50178,
+    "lon": 16.59793
+  },
+  {
+    "id": "307306",
+    "name": "Český Jiřetín",
+    "river": "Flájský potok",
+    "lat": 50.70721,
+    "lon": 13.54018
+  },
+  {
+    "id": "307307",
+    "name": "Ústí nad Orlicí - Kerhartice",
+    "river": "Tichá Orlice",
+    "lat": 49.96877,
+    "lon": 16.3685
+  },
+  {
+    "id": "307308",
+    "name": "Otovice",
+    "river": "Stěnava",
+    "lat": 50.55715,
+    "lon": 16.38757
+  },
+  {
+    "id": "307310",
+    "name": "Hrádek nad Nisou",
+    "river": "Lužická Nisa",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "307311",
+    "name": "Bílý Potok",
+    "river": "Smědá",
+    "lat": 50.87374,
+    "lon": 15.22209
+  },
+  {
+    "id": "307312",
+    "name": "Frýdlant - Řasnice",
+    "river": "Řasnice",
+    "lat": 50.96546,
+    "lon": 15.20149
+  },
+  {
+    "id": "307313",
+    "name": "Předlánce",
+    "river": "Smědá",
+    "lat": 50.97811,
+    "lon": 15.03477
+  },
+  {
+    "id": "307315",
+    "name": "Šance pod nádrží",
+    "river": "Ostravice",
+    "lat": 49.51436,
+    "lon": 18.41369
+  },
+  {
+    "id": "307316",
+    "name": "Svinov",
+    "river": "Odra",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "307317",
+    "name": "Valšov",
+    "river": "Moravice",
+    "lat": 49.93336,
+    "lon": 17.43813
+  },
+  {
+    "id": "307318",
+    "name": "Branka",
+    "river": "Moravice",
+    "lat": 49.88796,
+    "lon": 17.88264
+  },
+  {
+    "id": "307319",
+    "name": "Děhylov",
+    "river": "Opava",
+    "lat": 49.86939,
+    "lon": 18.16332
+  },
+  {
+    "id": "307321",
+    "name": "Chábory",
+    "river": "Dědina",
+    "lat": 50.26773,
+    "lon": 16.19546
+  },
+  {
+    "id": "307322",
+    "name": "Frýdek-Místek tok",
+    "river": "Ostravice",
+    "lat": 49.75687,
+    "lon": 15.52135
+  },
+  {
+    "id": "307323",
+    "name": "Žermanice pod nádrží",
+    "river": "Lučina",
+    "lat": 49.73398,
+    "lon": 18.44468
+  },
+  {
+    "id": "307324",
+    "name": "Bohumín",
+    "river": "Odra",
+    "lat": 49.90411,
+    "lon": 18.35755
+  },
+  {
+    "id": "307325",
+    "name": "Jablunkov",
+    "river": "Olše",
+    "lat": 49.57672,
+    "lon": 18.76459
+  },
+  {
+    "id": "307326",
+    "name": "Jablunkov",
+    "river": "Lomná",
+    "lat": 49.52786,
+    "lon": 18.63729
+  },
+  {
+    "id": "307327",
+    "name": "Těrlicko pod nádrží",
+    "river": "Stonávka",
+    "lat": 49.77756,
+    "lon": 18.52349
+  },
+  {
+    "id": "307328",
+    "name": "Vidnava",
+    "river": "Vidnavka",
+    "lat": 50.37234,
+    "lon": 17.18625
+  },
+  {
+    "id": "307334",
+    "name": "Šumperk tok",
+    "river": "Desná",
+    "lat": 49.96528,
+    "lon": 16.97061
+  },
+  {
+    "id": "307336",
+    "name": "Lupěné",
+    "river": "Moravská Sázava",
+    "lat": 49.87164,
+    "lon": 14.89674
+  },
+  {
+    "id": "307337",
+    "name": "Moravičany",
+    "river": "Morava",
+    "lat": 49.75694,
+    "lon": 16.96042
+  },
+  {
+    "id": "307338",
+    "name": "Němčice",
+    "river": "Labe",
+    "lat": 50.09293,
+    "lon": 15.80576
+  },
+  {
+    "id": "307339",
+    "name": "Mezihoří",
+    "river": "Třebůvka",
+    "lat": 49.70511,
+    "lon": 16.74187
+  },
+  {
+    "id": "307343",
+    "name": "Uničov",
+    "river": "Oskava",
+    "lat": 49.89523,
+    "lon": 17.13214
+  },
+  {
+    "id": "307344",
+    "name": "Velká Bystřice",
+    "river": "Bystřice",
+    "lat": 49.59423,
+    "lon": 17.36398
+  },
+  {
+    "id": "307345",
+    "name": "Velké Karlovice",
+    "river": "Vsetínská Bečva",
+    "lat": 49.36064,
+    "lon": 18.28356
+  },
+  {
+    "id": "307346",
+    "name": "Karolinka pod nádrží",
+    "river": "Velká Stanovnice",
+    "lat": 49.35014,
+    "lon": 18.23452
+  },
+  {
+    "id": "307347",
+    "name": "Litomyšl",
+    "river": "Loučná",
+    "lat": 49.87203,
+    "lon": 16.31052
+  },
+  {
+    "id": "307348",
+    "name": "Ústí",
+    "river": "Senice",
+    "lat": 49.97387,
+    "lon": 16.39361
+  },
+  {
+    "id": "307349",
+    "name": "Bystřička pod nádrží",
+    "river": "Bystřice",
+    "lat": 49.41898,
+    "lon": 18.01874
+  },
+  {
+    "id": "307350",
+    "name": "Jarcová",
+    "river": "Vsetínská Bečva",
+    "lat": 49.44453,
+    "lon": 17.96587
+  },
+  {
+    "id": "307351",
+    "name": "Rožnov pod Radhoštěm",
+    "river": "Rožnovská Bečva",
+    "lat": 49.45807,
+    "lon": 18.14224
+  },
+  {
+    "id": "307352",
+    "name": "Teplice",
+    "river": "Bečva",
+    "lat": 49.52852,
+    "lon": 17.74008
+  },
+  {
+    "id": "307353",
+    "name": "Hranice",
+    "river": "Velička",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "307354",
+    "name": "Dluhonice",
+    "river": "Bečva",
+    "lat": 49.45151,
+    "lon": 17.40258
+  },
+  {
+    "id": "307355",
+    "name": "Cerekvice nad Loučnou",
+    "river": "Loučná",
+    "lat": 49.89889,
+    "lon": 16.21519
+  },
+  {
+    "id": "307356",
+    "name": "Klopotovice",
+    "river": "Blata",
+    "lat": 49.44612,
+    "lon": 17.25076
+  },
+  {
+    "id": "307357",
+    "name": "Stražisko",
+    "river": "Romže",
+    "lat": 49.54329,
+    "lon": 16.92993
+  },
+  {
+    "id": "307358",
+    "name": "Polkovice",
+    "river": "Romže",
+    "lat": 49.39173,
+    "lon": 17.25917
+  },
+  {
+    "id": "307359",
+    "name": "VD Opatovice",
+    "river": "Malá Haná",
+    "lat": 49.30978,
+    "lon": 16.92336
+  },
+  {
+    "id": "307360",
+    "name": "Otaslavice",
+    "river": "Brodečka",
+    "lat": 49.38833,
+    "lon": 17.07108
+  },
+  {
+    "id": "307361",
+    "name": "Prusy",
+    "river": "Moštěnka",
+    "lat": 49.42811,
+    "lon": 17.51496
+  },
+  {
+    "id": "307362",
+    "name": "Chomýž",
+    "river": "Rusava",
+    "lat": 49.36237,
+    "lon": 17.64541
+  },
+  {
+    "id": "307363",
+    "name": "Dašice",
+    "river": "Loučná",
+    "lat": 50.02844,
+    "lon": 15.91244
+  },
+  {
+    "id": "307364",
+    "name": "Slušovice",
+    "river": "Dřevnice",
+    "lat": 49.24782,
+    "lon": 17.8015
+  },
+  {
+    "id": "307365",
+    "name": "Vizovice",
+    "river": "Lutoninka",
+    "lat": 49.22287,
+    "lon": 17.85455
+  },
+  {
+    "id": "307366",
+    "name": "Zlín",
+    "river": "Dřevnice",
+    "lat": 49.22666,
+    "lon": 17.66634
+  },
+  {
+    "id": "307367",
+    "name": "VD Bojkovice",
+    "river": "Kolelač",
+    "lat": 49.05103,
+    "lon": 17.84693
+  },
+  {
+    "id": "307368",
+    "name": "VD Luhačovice",
+    "river": "Luhačovický potok",
+    "lat": 49.12531,
+    "lon": 17.72939
+  },
+  {
+    "id": "307369",
+    "name": "VD Ludkovice",
+    "river": "Ludkovický potok",
+    "lat": 49.12531,
+    "lon": 17.72939
+  },
+  {
+    "id": "307370",
+    "name": "Hamry",
+    "river": "Chrudimka",
+    "lat": 49.73897,
+    "lon": 15.92641
+  },
+  {
+    "id": "307371",
+    "name": "Velká nad Veličkou",
+    "river": "Velička",
+    "lat": 48.88257,
+    "lon": 17.5206
+  },
+  {
+    "id": "307372",
+    "name": "Lanžhot",
+    "river": "Morava",
+    "lat": 48.72443,
+    "lon": 16.96695
+  },
+  {
+    "id": "307470",
+    "name": "Popov",
+    "river": "Vlára",
+    "lat": 49.0695,
+    "lon": 17.97526
+  },
+  {
+    "id": "385438",
+    "name": "Brumov",
+    "river": "Brumovka",
+    "lat": 49.46238,
+    "lon": 16.42575
+  },
+  {
+    "id": "385518",
+    "name": "Soběsuky",
+    "river": "Hloučela",
+    "lat": 49.23359,
+    "lon": 17.35949
+  },
+  {
+    "id": "390298",
+    "name": "Rožná",
+    "river": "Nedvědička",
+    "lat": 49.47727,
+    "lon": 16.23848
+  },
+  {
+    "id": "390302",
+    "name": "Velehrad",
+    "river": "Salaška",
+    "lat": 49.10288,
+    "lon": 17.39338
+  },
+  {
+    "id": "390306",
+    "name": "Řetechov-Pradlisko",
+    "river": "Ludkovický potok",
+    "lat": 49.13626,
+    "lon": 17.73363
+  },
+  {
+    "id": "465818",
+    "name": "Odry náhon",
+    "river": "náhon z Odry",
+    "lat": 49.66405,
+    "lon": 17.83161
+  },
+  {
+    "id": "470598",
+    "name": "Landštejn nad nádrží",
+    "river": "Pstruhovec",
+    "lat": 49.03425,
+    "lon": 15.25086
+  },
+  {
+    "id": "487178",
+    "name": "Josefov",
+    "river": "Křtinský potok",
+    "lat": 50.78322,
+    "lon": 15.24273
+  },
+  {
+    "id": "506782",
+    "name": "Prosečné",
+    "river": "Malé Labe",
+    "lat": 50.55204,
+    "lon": 15.69388
+  },
+  {
+    "id": "506783",
+    "name": "Hostinné",
+    "river": "Čistá",
+    "lat": 50.54066,
+    "lon": 15.72333
+  },
+  {
+    "id": "514704",
+    "name": "Třebětice",
+    "river": "Rusava",
+    "lat": 49.34843,
+    "lon": 17.68909
+  },
+  {
+    "id": "514711",
+    "name": "Slušovice",
+    "river": "Všeminka",
+    "lat": 49.24782,
+    "lon": 17.8015
+  },
+  {
+    "id": "514726",
+    "name": "Bojkovice nad nádrží",
+    "river": "Kolelač",
+    "lat": 49.05453,
+    "lon": 17.85645
+  },
+  {
+    "id": "514734",
+    "name": "Luhačovice nad nádrží",
+    "river": "Luhačovický potok",
+    "lat": 49.12686,
+    "lon": 17.79484
+  },
+  {
+    "id": "514745",
+    "name": "Lomnička",
+    "river": "Besének",
+    "lat": 49.36309,
+    "lon": 16.41535
+  },
+  {
+    "id": "514753",
+    "name": "Hradec nad Svitavou",
+    "river": "Svitava",
+    "lat": 49.71143,
+    "lon": 16.48058
+  },
+  {
+    "id": "514757",
+    "name": "Prostřední Poříčí",
+    "river": "Křetínka",
+    "lat": 49.57217,
+    "lon": 16.49755
+  },
+  {
+    "id": "514769",
+    "name": "Želešice",
+    "river": "Bobrava",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "514773",
+    "name": "Boršov",
+    "river": "Jedlovský potok",
+    "lat": 49.40394,
+    "lon": 15.43419
+  },
+  {
+    "id": "514777",
+    "name": "Hubenov nad nádrží",
+    "river": "Maršovský potok",
+    "lat": 49.40462,
+    "lon": 15.47241
+  },
+  {
+    "id": "514789",
+    "name": "Koryčany nad nádrží",
+    "river": "Kyjovka",
+    "lat": 49.10741,
+    "lon": 17.2222
+  },
+  {
+    "id": "514796",
+    "name": "Osvětimany",
+    "river": "Hruškovice",
+    "lat": 49.05577,
+    "lon": 17.24969
+  },
+  {
+    "id": "517558",
+    "name": "Ochoz",
+    "river": "Říčka (Zlatý potok)",
+    "lat": 49.2542,
+    "lon": 16.73723
+  },
+  {
+    "id": "523458",
+    "name": "Nová Říše nad nádrží",
+    "river": "Řečice (Olšanský potok)",
+    "lat": 49.1656,
+    "lon": 15.54935
+  },
+  {
+    "id": "523518",
+    "name": "Holštejn",
+    "river": "Bílá voda",
+    "lat": 49.40014,
+    "lon": 16.77441
+  },
+  {
+    "id": "523538",
+    "name": "Skalní Mlýn",
+    "river": "Punkva",
+    "lat": 49.36373,
+    "lon": 16.70826
+  },
+  {
+    "id": "551724",
+    "name": "Petrov",
+    "river": "Radějovka",
+    "lat": 49.88639,
+    "lon": 14.43373
+  },
+  {
+    "id": "551766",
+    "name": "Kadov",
+    "river": "Fryšávka",
+    "lat": 49.63257,
+    "lon": 16.07922
+  },
+  {
+    "id": "570911",
+    "name": "Slavíkovice",
+    "river": "Poleňka",
+    "lat": 49.00429,
+    "lon": 15.62435
+  },
+  {
+    "id": "773121",
+    "name": "Rotava",
+    "river": "Skřiváň",
+    "lat": 50.29627,
+    "lon": 12.57341
+  },
+  {
+    "id": "797135",
+    "name": "Domanín",
+    "river": "Bystřice",
+    "lat": 49.54166,
+    "lon": 16.23411
+  },
+  {
+    "id": "1736808",
+    "name": "Praha - Hlubočepy",
+    "river": "Dalejský potok",
+    "lat": 50.04121,
+    "lon": 14.37409
+  },
+  {
+    "id": "1912998",
+    "name": "VD Podhora",
+    "river": "Teplá",
+    "lat": 49.96373,
+    "lon": 12.81629
+  },
+  {
+    "id": "1913038",
+    "name": "Mnichov",
+    "river": "Pramenský potok",
+    "lat": 49.47916,
+    "lon": 12.71277
+  },
+  {
+    "id": "1959304",
+    "name": "Šumperk náhon",
+    "river": "",
+    "lat": 49.96528,
+    "lon": 16.97061
+  },
+  {
+    "id": "2442710",
+    "name": "Ehrendorf",
+    "river": "Lužnice",
+    "lat": 49.06298,
+    "lon": 14.75618
+  },
+  {
+    "id": "2497644",
+    "name": "Děčín",
+    "river": "Labe",
+    "lat": 50.78215,
+    "lon": 14.21478
+  },
+  {
+    "id": "2497645",
+    "name": "Liberec",
+    "river": "Lužická Nisa",
+    "lat": 50.77,
+    "lon": 15.05845
+  },
+  {
+    "id": "2497647",
+    "name": "Frýdlant",
+    "river": "Smědá",
+    "lat": 50.92139,
+    "lon": 15.07974
+  },
+  {
+    "id": "2497648",
+    "name": "Předměřice",
+    "river": "Jizera",
+    "lat": 50.25548,
+    "lon": 14.78127
+  },
+  {
+    "id": "2504741",
+    "name": "Vestřev",
+    "river": "Labe",
+    "lat": 50.51442,
+    "lon": 15.74171
+  },
+  {
+    "id": "2504743",
+    "name": "Dolní Libchavy",
+    "river": "Tichá Orlice",
+    "lat": 49.98938,
+    "lon": 16.39298
+  },
+  {
+    "id": "2504744",
+    "name": "Ústí nad Orlicí",
+    "river": "Třebovka",
+    "lat": 49.97387,
+    "lon": 16.39361
+  },
+  {
+    "id": "2504745",
+    "name": "Přemilov",
+    "river": "Chrudimka",
+    "lat": 49.80417,
+    "lon": 15.68408
+  },
+  {
+    "id": "2505250",
+    "name": "VD Letovice",
+    "river": "Křetínka",
+    "lat": 49.55798,
+    "lon": 16.53528
+  },
+  {
+    "id": "2505251",
+    "name": "Podhradí nad Dyjí",
+    "river": "Dyje",
+    "lat": 48.90024,
+    "lon": 15.68641
+  },
+  {
+    "id": "2505252",
+    "name": "Vysočany",
+    "river": "Želetavka",
+    "lat": 48.94105,
+    "lon": 15.68969
+  },
+  {
+    "id": "2505253",
+    "name": "Dalečín",
+    "river": "Svratka",
+    "lat": 49.59127,
+    "lon": 16.24008
+  },
+  {
+    "id": "2505254",
+    "name": "Janov",
+    "river": "Moravská Dyje",
+    "lat": 49.98137,
+    "lon": 14.60456
+  },
+  {
+    "id": "2505256",
+    "name": "Velké Pavlovice",
+    "river": "Trkmanka",
+    "lat": 48.89619,
+    "lon": 16.8192
+  },
+  {
+    "id": "2505257",
+    "name": "Štěchovice",
+    "river": "Kocába",
+    "lat": 49.84846,
+    "lon": 14.394
+  },
+  {
+    "id": "2505258",
+    "name": "Žďár nad Sázavou",
+    "river": "Sázava",
+    "lat": 49.56263,
+    "lon": 15.93924
+  },
+  {
+    "id": "2505260",
+    "name": "Havlíčkův Brod - Pohledští Dvořáci",
+    "river": "Sázava",
+    "lat": 49.60337,
+    "lon": 15.59774
+  },
+  {
+    "id": "2505261",
+    "name": "Radětín - Pelhřimov",
+    "river": "Bělá",
+    "lat": 49.45225,
+    "lon": 15.22695
+  },
+  {
+    "id": "2505263",
+    "name": "Červená Řečice",
+    "river": "Trnava",
+    "lat": 49.51123,
+    "lon": 15.17837
+  },
+  {
+    "id": "2505265",
+    "name": "Chornice",
+    "river": "Jevíčka",
+    "lat": 49.63075,
+    "lon": 16.73096
+  },
+  {
+    "id": "2505266",
+    "name": "Olomouc-Nové Sady tok",
+    "river": "Morava",
+    "lat": 49.57432,
+    "lon": 17.25759
+  },
+  {
+    "id": "2505267",
+    "name": "Mikulovice",
+    "river": "Bělá",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "2505268",
+    "name": "Svatava",
+    "river": "Svatava",
+    "lat": 50.19223,
+    "lon": 12.62524
+  },
+  {
+    "id": "2505270",
+    "name": "Teplička",
+    "river": "Teplá",
+    "lat": 50.14859,
+    "lon": 12.85157
+  },
+  {
+    "id": "2505272",
+    "name": "Koterov",
+    "river": "Úslava",
+    "lat": 49.71982,
+    "lon": 13.44095
+  },
+  {
+    "id": "2505274",
+    "name": "Plasy",
+    "river": "Střela",
+    "lat": 49.93416,
+    "lon": 13.39071
+  },
+  {
+    "id": "2505275",
+    "name": "Liblín",
+    "river": "Berounka",
+    "lat": 49.91648,
+    "lon": 13.54429
+  },
+  {
+    "id": "2505277",
+    "name": "VD Žlutice",
+    "river": "Střela",
+    "lat": 50.09039,
+    "lon": 13.10733
+  },
+  {
+    "id": "2505280",
+    "name": "Prádlo",
+    "river": "Úslava",
+    "lat": 49.50344,
+    "lon": 13.54145
+  },
+  {
+    "id": "2505281",
+    "name": "Třebel",
+    "river": "Kosový potok",
+    "lat": 49.49801,
+    "lon": 15.50921
+  },
+  {
+    "id": "2505282",
+    "name": "Stříbro",
+    "river": "Mže",
+    "lat": 49.75294,
+    "lon": 13.00409
+  },
+  {
+    "id": "2505283",
+    "name": "Mírovka",
+    "river": "Šlapanka",
+    "lat": 49.58104,
+    "lon": 15.61743
+  },
+  {
+    "id": "2505285",
+    "name": "Domažlice",
+    "river": "Zubřina",
+    "lat": 49.43843,
+    "lon": 12.92817
+  },
+  {
+    "id": "2505286",
+    "name": "Lhota",
+    "river": "Radbuza",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "2505289",
+    "name": "Dvorce",
+    "river": "Jihlava",
+    "lat": 49.37536,
+    "lon": 15.49037
+  },
+  {
+    "id": "2505290",
+    "name": "Brtnice",
+    "river": "Brtnice",
+    "lat": 49.30695,
+    "lon": 15.67642
+  },
+  {
+    "id": "2505291",
+    "name": "Ptáčov",
+    "river": "Jihlava",
+    "lat": 49.3961,
+    "lon": 15.59124
+  },
+  {
+    "id": "2505292",
+    "name": "Mostiště pod přehradou",
+    "river": "Oslava",
+    "lat": 49.39273,
+    "lon": 16.01247
+  },
+  {
+    "id": "2505293",
+    "name": "Velké Meziříčí",
+    "river": "Oslava",
+    "lat": 49.35614,
+    "lon": 16.01326
+  },
+  {
+    "id": "2505294",
+    "name": "VD Plumlov",
+    "river": "Hloučela",
+    "lat": 49.46818,
+    "lon": 17.03108
+  },
+  {
+    "id": "2505295",
+    "name": "Moravský Krumlov",
+    "river": "Rokytná",
+    "lat": 49.04893,
+    "lon": 16.3117
+  },
+  {
+    "id": "2506441",
+    "name": "VD Březová",
+    "river": "Teplá",
+    "lat": 50.19493,
+    "lon": 12.86
+  },
+  {
+    "id": "2506442",
+    "name": "Žatec",
+    "river": "Ohře",
+    "lat": 50.32717,
+    "lon": 13.54577
+  },
+  {
+    "id": "2506444",
+    "name": "Proseč nad Nisou",
+    "river": "Lužická Nisa",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "2506445",
+    "name": "Kokory",
+    "river": "Olešnice (Kokorka)",
+    "lat": 49.49482,
+    "lon": 17.37544
+  },
+  {
+    "id": "2535576",
+    "name": "Jaroměř",
+    "river": "Labe",
+    "lat": 50.35619,
+    "lon": 15.92136
+  },
+  {
+    "id": "2537533",
+    "name": "Hoheneich",
+    "river": "Skřemelice (Klášterecký potok)",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "2557540",
+    "name": "Leopoldschlag",
+    "river": "Malše",
+    "lat": 48.61733,
+    "lon": 14.5035
+  },
+  {
+    "id": "2586296",
+    "name": "Vlaské",
+    "river": "Morava",
+    "lat": 50.08904,
+    "lon": 16.89479
+  },
+  {
+    "id": "2586337",
+    "name": "Blanický mlýn",
+    "river": "Blanice",
+    "lat": 49.72913,
+    "lon": 14.91834
+  },
+  {
+    "id": "2589701",
+    "name": "Sedmihorky",
+    "river": "Libuňka",
+    "lat": 50.5538,
+    "lon": 15.19595
+  },
+  {
+    "id": "2601541",
+    "name": "Brenná",
+    "river": "Ploučnice",
+    "lat": 50.64986,
+    "lon": 14.63657
+  },
+  {
+    "id": "2605340",
+    "name": "Osoblaha",
+    "river": "Osoblaha",
+    "lat": 50.27517,
+    "lon": 17.71523
+  },
+  {
+    "id": "2645323",
+    "name": "Humenice",
+    "river": "Stropnice",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "2715981",
+    "name": "Hlupín",
+    "river": "Březový potok",
+    "lat": 49.33469,
+    "lon": 13.80677
+  },
+  {
+    "id": "2732030",
+    "name": "Stanovice",
+    "river": "Labe",
+    "lat": 50.40061,
+    "lon": 15.87139
+  },
+  {
+    "id": "2766951",
+    "name": "Podmokly",
+    "river": "Zbirožský potok",
+    "lat": 50.7757,
+    "lon": 14.18985
+  },
+  {
+    "id": "2766952",
+    "name": "Kladruby",
+    "river": "Úhlavka",
+    "lat": 49.71082,
+    "lon": 12.98698
+  },
+  {
+    "id": "2772455",
+    "name": "Úraz",
+    "river": "Chotovinský potok",
+    "lat": 49.22624,
+    "lon": 17.67026
+  },
+  {
+    "id": "2775878",
+    "name": "VD Olešná",
+    "river": "Olešná",
+    "lat": 49.6667,
+    "lon": 18.31926
+  },
+  {
+    "id": "2775879",
+    "name": "Kozlovice",
+    "river": "Ondřejnice",
+    "lat": 49.5904,
+    "lon": 18.25657
+  },
+  {
+    "id": "2795725",
+    "name": "Tržek",
+    "river": "Desná",
+    "lat": 50.75987,
+    "lon": 15.30284
+  },
+  {
+    "id": "2805413",
+    "name": "Havlovice",
+    "river": "Zubřina",
+    "lat": 50.48753,
+    "lon": 16.02932
+  },
+  {
+    "id": "2805414",
+    "name": "Uhrovic mlýn",
+    "river": "Javornice",
+    "lat": 49.99441,
+    "lon": 13.62461
+  },
+  {
+    "id": "2809272",
+    "name": "Kryry",
+    "river": "Blšanka",
+    "lat": 50.17437,
+    "lon": 13.4266
+  },
+  {
+    "id": "2809273",
+    "name": "Vilémov",
+    "river": "Liboc",
+    "lat": 49.81566,
+    "lon": 15.53583
+  },
+  {
+    "id": "2839574",
+    "name": "Bavorov",
+    "river": "Blanice",
+    "lat": 49.12184,
+    "lon": 14.07892
+  },
+  {
+    "id": "2905396",
+    "name": "Hamry-V lipách",
+    "river": "Úhlava",
+    "lat": 49.2258,
+    "lon": 13.16291
+  },
+  {
+    "id": "3302145",
+    "name": "Stříbrné Hory",
+    "river": "Borovský potok",
+    "lat": 49.59723,
+    "lon": 15.69405
+  },
+  {
+    "id": "4180198",
+    "name": "Vítkov",
+    "river": "Lobezský potok",
+    "lat": 49.75687,
+    "lon": 15.52135
+  },
+  {
+    "id": "4180199",
+    "name": "Hartoušov",
+    "river": "Plesná",
+    "lat": 49.85827,
+    "lon": 18.15286
+  },
+  {
+    "id": "10044851",
+    "name": "Radonice I",
+    "river": "Blanice",
+    "lat": 49.78519,
+    "lon": 14.94051
+  },
+  {
+    "id": "10045024",
+    "name": "Zbraslav",
+    "river": "Vltava",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "10045026",
+    "name": "Srbsko",
+    "river": "Berounka",
+    "lat": 49.93717,
+    "lon": 14.13592
+  },
+  {
+    "id": "10045028",
+    "name": "Hřensko - Labe",
+    "river": "Labe",
+    "lat": 50.8744,
+    "lon": 14.2425
+  },
+  {
+    "id": "10045030",
+    "name": "Kostelec nad Labem",
+    "river": "Labe",
+    "lat": 50.22653,
+    "lon": 14.58552
+  },
+  {
+    "id": "10045032",
+    "name": "Nesměřice",
+    "river": "Želivka",
+    "lat": 49.66953,
+    "lon": 15.1678
+  },
+  {
+    "id": "10045034",
+    "name": "Slověnice",
+    "river": "Chotýšanka",
+    "lat": 49.75729,
+    "lon": 14.88509
+  },
+  {
+    "id": "10058896",
+    "name": "Bohuňovsko-Jesenný",
+    "river": "Kamenice",
+    "lat": 49.30303,
+    "lon": 15.07519
+  },
+  {
+    "id": "10059408",
+    "name": "Nymburk",
+    "river": "Labe",
+    "lat": 50.18606,
+    "lon": 15.04167
+  },
+  {
+    "id": "10059505",
+    "name": "Kaplice",
+    "river": "Malše",
+    "lat": 48.73849,
+    "lon": 14.49627
+  },
+  {
+    "id": "20023346",
+    "name": "Zlíč",
+    "river": "Úpa",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "20042094",
+    "name": "Rakovník",
+    "river": "Rakovnický potok",
+    "lat": 50.2084,
+    "lon": 13.7542
+  },
+  {
+    "id": "20043324",
+    "name": "Klikov",
+    "river": "Dračice",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "20045344",
+    "name": "Žákava",
+    "river": "Bradava",
+    "lat": 49.62997,
+    "lon": 13.53072
+  },
+  {
+    "id": "20045966",
+    "name": "Rokycany - Na Pátku",
+    "river": "Klabava",
+    "lat": 49.74267,
+    "lon": 13.59961
+  },
+  {
+    "id": "20045969",
+    "name": "Rokycany - Dvořákova",
+    "river": "Holoubkovský potok",
+    "lat": 49.74513,
+    "lon": 13.60035
+  },
+  {
+    "id": "20067738",
+    "name": "Skuhrov",
+    "river": "Bělá",
+    "lat": 50.22946,
+    "lon": 16.2923
+  },
+  {
+    "id": "20067780",
+    "name": "Horní Staré Město",
+    "river": "Úpa",
+    "lat": 50.58552,
+    "lon": 15.89214
+  },
+  {
+    "id": "20067827",
+    "name": "Netolice",
+    "river": "Bezdrevský potok",
+    "lat": 49.0493,
+    "lon": 14.197
+  },
+  {
+    "id": "20070411",
+    "name": "Hrachov",
+    "river": "Brzina",
+    "lat": 49.63571,
+    "lon": 14.29752
+  },
+  {
+    "id": "20070415",
+    "name": "Lány - Městečko",
+    "river": "Klíčava",
+    "lat": 49.75943,
+    "lon": 15.71289
+  },
+  {
+    "id": "20070434",
+    "name": "Lány - Běleč",
+    "river": "Lánský potok",
+    "lat": 49.75943,
+    "lon": 15.71289
+  },
+  {
+    "id": "20070460",
+    "name": "Orlické Záhoří",
+    "river": "Divoká Orlice",
+    "lat": 50.27866,
+    "lon": 16.47492
+  },
+  {
+    "id": "20070907",
+    "name": "Bílek",
+    "river": "Doubrava",
+    "lat": 49.70331,
+    "lon": 15.7296
+  },
+  {
+    "id": "20075516",
+    "name": "Božetice",
+    "river": "Smutná",
+    "lat": 49.45113,
+    "lon": 14.4439
+  },
+  {
+    "id": "20075521",
+    "name": "Milevsko",
+    "river": "Milevský potok",
+    "lat": 49.45652,
+    "lon": 14.36671
+  },
+  {
+    "id": "20084968",
+    "name": "Višňová",
+    "river": "Smědá",
+    "lat": 50.96663,
+    "lon": 15.02495
+  },
+  {
+    "id": "20084971",
+    "name": "Rumburk",
+    "river": "Mandava",
+    "lat": 50.95327,
+    "lon": 14.55638
+  },
+  {
+    "id": "20084974",
+    "name": "Chrastava",
+    "river": "Jeřice",
+    "lat": 50.81692,
+    "lon": 14.96883
+  },
+  {
+    "id": "20085034",
+    "name": "Kadaň",
+    "river": "Ohře",
+    "lat": 50.37598,
+    "lon": 13.27131
+  },
+  {
+    "id": "20085037",
+    "name": "Terezín",
+    "river": "Ohře",
+    "lat": 50.511,
+    "lon": 14.15055
+  },
+  {
+    "id": "20085092",
+    "name": "Děčín-Březiny",
+    "river": "Ploučnice",
+    "lat": 50.7617,
+    "lon": 14.24372
+  },
+  {
+    "id": "20092272",
+    "name": "Jizerka",
+    "river": "Jizerka",
+    "lat": 50.81848,
+    "lon": 15.34548
+  },
+  {
+    "id": "20096829",
+    "name": "Horní Stropnice",
+    "river": "Stropnice",
+    "lat": 48.76124,
+    "lon": 14.73502
+  },
+  {
+    "id": "20210507",
+    "name": "Strašice",
+    "river": "Klabava",
+    "lat": 49.73552,
+    "lon": 13.75755
+  },
+  {
+    "id": "20214815",
+    "name": "Janov - Harrachov",
+    "river": "Mumlava",
+    "lat": 50.76824,
+    "lon": 15.39761
+  },
+  {
+    "id": "20214835",
+    "name": "Slaná",
+    "river": "Oleška",
+    "lat": 49.97159,
+    "lon": 14.91668
+  },
+  {
+    "id": "20214893",
+    "name": "Praha-Radotín",
+    "river": "Radotínský potok",
+    "lat": 49.98197,
+    "lon": 14.36316
+  },
+  {
+    "id": "20241095",
+    "name": "Mnichov",
+    "river": "Černá Opava",
+    "lat": 50.12571,
+    "lon": 17.37953
+  },
+  {
+    "id": "20241195",
+    "name": "Novosedly",
+    "river": "Polečnice (Kájovský potok)",
+    "lat": 48.83704,
+    "lon": 16.49274
+  },
+  {
+    "id": "20262955",
+    "name": "Velká Štáhle",
+    "river": "Moravice",
+    "lat": 49.9297,
+    "lon": 17.35697
+  },
+  {
+    "id": "20263035",
+    "name": "Hoštejn",
+    "river": "Březná",
+    "lat": 49.87438,
+    "lon": 16.77477
+  },
+  {
+    "id": "20265575",
+    "name": "Kouty nad Desnou",
+    "river": "Desná",
+    "lat": 50.10105,
+    "lon": 17.11654
+  },
+  {
+    "id": "20267515",
+    "name": "Habartice",
+    "river": "Krupá",
+    "lat": 50.17485,
+    "lon": 13.73158
+  },
+  {
+    "id": "20268815",
+    "name": "Staré Hamry",
+    "river": "Ostravice",
+    "lat": 49.47262,
+    "lon": 18.44582
+  },
+  {
+    "id": "20284461",
+    "name": "Všemily",
+    "river": "Chřibská Kamenice",
+    "lat": 49.30303,
+    "lon": 15.07519
+  },
+  {
+    "id": "20284478",
+    "name": "Stráž pod Ralskem",
+    "river": "Ještědský potok",
+    "lat": 50.70698,
+    "lon": 14.80492
+  },
+  {
+    "id": "20287377",
+    "name": "Jílové",
+    "river": "Jílovský potok",
+    "lat": 49.96079,
+    "lon": 14.57798
+  },
+  {
+    "id": "20368223",
+    "name": "Sendražice",
+    "river": "Trotina",
+    "lat": 50.28905,
+    "lon": 15.83091
+  },
+  {
+    "id": "20403255",
+    "name": "Sobětice",
+    "river": "Mochtínský potok",
+    "lat": 49.37465,
+    "lon": 13.31677
+  },
+  {
+    "id": "20409119",
+    "name": "Dolní Bory - Olší",
+    "river": "Oslava",
+    "lat": 49.42253,
+    "lon": 15.98553
+  },
+  {
+    "id": "20427485",
+    "name": "Bílá Smědá",
+    "river": "Bílá Smědá",
+    "lat": 50.8409,
+    "lon": 15.2533
+  },
+  {
+    "id": "20463355",
+    "name": "Chocnějovice",
+    "river": "Mohelka",
+    "lat": 50.5769,
+    "lon": 14.97139
+  },
+  {
+    "id": "20463360",
+    "name": "Obecnice",
+    "river": "Obecnický potok",
+    "lat": 49.71466,
+    "lon": 13.94477
+  },
+  {
+    "id": "20474208",
+    "name": "Černý Potok",
+    "river": "Černá voda",
+    "lat": 49.53402,
+    "lon": 14.5406
+  },
+  {
+    "id": "20474228",
+    "name": "Kryštofovy Hamry",
+    "river": "Přísečnice",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "20491235",
+    "name": "Nesměř",
+    "river": "Oslava",
+    "lat": 49.33052,
+    "lon": 16.02969
+  },
+  {
+    "id": "20491238",
+    "name": "Strážnice",
+    "river": "Velička",
+    "lat": 48.90102,
+    "lon": 17.31681
+  },
+  {
+    "id": "20491241",
+    "name": "Skryje",
+    "river": "Bobrůvka",
+    "lat": 49.39356,
+    "lon": 16.31068
+  },
+  {
+    "id": "20519935",
+    "name": "Antýgl",
+    "river": "Hamerský potok",
+    "lat": 49.05764,
+    "lon": 13.51126
+  },
+  {
+    "id": "20578655",
+    "name": "Barchov",
+    "river": "Podolský potok",
+    "lat": 49.99931,
+    "lon": 15.6808
+  },
+  {
+    "id": "20578675",
+    "name": "Rosice",
+    "river": "Žejbro",
+    "lat": 49.92226,
+    "lon": 15.95127
+  },
+  {
+    "id": "20594353",
+    "name": "Plzeň-Skvrňany",
+    "river": "Vejprnický potok",
+    "lat": 49.74247,
+    "lon": 13.32683
+  },
+  {
+    "id": "20598963",
+    "name": "Otradov",
+    "river": "Krounka",
+    "lat": 49.79334,
+    "lon": 16.0435
+  },
+  {
+    "id": "20628314",
+    "name": "Průhonice",
+    "river": "Dobřejovický potok",
+    "lat": 50.00171,
+    "lon": 14.5603
+  },
+  {
+    "id": "20650888",
+    "name": "Cvikov",
+    "river": "Boberský potok",
+    "lat": 50.77668,
+    "lon": 14.63297
+  },
+  {
+    "id": "20653435",
+    "name": "Bulovský potok",
+    "river": "Bulovský potok",
+    "lat": 49.20636,
+    "lon": 16.69213
+  },
+  {
+    "id": "20677475",
+    "name": "Rajnochovice",
+    "river": "Juhyně",
+    "lat": 49.41278,
+    "lon": 17.81215
+  },
+  {
+    "id": "20697921",
+    "name": "Kosky - Hamr",
+    "river": "Koštěnický potok",
+    "lat": 48.94971,
+    "lon": 14.88457
+  },
+  {
+    "id": "20745442",
+    "name": "Šindelová",
+    "river": "Rotava",
+    "lat": 50.31865,
+    "lon": 12.60332
+  },
+  {
+    "id": "20753343",
+    "name": "Josefův Důl",
+    "river": "Kamenice",
+    "lat": 50.78191,
+    "lon": 15.23146
+  },
+  {
+    "id": "20753433",
+    "name": "Sovenice",
+    "river": "Jizera",
+    "lat": 50.56321,
+    "lon": 14.98945
+  },
+  {
+    "id": "20753443",
+    "name": "Košátky",
+    "river": "Košátecký potok",
+    "lat": 50.31761,
+    "lon": 14.66944
+  },
+  {
+    "id": "20757820",
+    "name": "Desná- Jezdecká",
+    "river": "Černá Desná",
+    "lat": 50.80762,
+    "lon": 15.29298
+  },
+  {
+    "id": "20773798",
+    "name": "Mladá Boleslav",
+    "river": "Klenice",
+    "lat": 50.41135,
+    "lon": 14.90318
+  },
+  {
+    "id": "20773803",
+    "name": "Poříčí nad Sázavou",
+    "river": "Konopišťský potok",
+    "lat": 49.835,
+    "lon": 14.67639
+  },
+  {
+    "id": "20797314",
+    "name": "Stružnice",
+    "river": "Ploučnice",
+    "lat": 50.69687,
+    "lon": 14.44998
+  },
+  {
+    "id": "20797394",
+    "name": "Pertoltice",
+    "river": "Panenský potok",
+    "lat": 49.75481,
+    "lon": 15.18161
+  },
+  {
+    "id": "20812158",
+    "name": "Kašava nad nádrží",
+    "river": "Dřevnice",
+    "lat": 49.28874,
+    "lon": 17.78144
+  },
+  {
+    "id": "20816815",
+    "name": "Jaroměřice",
+    "river": "Úsobrnský potok",
+    "lat": 49.09408,
+    "lon": 15.8933
+  },
+  {
+    "id": "20823334",
+    "name": "Bartošovice",
+    "river": "Odra",
+    "lat": 49.66884,
+    "lon": 18.05461
+  },
+  {
+    "id": "20827518",
+    "name": "Vřesina",
+    "river": "Porubka",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "20827805",
+    "name": "Nový Jičín",
+    "river": "Jičínka",
+    "lat": 49.59386,
+    "lon": 18.01212
+  },
+  {
+    "id": "20910742",
+    "name": "Jevišovice nad nádrží",
+    "river": "Jevišovka",
+    "lat": 48.98831,
+    "lon": 15.954
+  },
+  {
+    "id": "20922048",
+    "name": "Sobotín",
+    "river": "Merta",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "20949735",
+    "name": "Praha - Radotín",
+    "river": "Berounka",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "22182334",
+    "name": "Dolní Bukovina",
+    "river": "Zábrdka",
+    "lat": 50.54538,
+    "lon": 14.93494
+  },
+  {
+    "id": "22182516",
+    "name": "Tukleky",
+    "river": "Želivka",
+    "lat": 49.55075,
+    "lon": 15.21627
+  },
+  {
+    "id": "22554181",
+    "name": "Malá Morávka",
+    "river": "Bělokamenný potok",
+    "lat": 50.01631,
+    "lon": 17.31314
+  },
+  {
+    "id": "23048162",
+    "name": "Loštice",
+    "river": "Třebůvka",
+    "lat": 49.7447,
+    "lon": 16.92892
+  },
+  {
+    "id": "23180676",
+    "name": "Stráž nad Nisou",
+    "river": "Černá Nisa",
+    "lat": 49.76896,
+    "lon": 15.55984
+  },
+  {
+    "id": "23851290",
+    "name": "Zděchov",
+    "river": "Zděchovka",
+    "lat": 49.26097,
+    "lon": 18.07784
+  },
+  {
+    "id": "25089890",
+    "name": "Slapany - lom",
+    "river": "Odrava",
+    "lat": 50.03124,
+    "lon": 12.37687
+  },
+  {
+    "id": "25089941",
+    "name": "Pila",
+    "river": "Lomnický potok",
+    "lat": 50.04187,
+    "lon": 15.78183
+  },
+  {
+    "id": "25432571",
+    "name": "Stránky",
+    "river": "Blšanka",
+    "lat": 50.28918,
+    "lon": 13.5775
+  },
+  {
+    "id": "25863926",
+    "name": "Trhové Sviny",
+    "river": "Svinenský potok",
+    "lat": 48.72137,
+    "lon": 14.69799
+  },
+  {
+    "id": "26597509",
+    "name": "Staré Město pod Landštejnem",
+    "river": "Pstruhovec",
+    "lat": 49.04216,
+    "lon": 15.25409
+  },
+  {
+    "id": "26767276",
+    "name": "Náměšť nad Oslavou",
+    "river": "Oslava",
+    "lat": 49.20726,
+    "lon": 16.15849
+  },
+  {
+    "id": "28611217",
+    "name": "Želízy",
+    "river": "Liběchovka",
+    "lat": 50.42373,
+    "lon": 14.46477
+  },
+  {
+    "id": "28733133",
+    "name": "Velký Rečkov",
+    "river": "Bělá",
+    "lat": 50.49463,
+    "lon": 14.90714
+  },
+  {
+    "id": "28733137",
+    "name": "Leský Mlýn",
+    "river": "Sedlický potok",
+    "lat": 49.6604,
+    "lon": 15.08716
+  },
+  {
+    "id": "28975955",
+    "name": "Žulová",
+    "river": "Stříbrný potok",
+    "lat": 50.3111,
+    "lon": 17.10201
+  },
+  {
+    "id": "28977095",
+    "name": "Velká Kraš",
+    "river": "Černý potok",
+    "lat": 50.35392,
+    "lon": 17.16398
+  },
+  {
+    "id": "29235299",
+    "name": "Rychaltice",
+    "river": "Ondřejnice",
+    "lat": 49.64434,
+    "lon": 18.21871
+  },
+  {
+    "id": "29235761",
+    "name": "Řeka",
+    "river": "Ropičanka",
+    "lat": 49.60576,
+    "lon": 18.59681
+  },
+  {
+    "id": "29236133",
+    "name": "Solanec",
+    "river": "Hutiský potok",
+    "lat": 49.43097,
+    "lon": 18.21393
+  },
+  {
+    "id": "29236544",
+    "name": "Hraničky",
+    "river": "Třebůvka",
+    "lat": 49.7581,
+    "lon": 16.91727
+  },
+  {
+    "id": "29954035",
+    "name": "Černá Smědá",
+    "river": "Smědá",
+    "lat": 50.84513,
+    "lon": 15.27346
+  },
+  {
+    "id": "31074555",
+    "name": "Praha - Vysočany",
+    "river": "Rokytka",
+    "lat": 50.09596,
+    "lon": 14.45937
+  },
+  {
+    "id": "31395173",
+    "name": "Staré Město pod Sněžníkem",
+    "river": "Vrbenský potok",
+    "lat": 50.19269,
+    "lon": 16.86839
+  },
+  {
+    "id": "31571772",
+    "name": "Uhlířská",
+    "river": "Černá Nisa",
+    "lat": 50.07894,
+    "lon": 15.39105
+  },
+  {
+    "id": "34010479",
+    "name": "Žirovnice",
+    "river": "Žirovnice",
+    "lat": 49.25318,
+    "lon": 15.18824
+  },
+  {
+    "id": "34140055",
+    "name": "Sobkovice",
+    "river": "Tichá Orlice",
+    "lat": 50.04791,
+    "lon": 16.59498
+  },
+  {
+    "id": "34165886",
+    "name": "Slatina nad Úpou",
+    "river": "Úpa",
+    "lat": 50.45409,
+    "lon": 16.03662
+  },
+  {
+    "id": "34215428",
+    "name": "Klášterec nad Orlicí",
+    "river": "Divoká Orlice",
+    "lat": 50.1116,
+    "lon": 16.55449
+  },
+  {
+    "id": "34415750",
+    "name": "Častolovice",
+    "river": "Bělá",
+    "lat": 50.12909,
+    "lon": 16.18128
+  },
+  {
+    "id": "34426070",
+    "name": "Březina",
+    "river": "Žehrovka",
+    "lat": 50.43429,
+    "lon": 15.31326
+  },
+  {
+    "id": "34426075",
+    "name": "Kojčice",
+    "river": "Želivka",
+    "lat": 49.47595,
+    "lon": 15.2559
+  },
+  {
+    "id": "34426083",
+    "name": "Želiv - Trnávka",
+    "river": "Trnava",
+    "lat": 49.52983,
+    "lon": 15.22181
+  },
+  {
+    "id": "34426197",
+    "name": "Senožaty",
+    "river": "Martinický potok",
+    "lat": 49.56907,
+    "lon": 15.19801
+  },
+  {
+    "id": "34426397",
+    "name": "Blažejovice",
+    "river": "Blažejovický potok",
+    "lat": 49.75687,
+    "lon": 15.52135
+  },
+  {
+    "id": "34426453",
+    "name": "Praha - Nusle",
+    "river": "Botič",
+    "lat": 50.05675,
+    "lon": 14.44205
+  },
+  {
+    "id": "34426494",
+    "name": "Praha - Výtoň",
+    "river": "Vltava",
+    "lat": 50.06858,
+    "lon": 14.41647
+  },
+  {
+    "id": "34718633",
+    "name": "Postoloprty",
+    "river": "Chomutovka",
+    "lat": 50.35979,
+    "lon": 13.70291
+  },
+  {
+    "id": "35263642",
+    "name": "Nový Dvůr ",
+    "river": "Spůlka",
+    "lat": 50.23215,
+    "lon": 15.11086
+  },
+  {
+    "id": "35910988",
+    "name": "Ústí nad Labem_Klisky",
+    "river": "Klíšský potok",
+    "lat": 50.67844,
+    "lon": 14.01501
+  },
+  {
+    "id": "36008487",
+    "name": "VD České Údolí",
+    "river": "Radbuza",
+    "lat": 49.71028,
+    "lon": 13.33936
+  },
+  {
+    "id": "36008523",
+    "name": "VD Lučina",
+    "river": "Mže",
+    "lat": 49.80799,
+    "lon": 12.56852
+  },
+  {
+    "id": "36008850",
+    "name": "VD Nýrsko",
+    "river": "Úhlava",
+    "lat": 49.253,
+    "lon": 13.15265
+  },
+  {
+    "id": "37575599",
+    "name": "Kaceřov",
+    "river": "Třemošná",
+    "lat": 49.81584,
+    "lon": 13.39499
+  },
+  {
+    "id": "37704777",
+    "name": "Dolní Libchava",
+    "river": "Šporka",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "37792624",
+    "name": "Kuří",
+    "river": "Pitkovický potok",
+    "lat": 49.98791,
+    "lon": 14.6209
+  },
+  {
+    "id": "37816755",
+    "name": "Praha - Hostivař",
+    "river": "Botič",
+    "lat": 50.04855,
+    "lon": 14.52413
+  },
+  {
+    "id": "37829235",
+    "name": "Průhonice",
+    "river": "Botič",
+    "lat": 50.00171,
+    "lon": 14.5603
+  },
+  {
+    "id": "37904504",
+    "name": "Hoštka",
+    "river": "Obrtka",
+    "lat": 50.48859,
+    "lon": 14.335
+  },
+  {
+    "id": "38158749",
+    "name": "Litoměřice",
+    "river": "Labe",
+    "lat": 49.80848,
+    "lon": 15.12491
+  },
+  {
+    "id": "38357920",
+    "name": "Dětmarovice",
+    "river": "Olše",
+    "lat": 49.89412,
+    "lon": 18.46079
+  },
+  {
+    "id": "38406654",
+    "name": "Praha - Petrovice",
+    "river": "Botič",
+    "lat": 50.03696,
+    "lon": 14.55758
+  },
+  {
+    "id": "38578163",
+    "name": "Jesenice - Kocanda",
+    "river": "Botič",
+    "lat": 49.9696,
+    "lon": 14.54239
+  },
+  {
+    "id": "38907900",
+    "name": "Praha - Kyjský rybník",
+    "river": "Rokytka",
+    "lat": 50.09988,
+    "lon": 14.55021
+  },
+  {
+    "id": "38908612",
+    "name": "Opatovice nad nádrží",
+    "river": "Malá Haná",
+    "lat": 49.32113,
+    "lon": 16.90233
+  },
+  {
+    "id": "39185505",
+    "name": "Praha-Libeň",
+    "river": "Rokytka",
+    "lat": 49.81907,
+    "lon": 15.51959
+  },
+  {
+    "id": "39933456",
+    "name": "Vyšní Lhoty tok",
+    "river": "Morávka",
+    "lat": 49.63581,
+    "lon": 18.45692
+  },
+  {
+    "id": "39957818",
+    "name": "Budišov nad Budišovkou",
+    "river": "Budišovka",
+    "lat": 49.80091,
+    "lon": 17.59001
+  },
+  {
+    "id": "39958256",
+    "name": "Slezská Harta pod nádrží",
+    "river": "Moravice",
+    "lat": 49.8874,
+    "lon": 17.58441
+  },
+  {
+    "id": "39962438",
+    "name": "Šternberk",
+    "river": "Sitka",
+    "lat": 49.74286,
+    "lon": 15.33841
+  },
+  {
+    "id": "39966605",
+    "name": "Bystřička nad nádrží",
+    "river": "Bystřice",
+    "lat": 49.41822,
+    "lon": 18.04471
+  },
+  {
+    "id": "39966866",
+    "name": "Valšov",
+    "river": "Kočovský potok",
+    "lat": 49.93336,
+    "lon": 17.43813
+  },
+  {
+    "id": "39971859",
+    "name": "Jakartovice",
+    "river": "Hvozdnice",
+    "lat": 49.87223,
+    "lon": 14.37119
+  },
+  {
+    "id": "41060250",
+    "name": "Karlovy Vary - Dvory",
+    "river": "Chodovský potok",
+    "lat": 49.75687,
+    "lon": 15.52135
+  },
+  {
+    "id": "41063442",
+    "name": "VD Jesenice",
+    "river": "Odrava",
+    "lat": 50.08999,
+    "lon": 12.47491
+  },
+  {
+    "id": "41064061",
+    "name": "Libavské Údolí",
+    "river": "Velká Libava",
+    "lat": 50.12887,
+    "lon": 12.55249
+  },
+  {
+    "id": "41064550",
+    "name": "Velké Albrechtice",
+    "river": "Bílovka",
+    "lat": 49.75044,
+    "lon": 18.04394
+  },
+  {
+    "id": "41064736",
+    "name": "Vyšní Lhoty přivaděč",
+    "river": "Přivaděč Morávka-Žermanice",
+    "lat": 49.64025,
+    "lon": 18.45366
+  },
+  {
+    "id": "41064750",
+    "name": "Místek",
+    "river": "Hodoňovický náhon",
+    "lat": 49.67054,
+    "lon": 18.33794
+  },
+  {
+    "id": "41065183",
+    "name": "Holice",
+    "river": "Hamerský náhon",
+    "lat": 49.86679,
+    "lon": 16.3149
+  },
+  {
+    "id": "41065312",
+    "name": "Horní Bečva",
+    "river": "Rožnovská Bečva",
+    "lat": 49.43216,
+    "lon": 18.2886
+  },
+  {
+    "id": "41433130",
+    "name": "Lipová-Lázně",
+    "river": "Staříč",
+    "lat": 50.22611,
+    "lon": 17.12756
+  },
+  {
+    "id": "41433227",
+    "name": "Jeseník",
+    "river": "Bělá",
+    "lat": 50.13159,
+    "lon": 17.21585
+  },
+  {
+    "id": "41433298",
+    "name": "Zlaté Hory",
+    "river": "Zlatý potok",
+    "lat": 50.24484,
+    "lon": 16.97636
+  },
+  {
+    "id": "41433399",
+    "name": "Palkovice",
+    "river": "Olešná",
+    "lat": 49.63467,
+    "lon": 18.31508
+  },
+  {
+    "id": "41433537",
+    "name": "Horní Domaslavice",
+    "river": "Lučina",
+    "lat": 49.6957,
+    "lon": 18.45926
+  },
+  {
+    "id": "41433591",
+    "name": "Rýmařov",
+    "river": "Podolský potok",
+    "lat": 49.98547,
+    "lon": 17.2091
+  },
+  {
+    "id": "41433896",
+    "name": "Hradiště",
+    "river": "Stonávka",
+    "lat": 49.68417,
+    "lon": 14.8487
+  },
+  {
+    "id": "41466398",
+    "name": "Raškovice",
+    "river": "Mohelnice",
+    "lat": 49.77698,
+    "lon": 16.91946
+  },
+  {
+    "id": "43143289",
+    "name": "Praha - Jiviny",
+    "river": "Litovický potok",
+    "lat": 50.07926,
+    "lon": 14.29758
+  },
+  {
+    "id": "43360441",
+    "name": "Vrchoslavice",
+    "river": "Velká Haná",
+    "lat": 49.33301,
+    "lon": 17.21834
+  },
+  {
+    "id": "43360490",
+    "name": "Polichno",
+    "river": "Luhačovický potok",
+    "lat": 49.06812,
+    "lon": 17.71116
+  },
+  {
+    "id": "43360513",
+    "name": "Štěpánov nad Svratkou",
+    "river": "Hodonínka",
+    "lat": 49.50459,
+    "lon": 16.33912
+  },
+  {
+    "id": "43360541",
+    "name": "Plaveč",
+    "river": "Jevišovka",
+    "lat": 48.92876,
+    "lon": 16.08
+  },
+  {
+    "id": "44796828",
+    "name": "Rychvald",
+    "river": "Stružka",
+    "lat": 49.86626,
+    "lon": 18.37626
+  },
+  {
+    "id": "45599398",
+    "name": "Dlouhá Loučka",
+    "river": "Oslava",
+    "lat": 49.83548,
+    "lon": 17.21152
+  },
+  {
+    "id": "45599721",
+    "name": "Slavíč",
+    "river": "Slavíč",
+    "lat": 49.54316,
+    "lon": 17.65644
+  },
+  {
+    "id": "45599811",
+    "name": "Morávka",
+    "river": "Skalka",
+    "lat": 49.5373,
+    "lon": 18.59432
+  },
+  {
+    "id": "45599832",
+    "name": "Morávka",
+    "river": "Morávka",
+    "lat": 49.59607,
+    "lon": 18.52472
+  },
+  {
+    "id": "45603809",
+    "name": "Radim",
+    "river": "Krasovka",
+    "lat": 50.07192,
+    "lon": 15.00952
+  }
+]

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "11800",
+    "name": "Devínska Nová Ves",
+    "lat": 48.217,
+    "lon": 16.983
+  },
+  {
+    "id": "11813",
+    "name": "Bratislava Koliba",
+    "lat": 48.167,
+    "lon": 17.107
+  },
+  {
+    "id": "11815",
+    "name": "Bratislava airport area",
+    "lat": 48.17,
+    "lon": 17.213
+  },
+  {
+    "id": "11816",
+    "name": "Bratislava Ivanka",
+    "lat": 48.2,
+    "lon": 17.2
+  },
+  {
+    "id": "11818",
+    "name": "Kuchyňa",
+    "lat": 48.4,
+    "lon": 17.167
+  },
+  {
+    "id": "11819",
+    "name": "Jaslovske Bohunice",
+    "lat": 48.4833,
+    "lon": 17.6667
+  },
+  {
+    "id": "11826",
+    "name": "Piestany",
+    "lat": 48.6167,
+    "lon": 17.8333
+  },
+  {
+    "id": "11841",
+    "name": "Žilina",
+    "lat": 49.233,
+    "lon": 18.739
+  },
+  {
+    "id": "11855",
+    "name": "Nitra",
+    "lat": 48.2833,
+    "lon": 18.1333
+  },
+  {
+    "id": "11856",
+    "name": "Mochovce",
+    "lat": 48.2833,
+    "lon": 18.45
+  },
+  {
+    "id": "11858",
+    "name": "Hurbanovo",
+    "lat": 47.8667,
+    "lon": 18.2
+  },
+  {
+    "id": "11867",
+    "name": "Prievidza",
+    "lat": 48.7667,
+    "lon": 18.6
+  },
+  {
+    "id": "11880",
+    "name": "Dudince",
+    "lat": 48.1667,
+    "lon": 18.8667
+  },
+  {
+    "id": "11903",
+    "name": "Sliac",
+    "lat": 48.65,
+    "lon": 19.15
+  },
+  {
+    "id": "11916",
+    "name": "Chopok",
+    "lat": 48.944,
+    "lon": 19.592
+  },
+  {
+    "id": "11927",
+    "name": "Lucenec",
+    "lat": 48.3333,
+    "lon": 19.7333
+  },
+  {
+    "id": "11933",
+    "name": "Strbske Pleso",
+    "lat": 49.1167,
+    "lon": 20.0833
+  },
+  {
+    "id": "11934",
+    "name": "Poprad / Tatry",
+    "lat": 49.0667,
+    "lon": 20.25
+  },
+  {
+    "id": "11938",
+    "name": "Telgart",
+    "lat": 48.85,
+    "lon": 20.1833
+  },
+  {
+    "id": "11968",
+    "name": "Kosice",
+    "lat": 48.6667,
+    "lon": 21.2167
+  },
+  {
+    "id": "11976",
+    "name": "Stropkov, Tisinec",
+    "lat": 49.2167,
+    "lon": 21.65
+  },
+  {
+    "id": "11978",
+    "name": "Milhostov",
+    "lat": 48.6667,
+    "lon": 21.7333
+  },
+  {
+    "id": "11993",
+    "name": "Kamenica Nad Cirochou",
+    "lat": 48.9333,
+    "lon": 22.0
+  },
+  {
+    "id": "13008",
+    "name": "Kredarica / Jezerce",
+    "lat": 46.3833,
+    "lon": 13.85
+  }
+]
