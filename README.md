@@ -93,6 +93,16 @@ Or one-off without Compose: `docker build -t smirkpocasi . && docker run -p 3000
 
 On the API VPS (split mode): `CORS_ORIGINS=https://pocasi.smht.eu`. On Vercel set `VITE_API_BASE` to this host.
 
+For Dokploy API-only (no UI on that host), set:
+
+```bash
+API_ONLY=true
+FRONTEND_URL=https://pocasi.smht.eu
+CORS_ORIGINS=https://pocasi.smht.eu
+```
+
+Non-`/api/*` requests then return 404 JSON, or redirect to `FRONTEND_URL` when set.
+
 ### Cloudflare Workers
 
 Use the Cloudflare Vite plugin path from [Start hosting docs](https://tanstack.com/start/latest/docs/framework/react/guide/hosting). A starter `wrangler.jsonc` is included. Swap the Vite Cloudflare plugin in for Nitro when targeting Workers (do not run both plugins at once).
