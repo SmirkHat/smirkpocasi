@@ -1,8 +1,9 @@
 import { normalizeNeighborStation } from './normalizers/neighborStation';
+import { apiUrl } from '@/lib/apiBase'
 
 export async function fetchGeosphere(location) {
   const { lat, lon } = location;
-  const response = await fetch(`/api/geosphere?lat=${lat}&lon=${lon}`);
+  const response = await fetch(apiUrl(`/api/geosphere?lat=${lat}&lon=${lon}`));
   if (!response.ok) {
     if (response.status === 404) return null;
     const error = await response.json().catch(() => ({}));

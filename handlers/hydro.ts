@@ -57,9 +57,12 @@ const SHMU_LEVELS_TTL = 5 * 60 * 1000;
 
 const MAX_STATION_KM = 150;
 const HISTORY_POINTS = 24;
+/** Map markers: keep a local radius so Praha doesn't download all of DE/SK. */
+const MAP_RADIUS_KM = 180;
+const MAP_MAX_MARKERS = 250;
 
-/** Approximate Germany bbox — PEGELONLINE federal gauges. */
-const DE_BOUNDS = { latMin: 47.2, latMax: 55.2, lonMin: 5.7, lonMax: 15.1 };
+/** Approximate Germany bbox — PEGELONLINE federal gauges (excludes most of CZ). */
+const DE_BOUNDS = { latMin: 47.25, latMax: 55.1, lonMin: 5.8, lonMax: 14.35 };
 /** Czechia + small border margin. */
 const CZ_BOUNDS = { latMin: 48.0, latMax: 51.6, lonMin: 11.5, lonMax: 19.6 };
 /** Slovakia. */
@@ -435,7 +438,9 @@ async function fetchInpocasiHydro(lat, lon) {
 async function fetchInpocasiMapStations(lat, lon) {
   try {
     const points = await ensureInpocasiCache();
-    return points.map((p) => parseInpocasiPoint(p, lat, lon)).filter(Boolean);
+    return points
+      .map((p) => parseInpocasiPoint(p, lat, lon))
+      .filter((s) => s && (s._dist == null || s._dist <= MAP_RADIUS_KM));
   } catch {
     return [];
   }
@@ -521,7 +526,7 @@ function mapPegelStation(s, lat, lon) {
 
 async function fetchPegelonlineNearby(lat, lon) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
-  if (!inBounds(lat, lon, DE_BOUNDS) && distanceKm(lat, lon, 51.0, 10.5) > 280) return [];
+  if (!inBounds(lat, lon, DE_BOUNDS) && distanceKm(lat, lon, 51.0, 10.5) > 220) return [];
 
   try {
     const all = await getPegelStations();
@@ -545,19 +550,17 @@ async function fetchPegelonlineNearby(lat, lon) {
   }
 }
 
-const MAP_PEGEL_MAX_KM = 450;
-
 /** PEGELONLINE gauges for the map (no per-station history). */
 async function fetchPegelMapStations(lat, lon) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
-  if (!inBounds(lat, lon, DE_BOUNDS) && distanceKm(lat, lon, 51.0, 10.5) > 280) return [];
+  if (!inBounds(lat, lon, DE_BOUNDS) && distanceKm(lat, lon, 51.0, 10.5) > 220) return [];
   try {
     const all = await getPegelStations();
     return all
       .map((s) => {
         const raw = mapPegelStation(s, lat, lon);
         if (!raw) return null;
-        if (raw._dist != null && raw._dist > MAP_PEGEL_MAX_KM) return null;
+        if (raw._dist != null && raw._dist > MAP_RADIUS_KM) return null;
         return enrichMetrics({ ...raw, id: `pegel-${raw.uuid}`, history: [] });
       })
       .filter(Boolean);
@@ -738,12 +741,7 @@ async function fetchShmuNearby(lat, lon) {
 
 async function fetchShmuMapStations(lat, lon) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
-  // Full SK network when the user is in CZ/SK coverage.
-  if (
-    !inBounds(lat, lon, SK_BOUNDS) &&
-    !inBounds(lat, lon, CZ_BOUNDS) &&
-    distanceKm(lat, lon, 48.7, 19.5) > 220
-  ) {
+  if (!inBounds(lat, lon, SK_BOUNDS) && distanceKm(lat, lon, 48.7, 19.5) > 220) {
     return [];
   }
 
@@ -751,9 +749,10 @@ async function fetchShmuMapStations(lat, lon) {
     const [geo, levels] = await Promise.all([getShmuGeojson(), getShmuOverviewLevels()]);
     const out = [];
     for (const [id, station] of geo) {
+      const dist = distanceKm(lat, lon, station.lat, station.lon);
+      if (!Number.isFinite(dist) || dist > MAP_RADIUS_KM) continue;
       const level = levels.get(id);
       const height = level?.height ?? null;
-      const dist = distanceKm(lat, lon, station.lat, station.lon);
       out.push(
         enrichMetrics({
           id: `shmu-${id}`,
@@ -773,7 +772,7 @@ async function fetchShmuMapStations(lat, lon) {
           source: 'shmu',
           attribution: 'SHMÚ',
           country: 'SK',
-          _dist: Number.isFinite(dist) ? dist : null,
+          _dist: dist,
         }),
       );
     }
@@ -842,145 +841,183 @@ function buildAttribution(stations) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try {
     const url = new URL(req.url, 'http://localhost');
     const lat = Number(url.searchParams.get('lat'));
     const lon = Number(url.searchParams.get('lon'));
-    const wantCz = !Number.isFinite(lat) || !Number.isFinite(lon) || inBounds(lat, lon, CZ_BOUNDS);
-    const wantDe = Number.isFinite(lat) && Number.isFinite(lon) && (
-      inBounds(lat, lon, DE_BOUNDS) || distanceKm(lat, lon, 51.0, 10.5) <= 280
+    const hasPoint = Number.isFinite(lat) && Number.isFinite(lon);
+
+    // Activate each network only when the point is in/near that country — not "all of CZ → SK+PL+DE".
+    const wantCz = !hasPoint || inBounds(lat, lon, CZ_BOUNDS);
+    const wantDe = hasPoint && (
+      inBounds(lat, lon, DE_BOUNDS) || distanceKm(lat, lon, 51.0, 10.5) <= 220
     );
-    const wantSk = Number.isFinite(lat) && Number.isFinite(lon) && (
-      inBounds(lat, lon, SK_BOUNDS) ||
-      inBounds(lat, lon, CZ_BOUNDS) ||
-      distanceKm(lat, lon, 48.7, 19.5) <= 220
+    const wantSk = hasPoint && (
+      inBounds(lat, lon, SK_BOUNDS) || distanceKm(lat, lon, 48.7, 19.5) <= 180
     );
-    const wantFr = Number.isFinite(lat) && Number.isFinite(lon) && (
+    const wantFr = hasPoint && (
       inBounds(lat, lon, FR_BOUNDS) || distanceKm(lat, lon, 46.5, 2.5) <= 320
     );
-    const wantUk = Number.isFinite(lat) && Number.isFinite(lon) && (
+    const wantUk = hasPoint && (
       inBounds(lat, lon, UK_BOUNDS) || distanceKm(lat, lon, 54.0, -2.5) <= 350
     );
-    const wantUs = Number.isFinite(lat) && Number.isFinite(lon) && (
+    const wantUs = hasPoint && (
       inBounds(lat, lon, US_BOUNDS) || distanceKm(lat, lon, 39.5, -98.0) <= 800
     );
-    const wantPl = Number.isFinite(lat) && Number.isFinite(lon) && (
-      inBounds(lat, lon, PL_BOUNDS) ||
-      inBounds(lat, lon, CZ_BOUNDS) ||
-      distanceKm(lat, lon, 52.0, 19.5) <= 320
+    const wantPl = hasPoint && (
+      inBounds(lat, lon, PL_BOUNDS) || distanceKm(lat, lon, 52.0, 19.5) <= 220
     );
-    const wantIe = Number.isFinite(lat) && Number.isFinite(lon) && (
+    const wantIe = hasPoint && (
       inBounds(lat, lon, IE_BOUNDS) || distanceKm(lat, lon, 53.4, -8.0) <= 280
     );
-    const wantCa = Number.isFinite(lat) && Number.isFinite(lon) && (
+    const wantCa = hasPoint && (
       inBounds(lat, lon, CA_BOUNDS) || distanceKm(lat, lon, 56.0, -96.0) <= 1200
     );
-    const wantCh = Number.isFinite(lat) && Number.isFinite(lon) && (
+    const wantCh = hasPoint && (
       inBounds(lat, lon, CH_BOUNDS) || distanceKm(lat, lon, 46.8, 8.2) <= 180
     );
 
-    let valid = [];
-    const mapLists = [];
+    const tasks = [];
 
     if (wantCz) {
-      const meta = await getMetadata();
-      const selected = selectStations(lat, lon, meta);
-
-      const stations = await Promise.all(
-        selected.map(async (station) => {
-          if (station.objID) {
-            const openData = await fetchOpenDataStation(station);
-            if (openData) {
-              return { ...openData, _dist: station.distance ?? null };
+      tasks.push((async () => {
+        const meta = await getMetadata();
+        const selected = selectStations(lat, lon, meta);
+        const stations = await Promise.all(
+          selected.map(async (station) => {
+            if (station.objID) {
+              const openData = await fetchOpenDataStation(station);
+              if (openData) {
+                return { ...openData, _dist: station.distance ?? null };
+              }
             }
-          }
 
-          const local = ALL_PROFILES.find(
-            (p) =>
-              p.name.toLowerCase() === String(station.name || '').toLowerCase() &&
-              p.river.toLowerCase() === String(station.river || '').toLowerCase(),
-          );
-          if (local) {
-            try {
-              const scraped = await scrapeStation(local, meta.byKey);
-              return { ...scraped, _dist: station.distance ?? null };
-            } catch {
-              return null;
+            const local = ALL_PROFILES.find(
+              (p) =>
+                p.name.toLowerCase() === String(station.name || '').toLowerCase() &&
+                p.river.toLowerCase() === String(station.river || '').toLowerCase(),
+            );
+            if (local) {
+              try {
+                const scraped = await scrapeStation(local, meta.byKey);
+                return { ...scraped, _dist: station.distance ?? null };
+              } catch {
+                return null;
+              }
             }
-          }
-          return null;
-        }),
-      );
+            return null;
+          }),
+        );
 
-      valid = stations.filter(Boolean);
-
-      const extras = await fetchInpocasiHydro(lat, lon);
-      if (extras.length) {
-        valid = mergeStations(valid, extras).slice(0, 12);
-      }
-
-      mapLists.push(await fetchInpocasiMapStations(lat, lon));
+        let profiles = stations.filter(Boolean);
+        const extras = await fetchInpocasiHydro(lat, lon);
+        if (extras.length) {
+          profiles = mergeStations(profiles, extras).slice(0, 12);
+        }
+        const mapStations = await fetchInpocasiMapStations(lat, lon);
+        return { profiles, mapStations };
+      })());
     }
 
     if (wantDe) {
-      const pegel = await fetchPegelonlineNearby(lat, lon);
-      if (pegel.length) {
-        valid = mergeStations(valid, pegel).slice(0, 16);
-      }
-      mapLists.push(await fetchPegelMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchPegelonlineNearby(lat, lon),
+          fetchPegelMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 16), mapStations };
+      })());
     }
 
     if (wantSk) {
-      const shmu = await fetchShmuNearby(lat, lon);
-      if (shmu.length) {
-        valid = mergeStations(valid, shmu).slice(0, 20);
-      }
-      mapLists.push(await fetchShmuMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchShmuNearby(lat, lon),
+          fetchShmuMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 20), mapStations };
+      })());
     }
 
     if (wantFr) {
-      const fr = await fetchHubeauNearby(lat, lon);
-      if (fr.length) valid = mergeStations(valid, fr).slice(0, 24);
-      mapLists.push(await fetchHubeauMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchHubeauNearby(lat, lon),
+          fetchHubeauMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
     }
 
     if (wantUk) {
-      const uk = await fetchEaNearby(lat, lon);
-      if (uk.length) valid = mergeStations(valid, uk).slice(0, 24);
-      mapLists.push(await fetchEaMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchEaNearby(lat, lon),
+          fetchEaMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
     }
 
     if (wantUs) {
-      const us = await fetchUsgsNearby(lat, lon);
-      if (us.length) valid = mergeStations(valid, us).slice(0, 24);
-      mapLists.push(await fetchUsgsMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchUsgsNearby(lat, lon),
+          fetchUsgsMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
     }
 
     if (wantPl) {
-      const pl = await fetchImgwNearby(lat, lon);
-      if (pl.length) valid = mergeStations(valid, pl).slice(0, 24);
-      mapLists.push(await fetchImgwMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchImgwNearby(lat, lon),
+          fetchImgwMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
     }
 
     if (wantIe) {
-      const ie = await fetchOpwNearby(lat, lon);
-      if (ie.length) valid = mergeStations(valid, ie).slice(0, 24);
-      mapLists.push(await fetchOpwMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchOpwNearby(lat, lon),
+          fetchOpwMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
     }
 
     if (wantCa) {
-      const ca = await fetchWscNearby(lat, lon);
-      if (ca.length) valid = mergeStations(valid, ca).slice(0, 24);
-      mapLists.push(await fetchWscMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchWscNearby(lat, lon),
+          fetchWscMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
     }
 
     if (wantCh) {
-      const ch = await fetchBafuNearby(lat, lon);
-      if (ch.length) valid = mergeStations(valid, ch).slice(0, 24);
-      mapLists.push(await fetchBafuMapStations(lat, lon));
+      tasks.push((async () => {
+        const [profiles, mapStations] = await Promise.all([
+          fetchBafuNearby(lat, lon),
+          fetchBafuMapStations(lat, lon),
+        ]);
+        return { profiles: profiles.slice(0, 24), mapStations };
+      })());
+    }
+
+    const parts = await Promise.all(tasks);
+    let valid = [];
+    const mapLists = [];
+    for (const part of parts) {
+      if (part.profiles?.length) valid = mergeStations(valid, part.profiles);
+      if (part.mapStations?.length) mapLists.push(part.mapStations);
     }
 
     if (!valid.length && !mapLists.some((list) => list.length)) {
@@ -990,7 +1027,8 @@ export default async function handler(req, res) {
     // Prefer detailed profiles on the map when they overlap bulk markers.
     const mapStations = mergeStations(valid, ...mapLists)
       .map(toMapMarker)
-      .filter(Boolean);
+      .filter(Boolean)
+      .slice(0, MAP_MAX_MARKERS);
 
     const attributionSources = [...valid, ...mapStations];
 

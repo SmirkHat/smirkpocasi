@@ -13,6 +13,8 @@
 - Data fetching belongs in hooks (TanStack Query later). No classes and no HOCs for data.
 - Browser-only UI (Leaflet maps) must use `<ClientOnly>` or `ssr: false` on the route.
 - Read server secrets from `process.env` inside handlers only — never at module scope, never with a `VITE_` prefix.
+- Optional split deploy: `VITE_API_BASE` (client, build-time) points UI at a remote API; `CORS_ORIGINS` on the API host. Empty `VITE_API_BASE` = same-origin `/api`. Client fetches must use `apiUrl()` from `src/lib/apiBase.ts`.
+- Home page loads via a single `GET /api/home` (see `handlers/home.ts` + `useHomeBundle`) — do not reintroduce per-provider browser fan-out on `/`.
 
 ## Dependencies
 - Before adding a dependency, ask whether it can be written in 10 clear lines without it.

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/apiBase'
 
 const CACHE_KEY = 'smirkpocasi:last-marine-v2';
 
@@ -27,7 +28,7 @@ export function useMarine(location = null, limit = 16) {
       params.set('lon', String(lon));
     }
 
-    fetch(`/api/marine?${params}`, { signal: controller.signal })
+    fetch(apiUrl(`/api/marine?${params}`), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('Teplotu moře se nepodařilo načíst.');
         return response.json();

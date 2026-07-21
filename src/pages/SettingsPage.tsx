@@ -13,6 +13,7 @@ import { useMeteostatHistory } from '../hooks/useMeteostatHistory';
 import { useNavigate } from '@tanstack/react-router';
 import { useWeatherStore } from '../store/weatherStore';
 import { formatPlaceName } from '../utils/formatters';
+import { apiUrl } from '@/lib/apiBase'
 
 const MIN_QUERY_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 250;
@@ -73,7 +74,7 @@ export default function SettingsPage() {
     const timeoutId = window.setTimeout(() => {
       setLoading(true);
       setError(null);
-      fetch(`/api/geocode?q=${encodeURIComponent(trimmedQuery)}`, { signal: controller.signal })
+      fetch(apiUrl(`/api/geocode?q=${encodeURIComponent(trimmedQuery)}`), { signal: controller.signal })
         .then(async (response) => {
           const payload = await response.json().catch(() => null);
           if (!response.ok) throw new Error(payload?.error || 'Našeptávání se nepodařilo.');

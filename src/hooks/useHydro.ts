@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CHMI_MAX_STATION_KM, locationInHydroCoverage } from '../utils/geo';
+import { apiUrl } from '@/lib/apiBase'
 
 const CACHE_KEY = 'smirkpocasi:last-hydro-v7';
 
@@ -40,7 +41,7 @@ export function useHydro(limit = 20, location = null, query = '') {
         params.set('lon', String(lon));
       }
 
-      fetch(`/api/hydro?${params}`, { signal: controller.signal })
+      fetch(apiUrl(`/api/hydro?${params}`), { signal: controller.signal })
         .then((response) => {
           if (!response.ok) throw new Error('Hydrologická data se nepodařilo načíst.');
           return response.json();

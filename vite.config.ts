@@ -15,6 +15,11 @@ const pwaOutDir =
     ? '.vercel/output/static'
     : '.output/public'
 
+/** Optional absolute API origin (split Vercel UI + VPS API). Used by PWA runtime cache. */
+const apiBaseForSw = String(process.env.VITE_API_BASE || '')
+  .trim()
+  .replace(/\/$/, '')
+
 export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
@@ -64,7 +69,16 @@ export default defineConfig({
         navigateFallback: null,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+            urlPattern: ({ url }) => {
+              if (url.pathname.startsWith('/api/')) return true
+              if (!apiBaseForSw) return false
+              try {
+                const base = new URL(apiBaseForSw)
+                return url.origin === base.origin && url.pathname.startsWith('/api/')
+              } catch {
+                return false
+              }
+            },
             handler: 'NetworkFirst',
             options: {
               cacheName: 'smirkpocasi-api',

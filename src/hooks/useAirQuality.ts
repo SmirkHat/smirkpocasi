@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react';
 import { fetchAQI } from '../api/aqi';
 import { normalizeOpenWeatherMapPollution } from '../api/normalizers/openweathermap';
 import { locationInCzechiaCoverage } from '../utils/geo';
+import { apiUrl } from '@/lib/apiBase'
 
 async function fetchChmiAqi(lat, lon) {
-  const response = await fetch(`/api/chmi-aqi?lat=${lat}&lon=${lon}`);
+  const response = await fetch(apiUrl(`/api/chmi-aqi?lat=${lat}&lon=${lon}`));
   if (!response.ok) throw new Error('ČHMÚ AQI unavailable');
   return response.json();
 }
 
 async function fetchOwmPollution(lat, lon) {
   const params = new URLSearchParams({ lat, lon, parts: 'pollution' });
-  const response = await fetch(`/api/openweathermap?${params}`);
+  const response = await fetch(apiUrl(`/api/openweathermap?${params}`));
   if (response.status === 501) return null;
   if (!response.ok) throw new Error('OpenWeatherMap AQI unavailable');
   const data = await response.json();
@@ -143,7 +144,10 @@ export function useAirQuality(location) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!lat || !lon) return undefined;
+    if (!lat || !lon) {
+      setLoading(false);
+      return undefined;
+    }
 
     let ignore = false;
     setLoading(true);

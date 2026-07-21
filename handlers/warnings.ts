@@ -1,5 +1,5 @@
 const CAP_URL = 'https://vystrahy-cr.chmi.cz/data/XOCZ50_OKPR.xml';
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 10 * 60 * 1000;
 
 let cache = null;
 let cacheAt = 0;
@@ -129,7 +129,7 @@ export default async function handler(req, res) {
     const all = await loadWarnings();
     const warnings = all.filter((warning) => coversLocation(warning.areas, lat, lon));
 
-    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     res.status(200).json({
       ok: true,
       generatedAt: new Date().toISOString(),

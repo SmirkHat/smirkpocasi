@@ -23,6 +23,8 @@ import { Route as ApiChmiRadarRouteImport } from './routes/api/chmi-radar'
 import { Route as ApiFmiRouteImport } from './routes/api/fmi'
 import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
 import { Route as ApiGeosphereRouteImport } from './routes/api/geosphere'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiHomeRouteImport } from './routes/api/home'
 import { Route as ApiHydroRouteImport } from './routes/api/hydro'
 import { Route as ApiImgwRouteImport } from './routes/api/imgw'
 import { Route as ApiInpocasiStationsRouteImport } from './routes/api/inpocasi-stations'
@@ -120,6 +122,16 @@ const ApiGeocodeRoute = ApiGeocodeRouteImport.update({
 const ApiGeosphereRoute = ApiGeosphereRouteImport.update({
   id: '/api/geosphere',
   path: '/api/geosphere',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHomeRoute = ApiHomeRouteImport.update({
+  id: '/api/home',
+  path: '/api/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHydroRoute = ApiHydroRouteImport.update({
@@ -278,6 +290,8 @@ export interface FileRoutesByFullPath {
   '/api/fmi': typeof ApiFmiRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/geosphere': typeof ApiGeosphereRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/home': typeof ApiHomeRoute
   '/api/hydro': typeof ApiHydroRoute
   '/api/imgw': typeof ApiImgwRoute
   '/api/inpocasi-stations': typeof ApiInpocasiStationsRoute
@@ -322,6 +336,8 @@ export interface FileRoutesByTo {
   '/api/fmi': typeof ApiFmiRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/geosphere': typeof ApiGeosphereRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/home': typeof ApiHomeRoute
   '/api/hydro': typeof ApiHydroRoute
   '/api/imgw': typeof ApiImgwRoute
   '/api/inpocasi-stations': typeof ApiInpocasiStationsRoute
@@ -367,6 +383,8 @@ export interface FileRoutesById {
   '/api/fmi': typeof ApiFmiRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/geosphere': typeof ApiGeosphereRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/home': typeof ApiHomeRoute
   '/api/hydro': typeof ApiHydroRoute
   '/api/imgw': typeof ApiImgwRoute
   '/api/inpocasi-stations': typeof ApiInpocasiStationsRoute
@@ -413,6 +431,8 @@ export interface FileRouteTypes {
     | '/api/fmi'
     | '/api/geocode'
     | '/api/geosphere'
+    | '/api/health'
+    | '/api/home'
     | '/api/hydro'
     | '/api/imgw'
     | '/api/inpocasi-stations'
@@ -457,6 +477,8 @@ export interface FileRouteTypes {
     | '/api/fmi'
     | '/api/geocode'
     | '/api/geosphere'
+    | '/api/health'
+    | '/api/home'
     | '/api/hydro'
     | '/api/imgw'
     | '/api/inpocasi-stations'
@@ -501,6 +523,8 @@ export interface FileRouteTypes {
     | '/api/fmi'
     | '/api/geocode'
     | '/api/geosphere'
+    | '/api/health'
+    | '/api/home'
     | '/api/hydro'
     | '/api/imgw'
     | '/api/inpocasi-stations'
@@ -546,6 +570,8 @@ export interface RootRouteChildren {
   ApiFmiRoute: typeof ApiFmiRoute
   ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiGeosphereRoute: typeof ApiGeosphereRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiHomeRoute: typeof ApiHomeRoute
   ApiHydroRoute: typeof ApiHydroRoute
   ApiImgwRoute: typeof ApiImgwRoute
   ApiInpocasiStationsRoute: typeof ApiInpocasiStationsRoute
@@ -674,6 +700,20 @@ declare module '@tanstack/react-router' {
       path: '/api/geosphere'
       fullPath: '/api/geosphere'
       preLoaderRoute: typeof ApiGeosphereRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/home': {
+      id: '/api/home'
+      path: '/api/home'
+      fullPath: '/api/home'
+      preLoaderRoute: typeof ApiHomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/hydro': {
@@ -890,6 +930,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiFmiRoute: ApiFmiRoute,
   ApiGeocodeRoute: ApiGeocodeRoute,
   ApiGeosphereRoute: ApiGeosphereRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiHomeRoute: ApiHomeRoute,
   ApiHydroRoute: ApiHydroRoute,
   ApiImgwRoute: ApiImgwRoute,
   ApiInpocasiStationsRoute: ApiInpocasiStationsRoute,
@@ -922,12 +964,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

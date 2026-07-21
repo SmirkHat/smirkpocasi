@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/apiBase'
 
 const IMAGE_LOOKUP_VERSION = 'v21';
 const CACHE_KEY = `smirkpocasi:place-image:${IMAGE_LOOKUP_VERSION}`;
@@ -69,7 +70,7 @@ export function usePlaceImage(location) {
       version: IMAGE_LOOKUP_VERSION
     });
 
-    fetch(`/api/place-image?${params}`, { signal: controller.signal })
+    fetch(apiUrl(`/api/place-image?${params}`), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('Obrázek místa se nepodařilo načíst.');
         return response.json();

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { locationInCzechiaCoverage } from '../utils/geo';
+import { apiUrl } from '@/lib/apiBase'
 
 export function useWarnings(location) {
   const lat = location?.lat;
@@ -24,7 +25,7 @@ export function useWarnings(location) {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/warnings?lat=${lat}&lon=${lon}`, { signal: controller.signal })
+    fetch(apiUrl(`/api/warnings?lat=${lat}&lon=${lon}`), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('Výstrahy se nepodařilo načíst.');
         return response.json();

@@ -1,0 +1,14 @@
+# Replace hostnames before first start.
+# DNS A/AAAA → this VPS. For nested api.pocasi.* use Cloudflare DNS-only (grey cloud)
+# so Let's Encrypt works on the origin (free CF proxy SSL won't cover nested subs).
+
+api.pocasi.smht.eu {
+	encode gzip
+	reverse_proxy app:3000
+}
+
+# Optional: same box as full-stack fallback (comment out if API-only).
+# pocasi.smht.eu {
+# 	encode gzip
+# 	reverse_proxy app:3000
+# }

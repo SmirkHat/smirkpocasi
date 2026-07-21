@@ -28,8 +28,15 @@ import { fetchWunderground } from '../api/wunderground';
 import { fetchXweather } from '../api/xweather';
 import { fetchYr } from '../api/yr';
 
-const OPTIONAL_API_PROVIDERS_ENABLED = import.meta.env.VITE_ENABLE_API_KEY_PROVIDERS === 'true';
-const EXPERIMENTAL_SOURCES_ENABLED = import.meta.env.VITE_ENABLE_EXPERIMENTAL_SOURCES === 'true';
+const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+const OPTIONAL_API_PROVIDERS_ENABLED =
+  viteEnv.VITE_ENABLE_API_KEY_PROVIDERS === 'true' ||
+  (typeof process !== 'undefined' && process.env?.VITE_ENABLE_API_KEY_PROVIDERS === 'true') ||
+  (typeof process !== 'undefined' && process.env?.ENABLE_API_KEY_PROVIDERS === 'true');
+const EXPERIMENTAL_SOURCES_ENABLED =
+  viteEnv.VITE_ENABLE_EXPERIMENTAL_SOURCES === 'true' ||
+  (typeof process !== 'undefined' && process.env?.VITE_ENABLE_EXPERIMENTAL_SOURCES === 'true') ||
+  (typeof process !== 'undefined' && process.env?.ENABLE_EXPERIMENTAL_SOURCES === 'true');
 
 export const PROVIDERS = [
   {

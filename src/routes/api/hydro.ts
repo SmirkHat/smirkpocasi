@@ -1,11 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import handler from '../../../handlers/hydro'
-import { adaptVercelHandler } from '@/server/adaptVercelHandler'
+import { apiHandlers } from '@/server/adaptVercelHandler'
 
 export const Route = createFileRoute('/api/hydro')({
   server: {
-    handlers: {
-      GET: adaptVercelHandler(handler),
-    },
+    handlers: apiHandlers(handler),
   },
 })

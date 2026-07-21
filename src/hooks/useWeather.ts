@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWeatherStore } from '../store/weatherStore';
+import { apiUrl } from '@/lib/apiBase'
 
 function cacheMatchesLocation(cached, location) {
   if (!cached?.data || !location?.lat || !location?.lon) return false;
@@ -25,7 +26,7 @@ export function useWeather(location) {
     if (showSkeleton) setLoading(true);
     setError(null);
 
-    fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`, { signal: controller.signal })
+    fetch(apiUrl(`/api/weather?lat=${location.lat}&lon=${location.lon}`), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('Počasí se nepodařilo načíst.');
         return response.json();

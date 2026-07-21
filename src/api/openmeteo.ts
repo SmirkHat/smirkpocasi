@@ -1,8 +1,10 @@
 import { normalizeOpenMeteo } from './normalizers/openmeteo';
+import { apiUrl } from '@/lib/apiBase'
 
 const OPEN_METEO_HOST = 'https://api.open-meteo.com';
 const ENSEMBLE_METEO_HOST = 'https://ensemble-api.open-meteo.com';
-const OPEN_METEO_DEV_PROXY_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_OPEN_METEO_DEV_PROXY === 'true';
+const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+const OPEN_METEO_DEV_PROXY_ENABLED = Boolean(viteEnv.DEV) && viteEnv.VITE_ENABLE_OPEN_METEO_DEV_PROXY === 'true';
 const CURRENT_FIELDS = [
   'temperature_2m',
   'apparent_temperature',
@@ -21,7 +23,7 @@ const CURRENT_FIELDS = [
 
 async function fetchOpenMeteoJson(url) {
   const requestUrl = OPEN_METEO_DEV_PROXY_ENABLED
-    ? `/api/openmeteo-proxy?url=${encodeURIComponent(url)}`
+    ? apiUrl(`/api/openmeteo-proxy?url=${encodeURIComponent(url)}`)
     : url;
   const response = await fetch(requestUrl);
   const data = await response.json().catch(() => null);
@@ -51,7 +53,7 @@ const ENSEMBLE_MEAN_FIELDS = [
 ].join(',');
 
 export async function fetchOpenMeteo(location) {
-  const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`);
+  const response = await fetch(apiUrl(`/api/weather?lat=${location.lat}&lon=${location.lon}`));
 
   if (!response.ok) throw new Error('Open-Meteo request failed.');
 

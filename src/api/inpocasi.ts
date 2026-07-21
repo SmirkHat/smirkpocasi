@@ -1,7 +1,8 @@
 import { normalizeInpocasiStation } from './normalizers/inpocasi';
+import { apiUrl } from '@/lib/apiBase'
 
 export async function fetchInpocasiStations(location) {
-  const response = await fetch(`/api/inpocasi-stations?lat=${location.lat}&lon=${location.lon}`);
+  const response = await fetch(apiUrl(`/api/inpocasi-stations?lat=${location.lat}&lon=${location.lon}`));
   if (response.status === 404) return null;
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

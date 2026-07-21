@@ -25,9 +25,12 @@ function pollutant(value) {
   return value != null ? `${value} µg/m³` : '—';
 }
 
-export default function AirQuality() {
+export default function AirQuality({ data: dataProp = undefined, loading: loadingProp = undefined, error: errorProp = undefined } = {}) {
   const location = useWeatherStore((state) => state.location);
-  const { data, loading, error } = useAirQuality(location);
+  const fetched = useAirQuality(dataProp === undefined ? location : null);
+  const data = dataProp === undefined ? fetched.data : dataProp;
+  const loading = loadingProp === undefined ? fetched.loading : loadingProp;
+  const error = errorProp === undefined ? fetched.error : errorProp;
 
   if (loading && !data) {
     return (

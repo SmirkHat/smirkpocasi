@@ -1,11 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import handler from '../../../handlers/meteoam'
-import { adaptVercelHandler } from '@/server/adaptVercelHandler'
+import { apiHandlers } from '@/server/adaptVercelHandler'
 
 export const Route = createFileRoute('/api/meteoam')({
   server: {
-    handlers: {
-      GET: adaptVercelHandler(handler),
-    },
+    handlers: apiHandlers(handler),
   },
 })

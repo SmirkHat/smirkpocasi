@@ -11,6 +11,7 @@ import { buildExtrapolatedRainviewerFrames, estimateRainviewerMotion } from '../
 import { RAINVIEWER_RECOLOR_SOURCE_SCHEME, createRainviewerColorTable, colorizeChmiRadar } from '../config/rainviewer';
 import { formatPlaceName } from '../utils/formatters';
 import 'leaflet/dist/leaflet.css';
+import { apiUrl } from '@/lib/apiBase'
 
 const RAINVIEWER_MAX_NATIVE_ZOOM = 7;
 const MAP_MAX_ZOOM = 20;
@@ -410,7 +411,7 @@ function frameStatusLabel(frame, frameIndex, observationIndex) {
 }
 
 function fetchChmiRadarFrames() {
-  chmiRequest ||= fetch('/api/chmi-radar?action=frames')
+  chmiRequest ||= fetch(apiUrl('/api/chmi-radar?action=frames'))
     .then((response) => {
       if (!response.ok) throw new Error('ČHMÚ radar metadata failed.');
       return response.json();
@@ -422,7 +423,7 @@ function fetchChmiRadarFrames() {
 }
 
 function fetchRainviewerMaps() {
-  rainviewerRequest ||= fetch('/api/rainviewer')
+  rainviewerRequest ||= fetch(apiUrl('/api/rainviewer'))
     .then((response) => {
       if (!response.ok) throw new Error('RainViewer metadata request failed.');
       return response.json();

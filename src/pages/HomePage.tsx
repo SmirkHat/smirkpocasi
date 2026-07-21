@@ -12,10 +12,8 @@ import NerdZone from '../components/NerdZone'
 import RadarMap from '../components/RadarMap'
 import WarningBanner from '../components/WarningBanner'
 import WeatherHero, { WeatherHeroSkeleton } from '../components/WeatherHero'
+import { useHomeBundle } from '../hooks/useHomeBundle'
 import { usePlaceImage } from '../hooks/usePlaceImage'
-import { useWarnings } from '../hooks/useWarnings'
-import { useWeather } from '../hooks/useWeather'
-import { useWeatherConsensus } from '../hooks/useWeatherConsensus'
 import { useWeatherStore } from '../store/weatherStore'
 import { firstDailyValue } from '../utils/forecast'
 import { getWeatherInfo } from '../utils/weatherCodes'
@@ -56,18 +54,17 @@ function RadarPreviewCard({ location, className }: { location: { lat?: number; l
 
 export default function HomePage() {
   const location = useWeatherStore((state) => state.location)
-  const weather = useWeather(location)
-  const consensus = useWeatherConsensus(location)
+  const home = useHomeBundle(location)
   const placeImage = usePlaceImage(location)
-  const warnings = useWarnings(location)
 
-  const weatherData: any = weather.data
+  const weatherData: any = home.weather
   const current = weatherData?.current
   const daily = weatherData?.daily
+  const consensus = home.consensus
   const consensusValues = consensus?.consensus
   const info = getWeatherInfo(consensusValues?.weatherCode ?? current?.weathercode)
 
-  const hero = weather.loading && !current ? (
+  const hero = home.loading && !current ? (
     <WeatherHeroSkeleton />
   ) : (
     <WeatherHero
@@ -79,18 +76,18 @@ export default function HomePage() {
       tempMin={firstDailyValue(daily, 'temperature_2m_min')}
       image={placeImage}
       credit={photoCredit(placeImage)}
-      offline={weather.offline}
+      offline={home.offline}
     />
   )
 
   return (
     <AppPage hero={hero}>
-      <WarningBanner attribution={warnings.attribution} warnings={warnings.warnings} />
+      <WarningBanner attribution={home.warningsAttribution} warnings={home.warnings} />
 
-      {weather.error && !weather.data ? (
+      {home.error && !home.weather ? (
         <Alert className="mb-4" variant="error">
           <AlertTitle>Počasí se nepodařilo načíst</AlertTitle>
-          <AlertDescription>{weather.error}</AlertDescription>
+          <AlertDescription>{home.error}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -101,8 +98,8 @@ export default function HomePage() {
           style={{ animationDelay: '60ms' }}
         >
           <ForecastExplorer
-            hourly={weather.data?.hourly}
-            daily={weather.data?.daily}
+            hourly={home.weather?.hourly}
+            daily={home.weather?.daily}
             forecastSeries={consensus.forecastSeries}
           />
         </section>
@@ -112,8 +109,8 @@ export default function HomePage() {
         </aside>
 
         <aside className="anim-rise flex flex-col gap-3 lg:col-span-4" aria-label="Kvalita ovzduší a srážky" style={{ animationDelay: '140ms' }}>
-          <AirQuality />
-          <HumidityPrecipTiles weather={weather.data} consensusValues={consensusValues} />
+          <AirQuality data={home.aqi} loading={home.loading && !home.aqi} error={null} />
+          <HumidityPrecipTiles weather={home.weather} consensusValues={consensusValues} />
         </aside>
 
         <section
@@ -121,12 +118,12 @@ export default function HomePage() {
           aria-label="Aktuální podmínky"
           style={{ animationDelay: '200ms' }}
         >
-          <MetricsGrid weather={weather.data} consensusValues={consensusValues} />
+          <MetricsGrid weather={home.weather} consensusValues={consensusValues} />
         </section>
       </div>
 
       <div className="anim-rise mt-5" style={{ animationDelay: '260ms' }}>
-        <NerdZone consensus={consensus} updatedAt={weather.updatedAt} offline={weather.offline} />
+        <NerdZone consensus={consensus} updatedAt={home.weatherUpdatedAt} offline={home.offline} />
       </div>
     </AppPage>
   )
