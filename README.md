@@ -8,7 +8,7 @@ Open-source Czech weather PWA for the SmirkHat.org community. The UI is Czech; c
 - Tailwind CSS v4
 - Local coss UI-style primitives in `src/components/ui`
 - Vite 7 + Nitro (Node server output)
-- Server routes under `src/routes/api/*` (legacy handlers in `/api` adapted)
+- Server routes under `src/routes/api/*` (legacy handlers in `/handlers` adapted)
 - Leaflet + react-leaflet 5
 - vite-plugin-pwa
 - Zustand

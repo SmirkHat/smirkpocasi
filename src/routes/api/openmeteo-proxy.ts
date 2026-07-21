@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import handler from '../../../api/openmeteo-proxy'
+import handler from '../../../handlers/openmeteo-proxy'
 import { adaptVercelHandler } from '@/server/adaptVercelHandler'
 
 export const Route = createFileRoute('/api/openmeteo-proxy')({

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import handler from '../../../api/shmu'
+import handler from '../../../handlers/shmu'
 import { adaptVercelHandler } from '@/server/adaptVercelHandler'
 
 export const Route = createFileRoute('/api/shmu')({

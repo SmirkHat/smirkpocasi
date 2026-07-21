@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import handler from '../../../api/nws'
+import handler from '../../../handlers/nws'
 import { adaptVercelHandler } from '@/server/adaptVercelHandler'
 
 export const Route = createFileRoute('/api/nws')({

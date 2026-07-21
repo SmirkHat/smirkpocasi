@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import handler from '../../../api/warnings'
+import handler from '../../../handlers/warnings'
 import { adaptVercelHandler } from '@/server/adaptVercelHandler'
 
 export const Route = createFileRoute('/api/warnings')({

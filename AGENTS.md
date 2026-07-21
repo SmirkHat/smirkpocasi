@@ -8,7 +8,7 @@
 
 ## Architecture
 - App is **TanStack Start** (React 19 + TypeScript) with file routes in `src/routes`.
-- Public HTTP APIs are Start **server routes** in `src/routes/api/*`, wrapping handlers in `/api` via `adaptVercelHandler`. Prefer Web `Request`/`Response` for new endpoints.
+- Public HTTP APIs are Start **server routes** in `src/routes/api/*`, wrapping handlers in `/handlers` via `adaptVercelHandler`. Prefer Web `Request`/`Response` for new endpoints.
 - Global state uses Zustand. Do not add Redux or React Context for global app data.
 - Data fetching belongs in hooks (TanStack Query later). No classes and no HOCs for data.
 - Browser-only UI (Leaflet maps) must use `<ClientOnly>` or `ssr: false` on the route.
