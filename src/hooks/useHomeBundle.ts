@@ -5,6 +5,7 @@ import { pendingSources } from '../utils/consensusCore'
 const CACHE_KEY = 'smirkpocasi:last-home:v1'
 
 function readCache() {
+  if (typeof window === 'undefined') return null
   try {
     return JSON.parse(localStorage.getItem(CACHE_KEY))
   } catch {
@@ -31,12 +32,12 @@ const emptyConsensus = () => ({
 /**
  * Single home request: weather + warnings + AQI + full consensus.
  * Server fans out upstreams in-process and caches aggressively.
+ *
+ * localStorage is only read after mount so SSR HTML matches the first client paint.
  */
 export function useHomeBundle(location) {
-  const initial = readCache()
-  const relevant = cacheMatches(initial, location)
-  const [bundle, setBundle] = useState(() => (relevant ? initial : null))
-  const [loading, setLoading] = useState(() => !relevant)
+  const [bundle, setBundle] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -44,7 +45,10 @@ export function useHomeBundle(location) {
 
     const controller = new AbortController()
     const cached = readCache()
-    if (!cacheMatches(cached, location)) {
+    if (cacheMatches(cached, location)) {
+      setBundle(cached)
+      setLoading(false)
+    } else {
       setBundle(null)
       setLoading(true)
     }

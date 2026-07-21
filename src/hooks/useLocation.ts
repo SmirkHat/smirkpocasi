@@ -53,6 +53,14 @@ async function queryGeolocationPermission() {
 
 async function fetchIpLocation(signal?: AbortSignal): Promise<DetectedLocation> {
   const response = await fetch(apiUrl('/api/geo'), { signal })
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      response.ok
+        ? 'Geo endpoint nevrátil JSON.'
+        : `Geo endpoint není dostupný (${response.status}).`,
+    )
+  }
   const payload = await response.json().catch(() => null)
   if (!response.ok) {
     throw new Error(payload?.error || 'Polohu z IP se nepodařilo zjistit.')

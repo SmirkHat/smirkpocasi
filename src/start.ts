@@ -1,9 +1,50 @@
 import { createMiddleware, createStart } from '@tanstack/react-start'
+import { corsHeaders } from '@/server/adaptVercelHandler'
 
 function isApiOnlyEnabled() {
   const raw = String(process.env.API_ONLY || '').trim().toLowerCase()
   return raw === '1' || raw === 'true' || raw === 'yes'
 }
+
+function isApiPath(pathname: string) {
+  return pathname === '/api' || pathname.startsWith('/api/')
+}
+
+/** Ensure API responses always carry CORS, even when a route is missing. */
+const apiCorsMiddleware = createMiddleware({ type: 'request' }).server(
+  async ({ next, request }) => {
+    const url = new URL(request.url)
+    if (!isApiPath(url.pathname)) return next()
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders(request) })
+    }
+
+    const response = await next()
+    const contentType = response.headers.get('content-type') || ''
+
+    // Missing API routes often fall through to the HTML app shell — convert to JSON 404.
+    if (
+      response.status === 404 &&
+      contentType.includes('text/html')
+    ) {
+      return Response.json(
+        { error: 'API route not found.', path: url.pathname },
+        { status: 404, headers: corsHeaders(request) },
+      )
+    }
+
+    const headers = new Headers(response.headers)
+    for (const [key, value] of Object.entries(corsHeaders(request))) {
+      headers.set(key, value)
+    }
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    })
+  },
+)
 
 /** When API_ONLY=true, only `/api/*` is served (Dokploy API host). */
 const apiOnlyMiddleware = createMiddleware({ type: 'request' }).server(
@@ -11,7 +52,7 @@ const apiOnlyMiddleware = createMiddleware({ type: 'request' }).server(
     if (!isApiOnlyEnabled()) return next()
 
     const url = new URL(request.url)
-    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
+    if (isApiPath(url.pathname)) {
       return next()
     }
 
@@ -27,11 +68,11 @@ const apiOnlyMiddleware = createMiddleware({ type: 'request' }).server(
         error: 'API-only host',
         hint: 'Use /api/* on this origin, or set FRONTEND_URL to redirect browsers.',
       },
-      { status: 404 },
+      { status: 404, headers: corsHeaders(request) },
     )
   },
 )
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [apiOnlyMiddleware],
+  requestMiddleware: [apiOnlyMiddleware, apiCorsMiddleware],
 }))

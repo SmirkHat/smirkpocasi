@@ -15,13 +15,14 @@ function cacheKey(location) {
 }
 
 function readCache(key) {
+  if (typeof window === 'undefined') return undefined
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
-    const item = cached?.[key];
-    if (!item || Date.now() - item.updatedAt > CACHE_TTL) return undefined;
-    return item.data;
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
+    const item = cached?.[key]
+    if (!item || Date.now() - item.updatedAt > CACHE_TTL) return undefined
+    return item.data
   } catch {
-    return undefined;
+    return undefined
   }
 }
 
@@ -45,47 +46,48 @@ function cleanupOldImageCaches() {
 }
 
 export function usePlaceImage(location) {
-  const key = cacheKey(location);
-  const [data, setData] = useState(() => (key ? readCache(key) ?? null : null));
+  const key = cacheKey(location)
+  // Always start empty so SSR and the first client paint match.
+  const [data, setData] = useState(null)
 
   useEffect(() => {
-    cleanupOldImageCaches();
+    cleanupOldImageCaches()
 
     if (!key || location?.lat == null || location?.lon == null) {
-      setData(null);
-      return undefined;
+      setData(null)
+      return undefined
     }
 
-    const cached = readCache(key);
+    const cached = readCache(key)
     if (cached !== undefined) {
-      setData(cached);
-      return undefined;
+      setData(cached)
+      return undefined
     }
 
-    const controller = new AbortController();
+    const controller = new AbortController()
     const params = new URLSearchParams({
       lat: String(location.lat),
       lon: String(location.lon),
       name: location.fullName || location.name || '',
-      version: IMAGE_LOOKUP_VERSION
-    });
+      version: IMAGE_LOOKUP_VERSION,
+    })
 
     fetch(apiUrl(`/api/place-image?${params}`), { signal: controller.signal })
       .then((response) => {
-        if (!response.ok) throw new Error('Obrázek místa se nepodařilo načíst.');
-        return response.json();
+        if (!response.ok) throw new Error('Obrázek místa se nepodařilo načíst.')
+        return response.json()
       })
       .then((image) => {
-        const next = image?.imageUrl ? image : null;
-        writeCache(key, next);
-        setData(next);
+        const next = image?.imageUrl ? image : null
+        writeCache(key, next)
+        setData(next)
       })
       .catch((error) => {
-        if (error.name !== 'AbortError') setData(null);
-      });
+        if (error.name !== 'AbortError') setData(null)
+      })
 
-    return () => controller.abort();
-  }, [key, location?.lat, location?.lon, location?.fullName, location?.name]);
+    return () => controller.abort()
+  }, [key, location?.lat, location?.lon, location?.fullName, location?.name])
 
-  return data;
+  return data
 }

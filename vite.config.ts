@@ -69,12 +69,19 @@ export default defineConfig({
         navigateFallback: null,
         runtimeCaching: [
           {
+            // Never cache private/geo lookups; avoid SW fighting CORS on failures.
+            urlPattern: ({ url }) => url.pathname === '/api/geo',
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: ({ url }) => {
-              if (url.pathname.startsWith('/api/')) return true
+              if (!url.pathname.startsWith('/api/')) return false
+              if (url.pathname === '/api/geo') return false
+              // Same-origin /api on the UI host
+              if (url.origin === self.location.origin) return true
               if (!apiBaseForSw) return false
               try {
-                const base = new URL(apiBaseForSw)
-                return url.origin === base.origin && url.pathname.startsWith('/api/')
+                return url.origin === new URL(apiBaseForSw).origin
               } catch {
                 return false
               }
