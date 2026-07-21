@@ -263,7 +263,9 @@ export async function fetchHubeauMapStations(lat, lon) {
     const byCode = new Map(stations.map((s) => [s.code, s]));
     const out = [];
     for (const [code, obs] of latest) {
-      const meta = byCode.get(code);
+      const meta = /** @type {{ lat?: number, lon?: number, name?: string, river?: string } | undefined} */ (
+        byCode.get(code)
+      );
       const slat = meta?.lat ?? obs.lat;
       const slon = meta?.lon ?? obs.lon;
       if (slat == null || slon == null) continue;
@@ -877,7 +879,10 @@ async function getChStations() {
   }
   const out = [];
   for (const [id, meta] of Object.entries(locations)) {
-    const details = meta.details || {};
+    const details =
+      /** @type {{ lat?: number, lon?: number, name?: string, 'water-body-name'?: string }} */ (
+        meta?.details || {}
+      );
     const slat = finite(details.lat);
     const slon = finite(details.lon);
     if (slat == null || slon == null) continue;

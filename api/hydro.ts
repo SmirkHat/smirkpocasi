@@ -632,11 +632,11 @@ async function getShmuOverviewLevels() {
 function parseShmuSpaFromHtml(html) {
   const spa = { spa1: null, spa2: null, spa3: null };
   const patterns = [
-    [/1\.\s*stupeň\s*PA[^0-9]{0,120}?(\d+)\s*cm/i, 'spa1'],
-    [/2\.\s*stupeň\s*PA[^0-9]{0,120}?(\d+)\s*cm/i, 'spa2'],
-    [/3\.\s*stupeň\s*PA[^0-9]{0,120}?(\d+)\s*cm/i, 'spa3'],
+    { re: /1\.\s*stupeň\s*PA[^0-9]{0,120}?(\d+)\s*cm/i, key: 'spa1' },
+    { re: /2\.\s*stupeň\s*PA[^0-9]{0,120}?(\d+)\s*cm/i, key: 'spa2' },
+    { re: /3\.\s*stupeň\s*PA[^0-9]{0,120}?(\d+)\s*cm/i, key: 'spa3' },
   ];
-  for (const [re, key] of patterns) {
+  for (const { re, key } of patterns) {
     const m = html.match(re);
     if (m) spa[key] = spaLevel(m[1]);
   }

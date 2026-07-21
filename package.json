@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev --port 5173",
     "generate-routes": "tsr generate",
-    "build": "vite build && node scripts/copy-pwa.mjs",
+    "build": "vite build && node scripts/finalize-pwa.mjs",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "test:weather-sources": "node scripts/weather-source-test.js",
