@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { HiArrowLeft, HiHome, HiMap, HiMapPin } from 'react-icons/hi2'
+import { HiArrowLeft, HiExclamationTriangle, HiHome, HiMap, HiMapPin } from 'react-icons/hi2'
 import { WiRaindrop } from 'react-icons/wi'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useImagePalette } from '../hooks/useImagePalette'
@@ -15,6 +16,34 @@ const navItems = [
   { path: '/hydro', label: 'Voda', Icon: WiRaindrop },
   { path: '/settings', label: 'Lokace', Icon: HiMapPin },
 ]
+
+function PrepNotice() {
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 pt-3 sm:px-6 sm:pt-4 lg:px-8">
+      <Alert variant="warning">
+        <HiExclamationTriangle className="size-5 shrink-0" aria-hidden="true" />
+        <AlertTitle>Aplikace je v přípravě</AlertTitle>
+        <AlertDescription>
+          <p>
+            UI může být rozbité a data nemusí fungovat spolehlivě. Zatím se na SmirkPočasí prosím
+            nespoléhej — jde o vývojovou verzi.
+          </p>
+          <p>
+            Hlášení chyb a poznámky piš hlavnímu vývojáři{' '}
+            <span className="font-medium text-foreground">@de_dast</span> na Discordu, nebo na{' '}
+            <a
+              className="font-medium text-foreground underline underline-offset-2 hover:no-underline"
+              href="mailto:dast@smirkhat.org"
+            >
+              dast@smirkhat.org
+            </a>
+            .
+          </p>
+        </AlertDescription>
+      </Alert>
+    </div>
+  )
+}
 
 function TopNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -142,6 +171,7 @@ export function AppPage({
       <PlaceBackdrop imageUrl={placeImage?.imageUrl} />
       <div className={cn('relative z-10', fillViewport && 'flex min-h-0 flex-1 flex-col')}>
         <TopNav />
+        <PrepNotice />
         {hero}
         <main
           className={cn(
