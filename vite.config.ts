@@ -23,7 +23,16 @@ export default defineConfig({
     viteReact(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'logo.svg', 'icons/apple-touch-icon.png', 'icons/icon-180.png', 'icons/icon-32.png', 'icons/icon-16.png'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon.svg',
+        'favicon-96x96.png',
+        'apple-touch-icon.png',
+        'web-app-manifest-192x192.png',
+        'web-app-manifest-512x512.png',
+        'site.webmanifest',
+        'logo.svg',
+      ],
       manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
