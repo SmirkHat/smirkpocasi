@@ -1,0 +1,10 @@
+# Cloudflare Workers deployment for TanStack Start
+# Use with the Cloudflare Vite plugin path documented in README / MIGRATION_PLAN.
+# Default local/Vercel/Docker builds use Nitro instead of this file.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "smirkpocasi",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry"
+}

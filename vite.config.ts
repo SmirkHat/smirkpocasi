@@ -1,0 +1,53 @@
+import { defineConfig } from 'vite'
+import { devtools } from '@tanstack/devtools-vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { nitro } from 'nitro/vite'
+import viteReact from '@vitejs/plugin-react'
+import viteTsConfigPaths from 'vite-tsconfig-paths'
+import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
+  server: {
+    allowedHosts: ['prcek.snapper-darter.ts.net', 'prcek.local'],
+  },
+  plugins: [
+    devtools(),
+    viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
+    tailwindcss(),
+    tanstackStart(),
+    nitro(),
+    viteReact(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'logo.svg', 'icons/apple-touch-icon.png', 'icons/icon-180.png', 'icons/icon-32.png', 'icons/icon-16.png'],
+      manifest: false,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: null,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'smirkpocasi-api',
+              networkTimeoutSeconds: 6,
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 12 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/(tile.openstreetmap.org|tilecache.rainviewer.com)\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'smirkpocasi-map-tiles',
+              expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            },
+          },
+        ],
+      },
+    }),
+  ],
+})

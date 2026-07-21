@@ -1,0 +1,20 @@
+node_modules
+dist
+.output
+.vercel
+.env
+.env.local
+.DS_Store
+*.log
+weather_test_*
+
+# Local research / scratch (not for production)
+*.har
+gemini.txt
+idk.html
+pocasicz.html
+chmi-legend-raw.png
+GetThumbNail.webp
+weather_source_calibration_report.md
+zprava-hluboky-vyzkum*.md
+[{]*.png

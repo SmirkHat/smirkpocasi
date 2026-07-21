@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "freemodel": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "FreeModel",
+      "options": {
+        "baseURL": "https://api.freemodel.dev/v1",
+        "apiKey": "fe_oa_f0202ac32d382433bca1259bd4a85a0a0a4f8dc96abb7d0e"
+      },
+      "models": {
+        "gpt-5.5": {
+          "name": "GPT-5.5"
+        },
+        "gpt-5.4": {
+          "name": "GPT-5.4"
+        },
+        "gpt-5.4-mini": {
+          "name": "GPT-5.4 Mini"
+        },
+        "gpt-5.3-codex": {
+          "name": "GPT-5.3 Codex"
+        }
+      }
+    }
+  },
+  "model": "freemodel/gpt-5.5"
+}
