@@ -1,6 +1,4 @@
 import { parse } from 'node-html-parser';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import {
   fetchEaMapStations,
   fetchEaNearby,
@@ -24,8 +22,7 @@ import {
   CA_BOUNDS,
   CH_BOUNDS,
 } from './hydroIntl';
-
-const ALL_PROFILES = JSON.parse(readFileSync(join(process.cwd(), 'data/hydro-stations.json'), 'utf8'));
+import ALL_PROFILES from '../data/hydro-stations.json';
 const OPENDATA_META_URL = 'https://opendata.chmi.cz/hydrology/now/metadata/meta1.json';
 const OPENDATA_DATA_BASE = 'https://opendata.chmi.cz/hydrology/now/data/';
 const INPOCASI_HYDRO_URL = 'https://www.in-pocasi.cz/stavy-rek/ajax/stations.json.php';

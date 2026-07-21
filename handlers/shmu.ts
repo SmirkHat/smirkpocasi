@@ -1,8 +1,5 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import https from 'node:https';
-
-const STATIONS = JSON.parse(readFileSync(join(process.cwd(), 'data/shmu-stations.json'), 'utf8'));
+import STATIONS from '../data/shmu-stations.json';
 const DATA_BASE = 'https://opendata.shmu.sk/meteorology/climate/now/data';
 // SHMÚ OpenData presents a cert chain that some environments cannot verify.
 const insecureAgent = new https.Agent({ rejectUnauthorized: false });

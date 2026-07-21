@@ -1,7 +1,4 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-const STATIONS = JSON.parse(readFileSync(join(process.cwd(), 'data/imgw-stations.json'), 'utf8'));
+import STATIONS from '../data/imgw-stations.json';
 const SYNOP_URL = 'https://danepubliczne.imgw.pl/api/data/synop';
 
 let synopCache = null;
