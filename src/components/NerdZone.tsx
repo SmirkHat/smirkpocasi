@@ -49,23 +49,37 @@ const derivedFieldLabels = {
   wetBulbTemperature: 'mokrá t.'
 };
 
+function sourceSortRank(source) {
+  // 1) used in consensus → 2) ok control / unused → 3) pending → 4) errors / missing keys
+  if (source.status === 'ok' && source.included) return 0;
+  if (source.status === 'ok') return 1;
+  if (source.status === 'pending') return 2;
+  return 3;
+}
+
 function getApiRows(consensus) {
   const sources = consensus?.sources || [];
   const okSources = sources.filter((source) => source.status === 'ok');
   const forecastSources = okSources.filter((source) => !observationSourceIds.has(source.id));
   const includedIds = new Set(consensus?.includedSourceIds || (forecastSources.length ? forecastSources : okSources).map((source) => source.id));
 
-  return sources.map((source) => {
-    const weatherInfo = source.weatherCode == null ? null : getWeatherInfo(source.weatherCode);
-    return {
-      ...source,
-      condition: source.status === 'ok' ? weatherInfo?.label || '—' : '—',
-      ConditionIcon: weatherInfo?.Icon || WiThermometer,
-      included: source.included ?? includedIds.has(source.id),
-      role: source.type || (observationSourceIds.has(source.id) ? 'Pozorování' : 'Model/API'),
-      symbol: source.symbolCode || source.iconName || (source.weatherCode == null ? null : `WMO ${source.weatherCode}`)
-    };
-  });
+  return sources
+    .map((source) => {
+      const weatherInfo = source.weatherCode == null ? null : getWeatherInfo(source.weatherCode);
+      return {
+        ...source,
+        condition: source.status === 'ok' ? weatherInfo?.label || '—' : '—',
+        ConditionIcon: weatherInfo?.Icon || WiThermometer,
+        included: source.included ?? includedIds.has(source.id),
+        role: source.type || (observationSourceIds.has(source.id) ? 'Pozorování' : 'Model/API'),
+        symbol: source.symbolCode || source.iconName || (source.weatherCode == null ? null : `WMO ${source.weatherCode}`)
+      };
+    })
+    .sort((a, b) => {
+      const rank = sourceSortRank(a) - sourceSortRank(b);
+      if (rank !== 0) return rank;
+      return String(a.name || a.id).localeCompare(String(b.name || b.id), 'cs');
+    });
 }
 
 function DerivedValue({ source, field, fields, children }) {
