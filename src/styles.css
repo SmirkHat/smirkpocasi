@@ -1,0 +1,471 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Geist";
+  src: url("../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("../node_modules/geist/dist/fonts/geist-sans/Geist-Italic[wght].woff2") format("woff2");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../node_modules/geist/dist/fonts/geist-mono/GeistMono-Italic[wght].woff2") format("woff2");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 100 900;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Geist", sans-serif;
+  --font-heading: "Geist", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+  --color-app: var(--app-bg);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --animate-skeleton: skeleton 2s -1s infinite linear;
+  --animate-caret-blink: 1s ease-out infinite caret-blink;
+  --animate-toast-success-odd: toast-success-odd 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-success-even: toast-success-even 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar: var(--sidebar);
+  --color-code-highlight: var(--code-highlight);
+  --code-foreground: var(--code-foreground);
+  --color-code: var(--code);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  @keyframes skeleton {
+  to {
+    background-position: -200% 0;
+    }
+  }
+  @keyframes caret-blink {
+  0%, 70%, to {
+    opacity: 1;
+    }
+  20%, 50% {
+    opacity: 0;
+    }
+  }
+  @keyframes toast-success-odd {
+  0% {
+    scale: 1;
+    }
+  30% {
+    scale: 1.025;
+    }
+  60% {
+    scale: 0.99;
+    }
+  100% {
+    scale: 1;
+    }
+  }
+  @keyframes toast-error-odd {
+  0% {
+    translate: 0 0;
+    }
+  25% {
+    translate: -3px 0;
+    }
+  50% {
+    translate: 3px 0;
+    }
+  75% {
+    translate: -3px 0;
+    }
+  100% {
+    translate: 0 0;
+    }
+  }
+  @keyframes toast-success-even {
+  0% {
+    scale: 1;
+    }
+  30% {
+    scale: 1.025;
+    }
+  60% {
+    scale: 0.99;
+    }
+  100% {
+    scale: 1;
+    }
+  }
+  @keyframes toast-error-even {
+  0% {
+    translate: 0 0;
+    }
+  25% {
+    translate: -3px 0;
+    }
+  50% {
+    translate: 3px 0;
+    }
+  75% {
+    translate: -3px 0;
+    }
+  100% {
+    translate: 0 0;
+    }
+  }
+}
+
+:root {
+  --app-bg: #171717;
+  --background: #171717;
+  --foreground: #e5e5e5;
+  --card: #222222;
+  --card-foreground: #e5e5e5;
+  --popover: #262626;
+  --popover-foreground: #e5e5e5;
+  --primary: #f59e0b;
+  --primary-foreground: #000000;
+  --secondary: #222222;
+  --secondary-foreground: #e5e5e5;
+  --muted: #222222;
+  --muted-foreground: #a3a3a3;
+  --border: #333333;
+  --input: #404040;
+  --ring: #f59e0b;
+  --destructive: #ef4444;
+  --destructive-foreground: #fca5a5;
+  --info: #38bdf8;
+  --info-foreground: #7dd3fc;
+  --success: #22c55e;
+  --success-foreground: #86efac;
+  --warning: #f59e0b;
+  --warning-foreground: #fde68a;
+  --font-heading: var(--font-sans);
+  --font-mono: "Geist Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  color-scheme: dark;
+  --accent: #92400e;
+  --accent-foreground: #fde68a;
+  --chart-1: #f59e0b;
+  --chart-2: #f97316;
+  --chart-3: #a16207;
+  --chart-4: #eab308;
+  --chart-5: #92400e;
+  --code: #222222;
+  --code-foreground: var(--foreground);
+  --code-highlight: #2a2a2a;
+  --radius: 0.75rem;
+  --sidebar: #171717;
+  --sidebar-accent: #222222;
+  --sidebar-accent-foreground: #e5e5e5;
+  --sidebar-border: #333333;
+  --sidebar-foreground: #a3a3a3;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-ring: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--app-bg);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* Leaflet — third-party map library overrides only */
+.leaflet-container {
+  z-index: 1;
+  width: 100%;
+  height: 240px;
+  border-radius: var(--radius-lg);
+  background: #111111;
+}
+
+.radar-fullscreen {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.radar-fullscreen .leaflet-container {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100% !important;
+  min-height: 0;
+  border-radius: 0;
+}
+
+.leaflet-container img {
+  max-width: none !important;
+}
+
+.osm-dark-tiles {
+  filter: invert(0.92) hue-rotate(180deg) saturate(0.55) brightness(0.82) contrast(1.08);
+}
+
+.leaflet-container .leaflet-control-attribution {
+  margin: 0 0.5rem 0.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--background) 88%, transparent) !important;
+  color: var(--muted-foreground) !important;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-black) 28%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: var(--foreground) !important;
+}
+
+.leaflet-control-zoom {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-black) 28%, transparent);
+}
+
+.leaflet-control-zoom a {
+  border-bottom-color: var(--border);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dark {
+  --app-bg: #171717;
+  --background: #171717;
+  --foreground: #e5e5e5;
+  --card: #222222;
+  --card-foreground: #e5e5e5;
+  --popover: #262626;
+  --popover-foreground: #e5e5e5;
+  --primary: #f59e0b;
+  --primary-foreground: #000000;
+  --secondary: #222222;
+  --secondary-foreground: #e5e5e5;
+  --muted: #222222;
+  --muted-foreground: #a3a3a3;
+  --border: #333333;
+  --input: #404040;
+  --ring: #f59e0b;
+  --destructive: #ef4444;
+  --destructive-foreground: #fca5a5;
+  --info: #38bdf8;
+  --info-foreground: #7dd3fc;
+  --success: #22c55e;
+  --success-foreground: #86efac;
+  --warning: #f59e0b;
+  --warning-foreground: #fde68a;
+  --accent: #92400e;
+  --accent-foreground: #fde68a;
+  --chart-1: #f59e0b;
+  --chart-2: #f97316;
+  --chart-3: #a16207;
+  --chart-4: #eab308;
+  --chart-5: #92400e;
+  --code: #222222;
+  --code-foreground: #e5e5e5;
+  --code-highlight: #2a2a2a;
+  --sidebar: #171717;
+  --sidebar-accent: #222222;
+  --sidebar-accent-foreground: #e5e5e5;
+  --sidebar-border: #333333;
+  --sidebar-foreground: #a3a3a3;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-ring: #f59e0b;
+}
+
+/* Stagger reveal pro sekce feedu — zpoždění se řídí přes [animation-delay:*] utility. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.anim-rise {
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Soft ambient drift for place-photo color mesh (location atmosphere). */
+@keyframes place-mesh-drift-a {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  50% {
+    translate: 3.5% -2.5%;
+    scale: 1.06;
+  }
+}
+
+@keyframes place-mesh-drift-b {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1.02;
+  }
+  50% {
+    translate: -4% 3%;
+    scale: 1.08;
+  }
+}
+
+@keyframes place-mesh-drift-c {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  33% {
+    translate: 2.5% 3.5%;
+    scale: 1.05;
+  }
+  66% {
+    translate: -3% -2%;
+    scale: 1.07;
+  }
+}
+
+.place-mesh-blob {
+  will-change: transform;
+  animation: place-mesh-drift-a 32s ease-in-out infinite;
+}
+
+.place-mesh-blob:nth-child(2) {
+  animation-name: place-mesh-drift-b;
+  animation-duration: 40s;
+  animation-delay: -12s;
+}
+
+.place-mesh-blob:nth-child(3) {
+  animation-name: place-mesh-drift-c;
+  animation-duration: 48s;
+  animation-delay: -22s;
+}
+
+.place-mesh-blob:nth-child(4) {
+  animation-name: place-mesh-drift-a;
+  animation-duration: 36s;
+  animation-delay: -6s;
+  animation-direction: reverse;
+}
+
+.place-mesh-blob:nth-child(5) {
+  animation-name: place-mesh-drift-b;
+  animation-duration: 44s;
+  animation-delay: -18s;
+  animation-direction: reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise {
+    animation: none;
+  }
+
+  .place-mesh-blob {
+    animation: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    position: relative;
+  }
+  code, kbd, samp, pre {
+    font-family: var(--font-mono);
+  }
+  html {
+    @apply font-sans;
+  }
+}
