@@ -12,6 +12,7 @@ import {
 } from 'react-icons/wi';
 import { Card } from '@/components/ui/card';
 import { Meter, MeterIndicator, MeterTrack } from '@/components/ui/meter';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { formatTime, formatVisibility } from '../utils/formatters';
 import { firstAvailable, firstDailyValue, nextHourlyValue } from '../utils/forecast';
@@ -78,6 +79,44 @@ function MetricTile({
         {detail ? <p className="truncate text-xs text-muted-foreground">{detail}</p> : null}
       </div>
     </Card>
+  );
+}
+
+function MetricTileSkeleton({ className = null }: { className?: string | null }) {
+  return (
+    <Card className={cn('flex min-h-31 flex-col justify-between gap-3 p-4', className)} aria-hidden="true">
+      <div className="flex items-center gap-1.5">
+        <Skeleton className="size-4.5 rounded-md" />
+        <Skeleton className="h-3 w-20" />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-1 w-full rounded-full" />
+        <Skeleton className="h-3 w-28" />
+      </div>
+    </Card>
+  );
+}
+
+export function HumidityPrecipTilesSkeleton({ className = null }: { className?: string | null }) {
+  return (
+    <div className={cn('grid grid-cols-2 gap-3', className)} aria-busy="true" aria-label="Načítám vlhkost a srážky">
+      <MetricTileSkeleton />
+      <MetricTileSkeleton />
+    </div>
+  );
+}
+
+export function MetricsGridSkeleton() {
+  return (
+    <>
+      <MetricTileSkeleton className="col-span-1 lg:col-span-2" />
+      <MetricTileSkeleton className="col-span-1 lg:col-span-2" />
+      <MetricTileSkeleton className="col-span-1 lg:col-span-2" />
+      <MetricTileSkeleton className="col-span-1 lg:col-span-2" />
+      <MetricTileSkeleton className="col-span-1 lg:col-span-2" />
+      <MetricTileSkeleton className="col-span-1 lg:col-span-2" />
+    </>
   );
 }
 

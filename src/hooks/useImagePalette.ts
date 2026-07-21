@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
-import { extractImagePalette } from '../utils/imagePalette';
+import { extractImagePalette, HERO_COVER_ASPECT, PALETTE_VERSION } from '../utils/imagePalette';
 
 const cache = new Map();
 
-export function useImagePalette(imageUrl, { count = 5 } = {}) {
-  const [palette, setPalette] = useState(() => (imageUrl ? cache.get(imageUrl) ?? null : null));
+function cacheKey(imageUrl, count, aspectRatio) {
+  return `${PALETTE_VERSION}:${count}:${aspectRatio}:${imageUrl}`;
+}
+
+export function useImagePalette(imageUrl, { count = 5, aspectRatio = HERO_COVER_ASPECT } = {}) {
+  const [palette, setPalette] = useState(() =>
+    imageUrl ? cache.get(cacheKey(imageUrl, count, aspectRatio)) ?? null : null,
+  );
 
   useEffect(() => {
     if (!imageUrl) {
@@ -12,7 +18,8 @@ export function useImagePalette(imageUrl, { count = 5 } = {}) {
       return undefined;
     }
 
-    const cached = cache.get(imageUrl);
+    const key = cacheKey(imageUrl, count, aspectRatio);
+    const cached = cache.get(key);
     if (cached) {
       setPalette(cached);
       return undefined;
@@ -20,10 +27,10 @@ export function useImagePalette(imageUrl, { count = 5 } = {}) {
 
     let cancelled = false;
 
-    extractImagePalette(imageUrl, { count })
+    extractImagePalette(imageUrl, { count, aspectRatio })
       .then((colors) => {
         if (cancelled) return;
-        if (colors) cache.set(imageUrl, colors);
+        if (colors) cache.set(key, colors);
         setPalette(colors);
       })
       .catch(() => {
@@ -33,7 +40,7 @@ export function useImagePalette(imageUrl, { count = 5 } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [imageUrl, count]);
+  }, [imageUrl, count, aspectRatio]);
 
   return palette;
 }

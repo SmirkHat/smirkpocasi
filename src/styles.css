@@ -251,7 +251,17 @@ input {
   width: 100%;
   height: 240px;
   border-radius: var(--radius-lg);
-  background: #111111;
+  /* Beat leaflet.css (#ddd) so tiles don’t flash white while loading */
+  background: #0b0f14 !important;
+}
+
+.leaflet-container .leaflet-tile-pane,
+.leaflet-container .leaflet-overlay-pane,
+.leaflet-container .leaflet-shadow-pane,
+.leaflet-container .leaflet-marker-pane,
+.leaflet-container .leaflet-tooltip-pane,
+.leaflet-container .leaflet-popup-pane {
+  background: transparent;
 }
 
 .radar-fullscreen {
@@ -372,76 +382,89 @@ input {
   animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Soft ambient drift for place-photo color mesh (location atmosphere). */
-@keyframes place-mesh-drift-a {
+/* Place-photo aurora: CSS-only color wash + soft veil + grain (no JS animation). */
+@keyframes place-aurora-drift {
   0%,
   100% {
-    translate: 0 0;
-    scale: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    translate: 3.5% -2.5%;
-    scale: 1.06;
+    transform: translate3d(2.5%, -1.8%, 0) scale(1.04);
   }
 }
 
-@keyframes place-mesh-drift-b {
+@keyframes place-aurora-drift-alt {
   0%,
   100% {
-    translate: 0 0;
-    scale: 1.02;
+    transform: translate3d(0, 0, 0) scale(1.02);
   }
   50% {
-    translate: -4% 3%;
-    scale: 1.08;
+    transform: translate3d(-2.2%, 2%, 0) scale(1.06);
   }
 }
 
-@keyframes place-mesh-drift-c {
-  0%,
-  100% {
-    translate: 0 0;
-    scale: 1;
-  }
-  33% {
-    translate: 2.5% 3.5%;
-    scale: 1.05;
-  }
-  66% {
-    translate: -3% -2%;
-    scale: 1.07;
+.place-aurora {
+  opacity: 0;
+  animation: place-aurora-in 0.7s ease forwards;
+}
+
+@keyframes place-aurora-in {
+  to {
+    opacity: 1;
   }
 }
 
-.place-mesh-blob {
-  will-change: transform;
-  animation: place-mesh-drift-a 32s ease-in-out infinite;
+.place-aurora-wash,
+.place-aurora-veil,
+.place-aurora-grain,
+.place-aurora-fade {
+  position: absolute;
+  inset: 0;
 }
 
-.place-mesh-blob:nth-child(2) {
-  animation-name: place-mesh-drift-b;
-  animation-duration: 40s;
-  animation-delay: -12s;
+.place-aurora-wash {
+  inset: -12%;
+  background:
+    radial-gradient(ellipse 88% 68% at 16% 12%, var(--place-c1) 0%, transparent 58%),
+    radial-gradient(ellipse 80% 62% at 86% 20%, var(--place-c2) 0%, transparent 56%),
+    radial-gradient(ellipse 92% 72% at 48% 92%, var(--place-c3) 0%, transparent 54%),
+    radial-gradient(ellipse 64% 50% at 72% 58%, var(--place-c4) 0%, transparent 52%);
+  opacity: 0.18;
+  mix-blend-mode: screen;
+  animation: place-aurora-drift 42s ease-in-out infinite;
 }
 
-.place-mesh-blob:nth-child(3) {
-  animation-name: place-mesh-drift-c;
-  animation-duration: 48s;
-  animation-delay: -22s;
+.place-aurora-veil {
+  inset: -8%;
+  background-color: var(--place-c1);
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+  -webkit-mask-image: url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png');
+  mask-image: url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png');
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  animation: place-aurora-drift-alt 54s ease-in-out infinite;
 }
 
-.place-mesh-blob:nth-child(4) {
-  animation-name: place-mesh-drift-a;
-  animation-duration: 36s;
-  animation-delay: -6s;
-  animation-direction: reverse;
+.place-aurora-grain {
+  background-image: url('https://framerusercontent.com/images/g0QcWrxr87K0ufOxIUFBakwYA8.png');
+  background-size: 120px;
+  background-repeat: repeat;
+  opacity: 0.28;
+  mix-blend-mode: overlay;
 }
 
-.place-mesh-blob:nth-child(5) {
-  animation-name: place-mesh-drift-b;
-  animation-duration: 44s;
-  animation-delay: -18s;
-  animation-direction: reverse;
+.place-aurora-fade {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 42%,
+    color-mix(in srgb, var(--app-bg) 28%, transparent) 82%,
+    var(--app-bg) 100%
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -449,7 +472,13 @@ input {
     animation: none;
   }
 
-  .place-mesh-blob {
+  .place-aurora {
+    animation: none;
+    opacity: 1;
+  }
+
+  .place-aurora-wash,
+  .place-aurora-veil {
     animation: none;
   }
 }

@@ -4,6 +4,8 @@ export type WeatherLocation = {
   name: string
   lat: number
   lon: number
+  label?: string
+  source?: string
 }
 
 type WeatherCachePayload = {

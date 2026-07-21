@@ -8,8 +8,8 @@ export default function RadarPage() {
 
   return (
     <AppPage fillViewport contentClassName="max-w-none">
-      <ClientOnly fallback={<div className="min-h-0 flex-1 animate-pulse bg-muted" />}>
-        <div className="flex min-h-0 flex-1 flex-col">
+      <ClientOnly fallback={<div className="min-h-0 flex-1 animate-pulse bg-[#0b0f14]" />}>
+        <div className="flex min-h-0 flex-1 flex-col bg-[#0b0f14]">
           <RadarMap location={location} fullscreen />
         </div>
       </ClientOnly>

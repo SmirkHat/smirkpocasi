@@ -1,41 +1,42 @@
-import { WiFlood } from 'react-icons/wi';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import HydroLevelsChart, { HydroSparkline } from './charts/HydroLevelsChart';
-import { floodFill, getChartTheme } from './charts/chartTheme';
-import { formatHydroName, formatFlow } from '../utils/formatters';
+import { useEffect } from 'react'
+import { WiFlood } from 'react-icons/wi'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardHeader, CardPanel, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import HydroLevelsChart, { HydroSparkline } from './charts/HydroLevelsChart'
+import { floodFill, getChartTheme } from './charts/chartTheme'
+import { formatHydroName, formatFlow } from '../utils/formatters'
 
 const SPA_COLORS = {
   0: 'success',
   1: 'warning',
   2: 'warning',
   3: 'destructive',
-};
+}
 
 const SPA_LABELS = {
   0: 'Normál',
   1: '1. SPA',
   2: '2. SPA',
   3: '3. SPA',
-};
+}
 
 function formatTrend(trend) {
-  if (trend == null || !Number.isFinite(trend) || Math.abs(trend) < 0.5) return null;
-  const arrow = trend > 0 ? '↑' : '↓';
-  return `${arrow} ${Math.abs(trend).toFixed(0)} cm`;
+  if (trend == null || !Number.isFinite(trend) || Math.abs(trend) < 0.5) return null
+  const arrow = trend > 0 ? '↑' : '↓'
+  return `${arrow} ${Math.abs(trend).toFixed(0)} cm`
 }
 
 /** Visual track: dry → current → SPA1/2/3 on a shared scale. */
 function SpaGauge({ height, dry, spa1, spa2, spa3, floodLevel }) {
-  const theme = getChartTheme();
-  if (height == null || spa1 == null) return null;
+  const theme = getChartTheme()
+  if (height == null || spa1 == null) return null
 
-  const max = Math.max(spa3 ?? spa2 ?? spa1 * 1.4, height, spa1) * 1.05;
-  const min = Math.min(dry ?? 0, height, spa1) * 0.85;
-  const span = max - min || 1;
-  const pct = (v) => `${Math.max(0, Math.min(100, ((v - min) / span) * 100))}%`;
+  const max = Math.max(spa3 ?? spa2 ?? spa1 * 1.4, height, spa1) * 1.05
+  const min = Math.min(dry ?? 0, height, spa1) * 0.85
+  const span = max - min || 1
+  const pct = (v) => `${Math.max(0, Math.min(100, ((v - min) / span) * 100))}%`
 
   return (
     <div className="mt-2" aria-hidden="true">
@@ -60,10 +61,32 @@ function SpaGauge({ height, dry, spa1, spa2, spa3, floodLevel }) {
         {spa3 != null ? <span>SPA3 {Math.round(spa3)}</span> : spa2 != null ? <span>SPA2 {Math.round(spa2)}</span> : <span />}
       </div>
     </div>
-  );
+  )
 }
 
-export default function HydroPanel({ data, loading, error, limit }) {
+function stationRowId(id) {
+  return `hydro-station-${id}`
+}
+
+export default function HydroPanel({ data, loading, error, limit, selectedId = null }) {
+  useEffect(() => {
+    if (selectedId == null) return undefined
+
+    const scrollToSelected = () => {
+      const node = document.getElementById(stationRowId(selectedId))
+      if (!node) return false
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return true
+    }
+
+    if (scrollToSelected()) return undefined
+
+    const frame = window.requestAnimationFrame(() => {
+      scrollToSelected()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [selectedId, data?.profiles])
+
   if (loading && !data) {
     return (
       <Card>
@@ -76,13 +99,13 @@ export default function HydroPanel({ data, loading, error, limit }) {
           <Skeleton className="h-12 w-full" />
         </CardPanel>
       </Card>
-    );
+    )
   }
-  if (error) return null;
-  if (!data?.profiles?.length) return null;
+  if (error) return null
+  if (!data?.profiles?.length) return null
 
-  const profiles = data.profiles.slice(0, limit);
-  const withSpa = profiles.filter((p) => p.spaPct != null);
+  const profiles = data.profiles.slice(0, limit)
+  const withSpa = profiles.filter((p) => p.spaPct != null)
 
   return (
     <Card>
@@ -105,11 +128,17 @@ export default function HydroPanel({ data, loading, error, limit }) {
 
         <div className="divide-y divide-border">
           {profiles.map((p) => {
-            const trend = formatTrend(p.trend);
+            const trend = formatTrend(p.trend)
+            const selected = selectedId != null && String(selectedId) === String(p.id)
             return (
               <div
                 key={p.id}
-                className="grid w-full grid-cols-[auto_1fr_auto] items-start gap-3 py-3 text-left first:pt-0 last:pb-0"
+                id={stationRowId(p.id)}
+                data-selected={selected ? '' : undefined}
+                className={cn(
+                  'grid w-full grid-cols-[auto_1fr_auto] items-start gap-3 rounded-lg px-2 py-3 text-left transition-colors first:pt-0 last:pb-0',
+                  selected && 'bg-primary/10 ring-1 ring-primary/35',
+                )}
               >
                 <WiFlood className="mt-0.5 size-7 text-primary" aria-hidden="true" />
                 <div className="min-w-0">
@@ -156,10 +185,10 @@ export default function HydroPanel({ data, loading, error, limit }) {
                   ) : null}
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       </CardPanel>
     </Card>
-  );
+  )
 }

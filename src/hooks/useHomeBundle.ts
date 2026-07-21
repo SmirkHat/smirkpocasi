@@ -70,13 +70,14 @@ export function useHomeBundle(location) {
           localStorage.removeItem(CACHE_KEY)
         }
         setBundle(payload)
+        setLoading(false)
       })
       .catch((fetchError) => {
         if (fetchError.name === 'AbortError') return
         setError(fetchError.message)
         if (cacheMatches(cached, location)) setBundle(cached)
+        setLoading(false)
       })
-      .finally(() => setLoading(false))
 
     return () => controller.abort()
   }, [location?.lat, location?.lon])

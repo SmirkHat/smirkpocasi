@@ -21,6 +21,7 @@ import { Route as ApiChmiRouteImport } from './routes/api/chmi'
 import { Route as ApiChmiAqiRouteImport } from './routes/api/chmi-aqi'
 import { Route as ApiChmiRadarRouteImport } from './routes/api/chmi-radar'
 import { Route as ApiFmiRouteImport } from './routes/api/fmi'
+import { Route as ApiGeoRouteImport } from './routes/api/geo'
 import { Route as ApiGeocodeRouteImport } from './routes/api/geocode'
 import { Route as ApiGeosphereRouteImport } from './routes/api/geosphere'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
@@ -112,6 +113,11 @@ const ApiChmiRadarRoute = ApiChmiRadarRouteImport.update({
 const ApiFmiRoute = ApiFmiRouteImport.update({
   id: '/api/fmi',
   path: '/api/fmi',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeoRoute = ApiGeoRouteImport.update({
+  id: '/api/geo',
+  path: '/api/geo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGeocodeRoute = ApiGeocodeRouteImport.update({
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/api/chmi-aqi': typeof ApiChmiAqiRoute
   '/api/chmi-radar': typeof ApiChmiRadarRoute
   '/api/fmi': typeof ApiFmiRoute
+  '/api/geo': typeof ApiGeoRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/geosphere': typeof ApiGeosphereRoute
   '/api/health': typeof ApiHealthRoute
@@ -334,6 +341,7 @@ export interface FileRoutesByTo {
   '/api/chmi-aqi': typeof ApiChmiAqiRoute
   '/api/chmi-radar': typeof ApiChmiRadarRoute
   '/api/fmi': typeof ApiFmiRoute
+  '/api/geo': typeof ApiGeoRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/geosphere': typeof ApiGeosphereRoute
   '/api/health': typeof ApiHealthRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/api/chmi-aqi': typeof ApiChmiAqiRoute
   '/api/chmi-radar': typeof ApiChmiRadarRoute
   '/api/fmi': typeof ApiFmiRoute
+  '/api/geo': typeof ApiGeoRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/geosphere': typeof ApiGeosphereRoute
   '/api/health': typeof ApiHealthRoute
@@ -429,6 +438,7 @@ export interface FileRouteTypes {
     | '/api/chmi-aqi'
     | '/api/chmi-radar'
     | '/api/fmi'
+    | '/api/geo'
     | '/api/geocode'
     | '/api/geosphere'
     | '/api/health'
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/api/chmi-aqi'
     | '/api/chmi-radar'
     | '/api/fmi'
+    | '/api/geo'
     | '/api/geocode'
     | '/api/geosphere'
     | '/api/health'
@@ -521,6 +532,7 @@ export interface FileRouteTypes {
     | '/api/chmi-aqi'
     | '/api/chmi-radar'
     | '/api/fmi'
+    | '/api/geo'
     | '/api/geocode'
     | '/api/geosphere'
     | '/api/health'
@@ -568,6 +580,7 @@ export interface RootRouteChildren {
   ApiChmiAqiRoute: typeof ApiChmiAqiRoute
   ApiChmiRadarRoute: typeof ApiChmiRadarRoute
   ApiFmiRoute: typeof ApiFmiRoute
+  ApiGeoRoute: typeof ApiGeoRoute
   ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiGeosphereRoute: typeof ApiGeosphereRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -686,6 +699,13 @@ declare module '@tanstack/react-router' {
       path: '/api/fmi'
       fullPath: '/api/fmi'
       preLoaderRoute: typeof ApiFmiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/geo': {
+      id: '/api/geo'
+      path: '/api/geo'
+      fullPath: '/api/geo'
+      preLoaderRoute: typeof ApiGeoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/geocode': {
@@ -928,6 +948,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChmiAqiRoute: ApiChmiAqiRoute,
   ApiChmiRadarRoute: ApiChmiRadarRoute,
   ApiFmiRoute: ApiFmiRoute,
+  ApiGeoRoute: ApiGeoRoute,
   ApiGeocodeRoute: ApiGeocodeRoute,
   ApiGeosphereRoute: ApiGeosphereRoute,
   ApiHealthRoute: ApiHealthRoute,
@@ -964,3 +985,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

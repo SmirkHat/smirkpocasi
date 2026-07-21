@@ -34,13 +34,35 @@ export default function AirQuality({ data: dataProp = undefined, loading: loadin
 
   if (loading && !data) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Kvalita ovzduší</CardTitle>
+      <Card className="flex h-full flex-col" aria-busy="true" aria-label="Načítám kvalitu ovzduší">
+        <CardHeader className="pb-0">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>Kvalita ovzduší</CardTitle>
+            <Skeleton className="size-6 rounded-md" />
+          </div>
         </CardHeader>
-        <CardPanel className="flex flex-col gap-3">
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-14 w-full" />
+        <CardPanel className="flex flex-1 flex-col justify-between gap-4">
+          <div className="flex items-end justify-between gap-3">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-10 w-16" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <div className="flex max-w-[50%] flex-col items-end gap-1.5">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-14" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-border/55 bg-background/40 p-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="mt-2 h-5 w-16" />
+            </div>
+            <div className="rounded-lg border border-border/55 bg-background/40 p-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="mt-2 h-5 w-16" />
+            </div>
+          </div>
         </CardPanel>
       </Card>
     );

@@ -6,10 +6,11 @@ import { Card, CardAction, CardHeader, CardPanel, CardTitle } from '@/components
 import { cn } from '@/lib/utils'
 import { AppPage } from '../components/AppChrome'
 import AirQuality from '../components/AirQuality'
-import ForecastExplorer from '../components/ForecastExplorer'
-import MetricsGrid, { HumidityPrecipTiles } from '../components/MetricsGrid'
+import ForecastExplorer, { ForecastExplorerSkeleton } from '../components/ForecastExplorer'
+import MetricsGrid, { HumidityPrecipTiles, HumidityPrecipTilesSkeleton, MetricsGridSkeleton } from '../components/MetricsGrid'
 import NerdZone from '../components/NerdZone'
 import RadarMap from '../components/RadarMap'
+import VodaPreview from '../components/VodaPreview'
 import WarningBanner from '../components/WarningBanner'
 import WeatherHero, { WeatherHeroSkeleton } from '../components/WeatherHero'
 import { useHomeBundle } from '../hooks/useHomeBundle'
@@ -42,8 +43,8 @@ function RadarPreviewCard({ location, className }: { location: { lat?: number; l
         </CardAction>
       </CardHeader>
       <CardPanel className="pt-3">
-        <ClientOnly fallback={<div className="aspect-square animate-pulse rounded-md bg-muted" />}>
-          <div className="relative aspect-square overflow-hidden rounded-md [&_.leaflet-container]:!absolute [&_.leaflet-container]:!inset-0 [&_.leaflet-container]:!h-full [&_.leaflet-container]:!min-h-0 [&_.leaflet-container]:!w-full [&_.leaflet-container]:!rounded-md">
+        <ClientOnly fallback={<div className="aspect-square animate-pulse rounded-md bg-[#0b0f14]" />}>
+          <div className="relative aspect-square overflow-hidden rounded-md bg-[#0b0f14] [&_.leaflet-container]:!absolute [&_.leaflet-container]:!inset-0 [&_.leaflet-container]:!h-full [&_.leaflet-container]:!min-h-0 [&_.leaflet-container]:!w-full [&_.leaflet-container]:!rounded-md">
             <RadarMap location={location} />
           </div>
         </ClientOnly>
@@ -63,6 +64,7 @@ export default function HomePage() {
   const consensus = home.consensus
   const consensusValues = consensus?.consensus
   const info = getWeatherInfo(consensusValues?.weatherCode ?? current?.weathercode)
+  const showPageSkeleton = home.loading && !home.weather
 
   const hero = home.loading && !current ? (
     <WeatherHeroSkeleton />
@@ -97,11 +99,16 @@ export default function HomePage() {
           aria-label="Podrobná předpověď"
           style={{ animationDelay: '60ms' }}
         >
-          <ForecastExplorer
-            hourly={home.weather?.hourly}
-            daily={home.weather?.daily}
-            forecastSeries={consensus.forecastSeries}
-          />
+          {showPageSkeleton ? (
+            <ForecastExplorerSkeleton />
+          ) : (
+            <ForecastExplorer
+              hourly={home.weather?.hourly}
+              daily={home.weather?.daily}
+              forecastSeries={consensus.forecastSeries}
+              fallback={home.error ? null : <ForecastExplorerSkeleton />}
+            />
+          )}
         </section>
 
         <aside className="anim-rise lg:col-span-4" aria-label="Radar" style={{ animationDelay: '100ms' }}>
@@ -110,7 +117,11 @@ export default function HomePage() {
 
         <aside className="anim-rise flex flex-col gap-3 lg:col-span-4" aria-label="Kvalita ovzduší a srážky" style={{ animationDelay: '140ms' }}>
           <AirQuality data={home.aqi} loading={home.loading && !home.aqi} error={null} />
-          <HumidityPrecipTiles weather={home.weather} consensusValues={consensusValues} />
+          {showPageSkeleton ? (
+            <HumidityPrecipTilesSkeleton />
+          ) : (
+            <HumidityPrecipTiles weather={home.weather} consensusValues={consensusValues} />
+          )}
         </aside>
 
         <section
@@ -118,13 +129,23 @@ export default function HomePage() {
           aria-label="Aktuální podmínky"
           style={{ animationDelay: '200ms' }}
         >
-          <MetricsGrid weather={home.weather} consensusValues={consensusValues} />
+          {showPageSkeleton ? (
+            <MetricsGridSkeleton />
+          ) : (
+            <MetricsGrid weather={home.weather} consensusValues={consensusValues} />
+          )}
+        </section>
+
+        <section className="anim-rise lg:col-span-12" aria-label="Voda" style={{ animationDelay: '230ms' }}>
+          <VodaPreview location={location} />
         </section>
       </div>
 
-      <div className="anim-rise mt-5" style={{ animationDelay: '260ms' }}>
-        <NerdZone consensus={consensus} updatedAt={home.weatherUpdatedAt} offline={home.offline} />
-      </div>
+      {!showPageSkeleton ? (
+        <div className="anim-rise mt-5" style={{ animationDelay: '260ms' }}>
+          <NerdZone consensus={consensus} updatedAt={home.weatherUpdatedAt} offline={home.offline} />
+        </div>
+      ) : null}
     </AppPage>
   )
 }

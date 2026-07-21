@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { WiRaindrop } from 'react-icons/wi';
 import {
   Area,
@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Card, CardDescription, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { buildMergedForecastDays, type ForecastDay, type HourlyPoint } from '../utils/hourlyForecast';
@@ -49,11 +50,7 @@ function WeekOverview({
       <p className="mb-2 shrink-0 text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
         Týdenní přehled
       </p>
-      <div
-        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-width:thin]"
-        role="listbox"
-        aria-label="Výběr dne"
-      >
+      <div className="min-h-0" role="listbox" aria-label="Výběr dne">
         {days.map((day, index) => {
           const info = getWeatherInfo(day.weatherCode);
           const WeatherIcon = info.Icon;
@@ -360,6 +357,54 @@ function WindChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
   );
 }
 
+export function ForecastExplorerSkeleton() {
+  return (
+    <Card className="flex h-full min-h-0 flex-col" aria-busy="true" aria-label="Načítám předpověď">
+      <CardHeader className="shrink-0 pb-0">
+        <CardTitle>Podrobná předpověď</CardTitle>
+        <CardDescription>Hodinový graf a týdenní přehled</CardDescription>
+      </CardHeader>
+      <CardPanel className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="shrink-0">
+          <div className="flex gap-4 border-b pb-2">
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-8 w-14" />
+          </div>
+          <Skeleton className="mt-3 h-[220px] w-full rounded-md" />
+          <Skeleton className="mx-auto mt-2 h-3 w-40" />
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col border-t border-border/70 pt-3">
+          <p className="mb-2 shrink-0 text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            Týdenní přehled
+          </p>
+          <div className="flex flex-col gap-1" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => (
+              <div
+                key={index}
+                className="grid w-full grid-cols-[5.5rem_2rem_minmax(0,1fr)_2.75rem] items-center gap-2 rounded-lg px-2 py-2 sm:grid-cols-[6.5rem_2.25rem_minmax(0,1fr)_3rem] sm:gap-3"
+              >
+                <div className="min-w-0 space-y-1.5">
+                  <Skeleton className="h-4 w-14" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+                <Skeleton className="size-7 justify-self-center rounded-full sm:size-8" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Skeleton className="h-4 w-7 shrink-0 sm:w-8" />
+                  <Skeleton className="h-1.5 min-w-8 flex-1 rounded-full" />
+                  <Skeleton className="h-4 w-7 shrink-0 sm:w-8" />
+                </div>
+                <Skeleton className="h-3.5 w-6 justify-self-end" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardPanel>
+    </Card>
+  );
+}
+
 /**
  * Google-style day explorer: tabs for temp / precip mm / wind,
  * merged hourly series from every forecast-capable source.
@@ -368,10 +413,12 @@ export default function ForecastExplorer({
   hourly,
   daily,
   forecastSeries = [],
+  fallback = null,
 }: {
   hourly?: any;
   daily?: any;
   forecastSeries?: Array<{ id: string; name?: string; weight: number; kind: string; data: any }>;
+  fallback?: ReactNode;
 }) {
   const { days } = useMemo(
     () => buildMergedForecastDays({ hourly, daily, forecastSeries }),
@@ -384,7 +431,7 @@ export default function ForecastExplorer({
   const activeDay = days.find((day) => day.key === activeKey) || days[0];
   const rows = useMemo(() => (activeDay ? chartRows(activeDay.hours) : []), [activeDay]);
 
-  if (!days.length || !activeDay) return null;
+  if (!days.length || !activeDay) return fallback;
 
   return (
     <Card className="flex h-full min-h-0 flex-col">

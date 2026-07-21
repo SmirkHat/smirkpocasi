@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { HiPause, HiPlay } from 'react-icons/hi2';
+import { MapPin } from 'lucide-react';
 import L from 'leaflet';
 import { CircleMarker, ImageOverlay, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { CHMI_RADAR_BOUNDS, locationInChmiRadarCoverage } from '../utils/geo';
 import { buildExtrapolatedRainviewerFrames, estimateRainviewerMotion } from '../utils/radarExtrapolate';
 import { RAINVIEWER_RECOLOR_SOURCE_SCHEME, createRainviewerColorTable, colorizeChmiRadar } from '../config/rainviewer';
+import { useUiStore } from '../store/uiStore';
 import { formatPlaceName } from '../utils/formatters';
 import 'leaflet/dist/leaflet.css';
 import { apiUrl } from '@/lib/apiBase'
@@ -447,6 +449,8 @@ function defaultSourceFor(location) {
 }
 
 export default function RadarMap({ location, fullscreen = false }) {
+  const openLocationPicker = useUiStore((state) => state.openLocationPicker);
+  const placeName = formatPlaceName(location?.name) || location?.name || 'Lokace';
   const center = useMemo(() => [location?.lat || 50.0755, location?.lon || 14.4378], [location?.lat, location?.lon]);
   const initialZoom = fullscreen ? 9 : 8;
   const chmiAvailable = locationInChmiRadarCoverage(location);
@@ -570,7 +574,7 @@ export default function RadarMap({ location, fullscreen = false }) {
   }, [animationEnabled, frames.length]);
 
   return (
-    <div className={cn('relative h-full w-full', fullscreen && 'radar-fullscreen min-h-0 flex-1')}>
+    <div className={cn('relative h-full w-full bg-[#0b0f14]', fullscreen && 'radar-fullscreen min-h-0 flex-1')}>
       <MapContainer
         center={center}
         zoom={initialZoom}
@@ -578,7 +582,7 @@ export default function RadarMap({ location, fullscreen = false }) {
         scrollWheelZoom={fullscreen}
         zoomControl={false}
         attributionControl={false}
-        className="leaflet-map h-full w-full"
+        className="leaflet-map h-full w-full bg-[#0b0f14]"
       >
         <Recenter center={center} zoom={initialZoom} />
         <TileLayer
@@ -594,6 +598,23 @@ export default function RadarMap({ location, fullscreen = false }) {
         )}
         <LocationMarker label={formatPlaceName(location?.name) || location?.name} position={center} />
       </MapContainer>
+
+      {fullscreen ? (
+        <div className="absolute top-3 right-3 z-5">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="max-w-[12rem] border border-border bg-background shadow-xs"
+            onClick={openLocationPicker}
+            aria-haspopup="dialog"
+            aria-label={`Změnit lokaci · ${placeName}`}
+          >
+            <MapPin aria-hidden="true" />
+            <span className="truncate">{placeName}</span>
+          </Button>
+        </div>
+      ) : null}
 
       <div className="absolute top-3 left-3 z-5">
         <Tabs

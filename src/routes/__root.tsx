@@ -4,10 +4,13 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
+  useRouter,
+  type ErrorComponentProps,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { NotFoundScreen, RouteErrorScreen } from '@/components/StatusScreen'
 import { StoreHydration } from '@/components/StoreHydration'
 import { PwaRegister } from '@/components/PwaRegister'
 import appCss from '../styles.css?url'
@@ -39,7 +42,21 @@ export const Route = createRootRoute({
   }),
   component: RootComponent,
   shellComponent: RootDocument,
+  notFoundComponent: NotFoundScreen,
+  errorComponent: RootErrorComponent,
 })
+
+function RootErrorComponent({ error }: ErrorComponentProps) {
+  const router = useRouter()
+  return (
+    <RouteErrorScreen
+      error={error}
+      onRetry={() => {
+        router.invalidate()
+      }}
+    />
+  )
+}
 
 function RootComponent() {
   return (

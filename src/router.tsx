@@ -1,5 +1,18 @@
-import { createRouter as createTanStackRouter } from '@tanstack/react-router'
+import { createRouter as createTanStackRouter, useRouter, type ErrorComponentProps } from '@tanstack/react-router'
+import { NotFoundScreen, RouteErrorScreen } from './components/StatusScreen'
 import { routeTree } from './routeTree.gen'
+
+function DefaultErrorComponent({ error }: ErrorComponentProps) {
+  const router = useRouter()
+  return (
+    <RouteErrorScreen
+      error={error}
+      onRetry={() => {
+        router.invalidate()
+      }}
+    />
+  )
+}
 
 export function getRouter() {
   const router = createTanStackRouter({
@@ -8,6 +21,8 @@ export function getRouter() {
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
     trailingSlash: 'never',
+    defaultNotFoundComponent: NotFoundScreen,
+    defaultErrorComponent: DefaultErrorComponent,
   })
 
   return router
