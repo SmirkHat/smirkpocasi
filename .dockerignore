@@ -1,0 +1,12 @@
+.git
+.cursor
+.vercel
+.output
+.tanstack
+node_modules
+dist
+.env
+.env.local
+*.log
+*.har
+.DS_Store
