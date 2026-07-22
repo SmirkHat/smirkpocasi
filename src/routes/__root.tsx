@@ -122,6 +122,15 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="cs" className="dark" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Immediate /sw.js registration so PWABuilder (headless) detects the SW before React hydrates. */}
+        {import.meta.env.DEV ? null : (
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}",
+            }}
+          />
+        )}
       </head>
       <body>
         {children}

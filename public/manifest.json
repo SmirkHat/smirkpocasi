@@ -20,6 +20,7 @@
     { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "screenshots": [
-    { "src": "/screenshots/mobile.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow" }
+    { "src": "/screenshots/mobile.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "SmirkPočasí — Praha" },
+    { "src": "/screenshots/desktop.png", "sizes": "1280x900", "type": "image/png", "form_factor": "wide", "label": "SmirkPočasí — Praha, desktop" }
   ]
 }

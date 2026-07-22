@@ -1,6 +1,8 @@
 /**
  * After Nitro/Vite finish, generate the service worker against the real static
- * output dir. vite-plugin-pwa often targets empty `dist/` under TanStack Start.
+ * output dir. Overwrites public/sw.js (static baseline for PWABuilder) with a
+ * Workbox SW that also precaches hashed assets. vite-plugin-pwa alone often
+ * targets empty `dist/` under TanStack Start.
  */
 import { generateSW } from 'workbox-build'
 import { existsSync } from 'node:fs'

@@ -36,8 +36,9 @@ export default defineConfig({
     viteReact(),
     VitePWA({
       registerType: 'autoUpdate',
-      // Emit a small register script into HTML so installability crawlers (PWA Builder) see the SW.
-      injectRegister: 'script',
+      // Registration is an inline <script> in __root.tsx (PWABuilder needs it in HTML, not React).
+      injectRegister: false,
+      filename: 'sw.js',
       // Must match Nitro static output or Workbox precaches an empty dist/.
       outDir: pwaOutDir,
       includeAssets: [
@@ -50,6 +51,7 @@ export default defineConfig({
         'icons/icon-192.png',
         'icons/icon-512.png',
         'screenshots/mobile.png',
+        'screenshots/desktop.png',
         'splash/iphone-14-pro-max.png',
         'splash/iphone-14-pro.png',
         'splash/iphone-12.png',

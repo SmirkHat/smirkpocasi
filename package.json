@@ -9,6 +9,7 @@
     "build": "vite build && node scripts/finalize-pwa.mjs",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
+    "screenshots:pwa": "node scripts/capture-pwa-screenshots.mjs",
     "test:weather-sources": "node scripts/weather-source-test.js",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit"

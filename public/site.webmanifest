@@ -46,7 +46,14 @@
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "SmirkPočasí — domovská obrazovka"
+      "label": "SmirkPočasí — Praha, domovská obrazovka"
+    },
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "SmirkPočasí — Praha, desktop"
     }
   ],
   "shortcuts": [
