@@ -57,9 +57,12 @@ function RadarPreviewCard({ location, className }: { location: { lat?: number; l
 }
 
 export default function HomePage() {
+  const hydrated = useWeatherStore((state) => state.hydrated)
   const location = useWeatherStore((state) => state.location)
-  const home = useHomeBundle(location)
-  const placeImage = usePlaceImage(location)
+  // Wait for first-launch GPS/IP bootstrap before fetching weather.
+  const readyLocation = hydrated ? location : null
+  const home = useHomeBundle(readyLocation)
+  const placeImage = usePlaceImage(readyLocation)
   const refresh = useCallback(() => home.refresh(), [home.refresh])
   const pull = usePullToRefresh(refresh, true)
 

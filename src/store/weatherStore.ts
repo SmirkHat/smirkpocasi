@@ -29,10 +29,19 @@ type WeatherStore = {
 }
 
 const FAVORITES_KEY = 'smirkpocasi:favorites'
-const LOCATION_KEY = 'smirkpocasi:selected-location'
+export const LOCATION_KEY = 'smirkpocasi:selected-location'
 const WEATHER_CACHE_KEY = 'smirkpocasi:last-weather'
+/** Set after first-launch GPS → IP → Praha cascade (or when a saved location already exists). */
+export const LOCATION_BOOTSTRAP_KEY = 'smirkpocasi:location-bootstrapped'
 
-const defaultLocation: WeatherLocation = { name: 'Praha', lat: 50.0755, lon: 14.4378 }
+export const DEFAULT_LOCATION: WeatherLocation = {
+  name: 'Praha',
+  lat: 50.0755,
+  lon: 14.4378,
+  source: 'default',
+}
+
+const defaultLocation = DEFAULT_LOCATION
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof localStorage !== 'undefined'

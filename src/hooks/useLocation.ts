@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import { apiUrl } from '@/lib/apiBase'
-import { useWeatherStore } from '../store/weatherStore'
+import { DEFAULT_LOCATION, useWeatherStore, type WeatherLocation } from '../store/weatherStore'
 
-type DetectedLocation = {
-  name: string
-  lat: number
-  lon: number
-  label?: string
+type DetectedLocation = WeatherLocation & {
   country?: string
-  source?: string
   accuracy?: string
 }
 
@@ -72,7 +67,62 @@ async function fetchIpLocation(signal?: AbortSignal): Promise<DetectedLocation> 
 }
 
 /**
- * Resolve current place: browser GPS (asks for permission) → edge/IP geo fallback.
+ * GPS (may prompt) → edge/IP geo → Praha.
+ * Always resolves to a usable location.
+ */
+export async function resolveLocationCascade(): Promise<{
+  location: DetectedLocation
+  source: string
+}> {
+  const permission = await queryGeolocationPermission()
+
+  if (permission !== 'denied' && typeof navigator !== 'undefined' && navigator.geolocation) {
+    try {
+      let position: GeolocationPosition
+      try {
+        position = await readGeolocation()
+      } catch (firstError) {
+        if (permissionDenied(firstError as GeolocationPositionError)) throw firstError
+        position = await readGeolocationPrecise()
+      }
+
+      return {
+        location: {
+          name: 'Moje poloha',
+          lat: Number(position.coords.latitude.toFixed(5)),
+          lon: Number(position.coords.longitude.toFixed(5)),
+          source: 'gps',
+          accuracy: 'gps',
+        },
+        source: 'gps',
+      }
+    } catch {
+      // Denied or unavailable — fall through to IP.
+    }
+  }
+
+  try {
+    const ipLocation = await fetchIpLocation()
+    return {
+      location: {
+        name: ipLocation.name,
+        lat: ipLocation.lat,
+        lon: ipLocation.lon,
+        ...(ipLocation.label ? { label: ipLocation.label } : {}),
+        ...(ipLocation.source ? { source: ipLocation.source } : { source: 'ip' }),
+      },
+      source: ipLocation.source || 'ip',
+    }
+  } catch {
+    return {
+      location: { ...DEFAULT_LOCATION },
+      source: 'default',
+    }
+  }
+}
+
+/**
+ * Resolve current place: browser GPS (asks for permission) → edge/IP geo → Praha.
  */
 export function useLocation() {
   const location = useWeatherStore((state) => state.location)
@@ -90,69 +140,28 @@ export function useLocation() {
     setGpsSource(null)
 
     const permission = await queryGeolocationPermission()
+    const result = await resolveLocationCascade()
 
-    if (permission !== 'denied' && navigator.geolocation) {
-      try {
-        let position: GeolocationPosition
-        try {
-          position = await readGeolocation()
-        } catch (firstError) {
-          if (permissionDenied(firstError as GeolocationPositionError)) throw firstError
-          // Coarse failed (timeout / unavailable) — try precise GPS once.
-          position = await readGeolocationPrecise()
-        }
+    setLocation(result.location)
+    if (result.source === 'gps') addFavorite(result.location)
+    setGpsSource(result.source)
 
-        const gpsLocation: DetectedLocation = {
-          name: 'Moje poloha',
-          lat: Number(position.coords.latitude.toFixed(5)),
-          lon: Number(position.coords.longitude.toFixed(5)),
-          source: 'gps',
-          accuracy: 'gps',
-        }
-        setLocation(gpsLocation)
-        addFavorite(gpsLocation)
-        setGpsSource('gps')
-        setLoadingGps(false)
-        onSuccess?.()
-        return
-      } catch (error) {
-        const geoError = error as GeolocationPositionError
-        if (permissionDenied(geoError)) {
-          // Fall through to IP — user denied GPS; still try approximate location.
-        }
-        // Otherwise fall through to IP as well.
-      }
-    }
-
-    try {
-      const ipLocation = await fetchIpLocation()
-      setLocation({
-        name: ipLocation.name,
-        lat: ipLocation.lat,
-        lon: ipLocation.lon,
-        ...(ipLocation.label ? { label: ipLocation.label } : {}),
-        ...(ipLocation.source ? { source: ipLocation.source } : {}),
-      })
-      setGpsSource(ipLocation.source || 'ip')
+    if (result.source === 'default') {
+      setGpsError(
+        permission === 'denied'
+          ? 'Přístup k poloze byl odepřen a odhad z IP taky selhal — zůstává Praha. Povol polohu, nebo vyber město ručně.'
+          : 'Polohu se nepodařilo zjistit — zůstává Praha. Vyber město ručně, nebo zkus znovu.',
+      )
+    } else if (result.source !== 'gps') {
       setGpsNotice(
         permission === 'denied'
           ? 'GPS byla odepřena — použita přibližná poloha podle sítě (IP).'
           : 'GPS není dostupná — použita přibližná poloha podle sítě (IP).',
       )
-      setLoadingGps(false)
-      onSuccess?.()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Poloha se nepodařila zjistit.'
-      if (permission === 'denied') {
-        setGpsError(
-          'Přístup k poloze byl odepřen a odhad z IP taky selhal. Povol polohu v prohlížeči, nebo vyber město ručně.',
-        )
-      } else {
-        setGpsError(message)
-      }
-      setLoadingGps(false)
     }
+
+    setLoadingGps(false)
+    onSuccess?.()
   }
 
   /** @deprecated Prefer detectLocation — kept for existing call sites. */
