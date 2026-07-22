@@ -30,13 +30,8 @@ export function WeatherHeroSkeleton() {
       <section
         aria-busy="true"
         aria-label="Načítám aktuální počasí"
-        className="anim-rise relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-[linear-gradient(150deg,#1a2a3a_0%,var(--background)_48%,#2d1d08_100%)] sm:min-h-96 lg:min-h-112"
+        className="anim-rise relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-[linear-gradient(150deg,var(--card)_0%,var(--app-bg)_50%,var(--card)_100%)] sm:min-h-96 lg:min-h-112"
       >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.12)_0%,rgb(0_0_0/0.2)_40%,rgb(0_0_0/0.66)_78%,rgb(0_0_0/0.88)_100%)]"
-        />
-
         <div className="relative z-1 flex flex-col gap-1 p-5 sm:p-6 lg:p-8">
           <Skeleton className="h-7 w-40 rounded-md bg-white/20 sm:h-8 sm:w-52 dark:bg-white/15" />
 
@@ -79,15 +74,17 @@ export default function WeatherHero({
         aria-label={`Aktuální počasí pro ${placeName}`}
         className={cn(
           'anim-rise relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-cover bg-center sm:min-h-96 lg:min-h-112',
-          !image?.imageUrl && 'bg-[linear-gradient(150deg,#1a2a3a_0%,var(--background)_48%,#2d1d08_100%)]'
+          !image?.imageUrl &&
+            'bg-[linear-gradient(150deg,var(--card)_0%,var(--app-bg)_50%,var(--card)_100%)]',
         )}
         style={heroBgStyle}
       >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.12)_0%,rgb(0_0_0/0.2)_40%,rgb(0_0_0/0.66)_78%,rgb(0_0_0/0.88)_100%)]"
-        />
-
+        {image?.imageUrl ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.12)_0%,rgb(0_0_0/0.2)_40%,rgb(0_0_0/0.66)_78%,rgb(0_0_0/0.88)_100%)]"
+          />
+        ) : null}
         <div className="relative z-1 flex flex-col gap-1 p-5 sm:p-6 lg:p-8">
           <div className="flex min-w-0 items-center gap-2">
             <button

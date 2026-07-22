@@ -9,6 +9,41 @@ const TITLE_MAX_DISTANCE_METERS = 15000;
 const OPENTRIPMAP_MAX_DISTANCE_METERS = 15000;
 const OPENTRIPMAP_LANG = 'en';
 const THUMB_WIDTH = 1920;
+/** In-process cache — survives warm instances; CDN also gets s-maxage below. */
+const MEMORY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const MEMORY_MAX_ENTRIES = 400;
+const memoryCache = new Map();
+const inFlight = new Map();
+
+function memoryCacheKey(lat, lon, name) {
+  const title = String(name || '')
+    .split(',')[0]
+    .trim()
+    .toLocaleLowerCase('cs-CZ');
+  return `${Number(lat).toFixed(3)},${Number(lon).toFixed(3)}:${title}`;
+}
+
+function readMemoryCache(key) {
+  const cached = memoryCache.get(key);
+  if (!cached) return null;
+  if (Date.now() - cached.at >= MEMORY_TTL_MS) {
+    memoryCache.delete(key);
+    return null;
+  }
+  // Refresh LRU order.
+  memoryCache.delete(key);
+  memoryCache.set(key, cached);
+  return cached.payload;
+}
+
+function writeMemoryCache(key, payload) {
+  memoryCache.set(key, { at: Date.now(), payload });
+  while (memoryCache.size > MEMORY_MAX_ENTRIES) {
+    const oldest = memoryCache.keys().next().value;
+    memoryCache.delete(oldest);
+  }
+}
+
 const WIKIMEDIA_PROJECTS = [
   { host: 'cs.wikipedia.org', source: 'Wikipedia (cs)' },
   { host: 'en.wikipedia.org', source: 'Wikipedia (en)' },
@@ -975,10 +1010,27 @@ export default async function handler(req, res) {
     return;
   }
 
+  const key = memoryCacheKey(lat, lon, name);
+  const cached = readMemoryCache(key);
+  if (cached) {
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
+    res.setHeader('X-Place-Image-Cache', 'HIT');
+    res.status(200).json(cached);
+    return;
+  }
+
   try {
-    const image = await placeImage(lat, lon, name);
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
-    res.status(200).json(image || { imageUrl: null });
+    let pending = inFlight.get(key);
+    if (!pending) {
+      pending = placeImage(lat, lon, name).finally(() => inFlight.delete(key));
+      inFlight.set(key, pending);
+    }
+    const image = await pending;
+    const payload = image || { imageUrl: null };
+    writeMemoryCache(key, payload);
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
+    res.setHeader('X-Place-Image-Cache', 'MISS');
+    res.status(200).json(payload);
   } catch (error) {
     res.status(502).json({ error: 'Obrázek místa se nepodařilo načíst.', detail: error.message });
   }
