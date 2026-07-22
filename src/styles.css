@@ -226,6 +226,11 @@
 html {
   min-height: 100%;
   background: var(--app-bg);
+  /* App-like: no double-tap / pinch browser zoom; maps override via Leaflet. */
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -234,10 +239,33 @@ body {
   font-family: var(--font-sans);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Standalone PWA: keep chrome flush with the system UI. */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
 }
 
 #root {
   min-height: 100dvh;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+svg {
+  -webkit-user-drag: none;
 }
 
 button,
@@ -253,6 +281,8 @@ input {
   border-radius: var(--radius-lg);
   /* Beat leaflet.css (#ddd) so tiles don’t flash white while loading */
   background: #0b0f14 !important;
+  /* Allow Leaflet pinch/pan; page-level touch-action: manipulation blocks browser zoom. */
+  touch-action: none;
 }
 
 .leaflet-container .leaflet-tile-pane,

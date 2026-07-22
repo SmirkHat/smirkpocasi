@@ -1,8 +1,32 @@
 {
+  "id": "/smirkpocasi",
   "name": "SmirkPočasí",
   "short_name": "SmirkPočasí",
   "description": "Česká počasí aplikace od SmirkHat.org",
+  "lang": "cs-CZ",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "theme_color": "#181818",
+  "background_color": "#181818",
+  "prefer_related_applications": false,
+  "categories": ["weather", "utilities"],
   "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
@@ -16,11 +40,43 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#181818",
-  "background_color": "#181818",
-  "display": "standalone",
-  "orientation": "portrait",
-  "start_url": "/",
-  "scope": "/",
-  "lang": "cs-CZ"
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "SmirkPočasí — domovská obrazovka"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Počasí",
+      "short_name": "Počasí",
+      "description": "Aktuální počasí a předpověď",
+      "url": "/?utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Radar",
+      "short_name": "Radar",
+      "description": "Srážkový radar",
+      "url": "/radar?utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Voda",
+      "short_name": "Voda",
+      "description": "Stavy řek a moře",
+      "url": "/hydro?utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Lokace",
+      "short_name": "Lokace",
+      "description": "Nastavení místa",
+      "url": "/settings?utm_source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
 }

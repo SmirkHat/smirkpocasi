@@ -36,6 +36,8 @@ export default defineConfig({
     viteReact(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Emit a small register script into HTML so installability crawlers (PWA Builder) see the SW.
+      injectRegister: 'script',
       // Must match Nitro static output or Workbox precaches an empty dist/.
       outDir: pwaOutDir,
       includeAssets: [
@@ -45,6 +47,9 @@ export default defineConfig({
         'apple-touch-icon.png',
         'web-app-manifest-192x192.png',
         'web-app-manifest-512x512.png',
+        'icons/icon-192.png',
+        'icons/icon-512.png',
+        'screenshots/mobile.png',
         'site.webmanifest',
         'logo.svg',
       ],

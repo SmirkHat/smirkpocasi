@@ -6,6 +6,7 @@ import { Card, CardAction, CardHeader, CardPanel, CardTitle } from '@/components
 import { cn } from '@/lib/utils'
 import { AppPage } from '../components/AppChrome'
 import AirQuality from '../components/AirQuality'
+import { DataUpdateFooter } from '../components/DataUpdateFooter'
 import ForecastExplorer, { ForecastExplorerSkeleton } from '../components/ForecastExplorer'
 import MetricsGrid, { HumidityPrecipTiles, HumidityPrecipTilesSkeleton, MetricsGridSkeleton } from '../components/MetricsGrid'
 import NerdZone from '../components/NerdZone'
@@ -146,6 +147,13 @@ export default function HomePage() {
           <NerdZone consensus={consensus} updatedAt={home.weatherUpdatedAt} offline={home.offline} />
         </div>
       ) : null}
+
+      <DataUpdateFooter
+        updatedAt={home.updatedAt}
+        clientMeta={home.clientMeta}
+        offline={home.offline}
+        className="anim-rise mb-2"
+      />
     </AppPage>
   )
 }

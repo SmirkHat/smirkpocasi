@@ -29,6 +29,20 @@ const emptyConsensus = () => ({
   forecastSeries: [],
 })
 
+function withClientMeta(payload, response) {
+  const receivedAt = new Date().toISOString()
+  const serverHttpDate = response?.headers?.get?.('Date') || null
+  return {
+    ...payload,
+    clientMeta: {
+      receivedAt,
+      serverHttpDate,
+      // Prefer body stamp (when server assembled the payload); fall back to HTTP Date.
+      serverUpdatedAt: payload?.updatedAt || serverHttpDate || receivedAt,
+    },
+  }
+}
+
 /**
  * Single home request: weather + warnings + AQI + full consensus.
  * Server fans out upstreams in-process and caches aggressively.
@@ -65,7 +79,8 @@ export function useHomeBundle(location) {
           const payload = await response.json().catch(() => null)
           throw new Error(payload?.error || 'Home data se nepodařilo načíst.')
         }
-        return response.json()
+        const payload = await response.json()
+        return withClientMeta(payload, response)
       })
       .then((payload) => {
         try {
@@ -87,6 +102,7 @@ export function useHomeBundle(location) {
   }, [location?.lat, location?.lon])
 
   const consensus = bundle?.consensus || emptyConsensus()
+  const clientMeta = bundle?.clientMeta ?? null
 
   return {
     loading,
@@ -103,5 +119,6 @@ export function useHomeBundle(location) {
       error,
     },
     updatedAt: bundle?.updatedAt ?? null,
+    clientMeta,
   }
 }

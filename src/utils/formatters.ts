@@ -93,6 +93,21 @@ export function formatDateTime(value) {
   }).format(date);
 }
 
+/** Full stamp with seconds — for data-freshness footers. */
+export function formatDateTimeDetailed(value) {
+  if (!value) return '—';
+  const date = parseDate(value);
+  if (isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat('cs-CZ', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(date);
+}
+
 /**
  * UI-only place label: drop trailing parentheticals like "Lípa (okres Zlín)".
  * Keep the full `location.name` in store/APIs for disambiguation.
