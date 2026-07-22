@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { cn } from '@/lib/utils'
-import { floodFill, getChartTheme } from './charts/chartTheme'
+import { floodFill, useChartTheme } from './charts/chartTheme'
 import { formatHydroName, formatPlaceName } from '../utils/formatters'
 
 const OSM_MAX_NATIVE_ZOOM = 19
@@ -43,13 +43,13 @@ function Recenter({ center, zoom, bounds }) {
   return null
 }
 
-function LocationMarker({ position, label }) {
+function LocationMarker({ position, label, color }) {
   if (!Number.isFinite(position?.[0]) || !Number.isFinite(position?.[1])) return null
 
   return (
     <CircleMarker
       center={position}
-      pathOptions={{ color: '#ffffff', weight: 2, fillColor: '#e11d48', fillOpacity: 1 }}
+      pathOptions={{ color: '#ffffff', weight: 2, fillColor: color, fillOpacity: 1 }}
       radius={8}
       zIndexOffset={1000}
     >
@@ -129,7 +129,7 @@ export default function HydroMap({
   onSelectStation = null,
   className,
 }) {
-  const theme = useMemo(() => getChartTheme(), [])
+  const theme = useChartTheme()
   const center = useMemo(() => {
     const lat = Number(location?.lat)
     const lon = Number(location?.lon)
@@ -190,6 +190,7 @@ export default function HydroMap({
         ))}
         <LocationMarker
           position={center}
+          color={theme.primary}
           label={formatPlaceName(location?.name) || location?.name}
         />
       </MapContainer>

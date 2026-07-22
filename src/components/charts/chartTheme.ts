@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 const TOKEN_KEYS = [
   '--foreground',
   '--muted-foreground',
@@ -73,3 +75,28 @@ export function floodFill(level, theme) {
   if (level >= 1) return theme.warning;
   return theme.info;
 }
+
+/**
+ * Live --primary (and full chart theme) as place-photo tokens update on <html style>.
+ * Leaflet needs concrete colors, not CSS variables.
+ */
+export function useChartTheme() {
+  const [theme, setTheme] = useState(() => getChartTheme());
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const sync = () => setTheme(getChartTheme());
+    sync();
+
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return theme;
+}
+

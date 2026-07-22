@@ -12,6 +12,7 @@ import { buildExtrapolatedRainviewerFrames, estimateRainviewerMotion } from '../
 import { RAINVIEWER_RECOLOR_SOURCE_SCHEME, createRainviewerColorTable, colorizeChmiRadar } from '../config/rainviewer';
 import { useUiStore } from '../store/uiStore';
 import { formatPlaceName } from '../utils/formatters';
+import { useChartTheme } from './charts/chartTheme';
 import 'leaflet/dist/leaflet.css';
 import { apiUrl } from '@/lib/apiBase'
 
@@ -285,6 +286,7 @@ function Recenter({ center, zoom }) {
 }
 
 function LocationMarker({ position, label }) {
+  const theme = useChartTheme();
   if (!Number.isFinite(position?.[0]) || !Number.isFinite(position?.[1])) return null;
 
   return (
@@ -293,12 +295,16 @@ function LocationMarker({ position, label }) {
       pathOptions={{
         color: '#ffffff',
         weight: 2,
-        fillColor: '#e11d48',
-        fillOpacity: 1
+        fillColor: theme.primary,
+        fillOpacity: 1,
       }}
       radius={8}
     >
-      {label ? <Tooltip direction="top" offset={[0, -8]} opacity={1} permanent={false}>{label}</Tooltip> : null}
+      {label ? (
+        <Tooltip direction="top" offset={[0, -8]} opacity={1} permanent={false}>
+          {label}
+        </Tooltip>
+      ) : null}
     </CircleMarker>
   );
 }
