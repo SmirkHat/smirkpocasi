@@ -10,6 +10,18 @@ function isApiPath(pathname: string) {
   return pathname === '/api' || pathname.startsWith('/api/')
 }
 
+function withCors(response: Response, request: Request) {
+  const headers = new Headers(response.headers)
+  for (const [key, value] of Object.entries(corsHeaders(request))) {
+    headers.set(key, value)
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  })
+}
+
 /** Ensure API responses always carry CORS, even when a route is missing. */
 const apiCorsMiddleware = createMiddleware({ type: 'request' }).server(
   async ({ next, request }) => {
@@ -20,29 +32,22 @@ const apiCorsMiddleware = createMiddleware({ type: 'request' }).server(
       return new Response(null, { status: 204, headers: corsHeaders(request) })
     }
 
-    const response = await next()
-    const contentType = response.headers.get('content-type') || ''
+    // Request middleware next() returns { request, response, context, pathname } — not a Response.
+    const result = await next()
+    const contentType = result.response.headers.get('content-type') || ''
 
     // Missing API routes often fall through to the HTML app shell — convert to JSON 404.
-    if (
-      response.status === 404 &&
-      contentType.includes('text/html')
-    ) {
+    if (result.response.status === 404 && contentType.includes('text/html')) {
       return Response.json(
         { error: 'API route not found.', path: url.pathname },
         { status: 404, headers: corsHeaders(request) },
       )
     }
 
-    const headers = new Headers(response.headers)
-    for (const [key, value] of Object.entries(corsHeaders(request))) {
-      headers.set(key, value)
+    return {
+      ...result,
+      response: withCors(result.response, request),
     }
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    })
   },
 )
 
