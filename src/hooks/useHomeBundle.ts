@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiUrl } from '@/lib/apiBase'
 import { pendingSources } from '../utils/consensusCore'
 
@@ -37,9 +37,30 @@ function withClientMeta(payload, response) {
     clientMeta: {
       receivedAt,
       serverHttpDate,
-      // Prefer body stamp (when server assembled the payload); fall back to HTTP Date.
       serverUpdatedAt: payload?.updatedAt || serverHttpDate || receivedAt,
     },
+  }
+}
+
+async function fetchHomeBundle(location, signal) {
+  const params = new URLSearchParams({
+    lat: String(location.lat),
+    lon: String(location.lon),
+  })
+  const response = await fetch(apiUrl(`/api/home?${params}`), { signal })
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null)
+    throw new Error(payload?.error || 'Home data se nepodařilo načíst.')
+  }
+  const payload = await response.json()
+  return withClientMeta(payload, response)
+}
+
+function persistBundle(payload) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload))
+  } catch {
+    localStorage.removeItem(CACHE_KEY)
   }
 }
 
@@ -53,6 +74,8 @@ export function useHomeBundle(location) {
   const [bundle, setBundle] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const locationRef = useRef(location)
+  locationRef.current = location
 
   useEffect(() => {
     if (!location?.lat || !location?.lon) return undefined
@@ -68,26 +91,9 @@ export function useHomeBundle(location) {
     }
     setError(null)
 
-    const params = new URLSearchParams({
-      lat: String(location.lat),
-      lon: String(location.lon),
-    })
-
-    fetch(apiUrl(`/api/home?${params}`), { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) {
-          const payload = await response.json().catch(() => null)
-          throw new Error(payload?.error || 'Home data se nepodařilo načíst.')
-        }
-        const payload = await response.json()
-        return withClientMeta(payload, response)
-      })
+    fetchHomeBundle(location, controller.signal)
       .then((payload) => {
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(payload))
-        } catch {
-          localStorage.removeItem(CACHE_KEY)
-        }
+        persistBundle(payload)
         setBundle(payload)
         setLoading(false)
       })
@@ -100,6 +106,20 @@ export function useHomeBundle(location) {
 
     return () => controller.abort()
   }, [location?.lat, location?.lon])
+
+  const refresh = useCallback(async () => {
+    const current = locationRef.current
+    if (!current?.lat || !current?.lon) return
+    setError(null)
+    try {
+      const payload = await fetchHomeBundle(current)
+      persistBundle(payload)
+      setBundle(payload)
+      setLoading(false)
+    } catch (fetchError) {
+      setError(fetchError.message)
+    }
+  }, [])
 
   const consensus = bundle?.consensus || emptyConsensus()
   const clientMeta = bundle?.clientMeta ?? null
@@ -120,5 +140,6 @@ export function useHomeBundle(location) {
     },
     updatedAt: bundle?.updatedAt ?? null,
     clientMeta,
+    refresh,
   }
 }

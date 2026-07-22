@@ -19,6 +19,7 @@ import { useLocation } from '../hooks/useLocation'
 import { useMeteostatHistory } from '../hooks/useMeteostatHistory'
 import { useWeatherStore } from '../store/weatherStore'
 import { formatPlaceName } from '../utils/formatters'
+import { hapticLight, hapticMedium } from '../utils/haptics'
 
 const MIN_QUERY_LENGTH = 2
 const SEARCH_DEBOUNCE_MS = 250
@@ -127,12 +128,14 @@ export default function LocationPickerDialog({
       ...(place.fullName ? { fullName: place.fullName } : {}),
       ...(place.source ? { source: place.source } : {}),
     }
+    hapticMedium()
     setLocation(nextLocation)
     addFavorite(nextLocation)
     onOpenChange(false)
   }
 
   function chooseFavorite(favorite: any) {
+    hapticMedium()
     setLocation(favorite)
     onOpenChange(false)
   }
@@ -148,7 +151,10 @@ export default function LocationPickerDialog({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => useGps(() => onOpenChange(false))}
+              onClick={() => {
+                hapticLight()
+                useGps(() => onOpenChange(false))
+              }}
               loading={loadingGps}
             >
               <HiMapPin aria-hidden="true" />

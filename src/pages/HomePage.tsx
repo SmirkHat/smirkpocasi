@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { HiArrowsPointingOut } from 'react-icons/hi2'
 import { ClientOnly, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -15,6 +16,7 @@ import VodaPreview from '../components/VodaPreview'
 import WarningBanner from '../components/WarningBanner'
 import WeatherHero, { WeatherHeroSkeleton } from '../components/WeatherHero'
 import { useHomeBundle } from '../hooks/useHomeBundle'
+import { PullToRefreshIndicator, usePullToRefresh } from '../hooks/usePullToRefresh'
 import { usePlaceImage } from '../hooks/usePlaceImage'
 import { useWeatherStore } from '../store/weatherStore'
 import { firstDailyValue } from '../utils/forecast'
@@ -58,6 +60,8 @@ export default function HomePage() {
   const location = useWeatherStore((state) => state.location)
   const home = useHomeBundle(location)
   const placeImage = usePlaceImage(location)
+  const refresh = useCallback(() => home.refresh(), [home.refresh])
+  const pull = usePullToRefresh(refresh, true)
 
   const weatherData: any = home.weather
   const current = weatherData?.current
@@ -85,6 +89,7 @@ export default function HomePage() {
 
   return (
     <AppPage hero={hero}>
+      <PullToRefreshIndicator pull={pull.pull} refreshing={pull.refreshing} threshold={pull.threshold} />
       <WarningBanner attribution={home.warningsAttribution} warnings={home.warnings} />
 
       {home.error && !home.weather ? (

@@ -12,6 +12,9 @@ import { useUiStore } from '../store/uiStore'
 import { useWeatherStore } from '../store/weatherStore'
 import { backdropThemeFromDominant } from '../utils/imagePalette'
 import LocationPickerDialog from './LocationPickerDialog'
+import { InstallPrompt } from './InstallPrompt'
+import { NetworkBanner } from './NetworkBanner'
+import { hapticLight } from '../utils/haptics'
 
 const pageNavItems = [
   { path: '/', label: 'Počasí', Icon: CloudSun },
@@ -100,6 +103,7 @@ function BottomNav() {
               key={path}
               to={path}
               aria-current={active ? 'page' : undefined}
+              onClick={() => hapticLight()}
               className={cn(
                 'flex h-12 flex-col items-center justify-center gap-0.5 rounded-lg text-[0.6875rem] font-medium no-underline transition-colors',
                 active
@@ -176,6 +180,12 @@ export function AppPage({
       <PlaceBackdrop palette={palette} />
       <div className={cn('relative z-10', fillViewport && 'flex min-h-0 flex-1 flex-col')}>
         <TopNav />
+        {!fillViewport ? (
+          <>
+            <NetworkBanner />
+            <InstallPrompt />
+          </>
+        ) : null}
         {hero}
         <main
           className={cn(
