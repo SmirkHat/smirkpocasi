@@ -1,4 +1,5 @@
 import { metersPerSecondToKmh } from './weatherMath';
+import { ROBUST_FIELD, robustAggregate } from './robustAggregate';
 
 const TZ = 'Europe/Prague';
 
@@ -72,13 +73,6 @@ function parseLooseTime(value: string) {
     return new Date(`${normalized.length === 16 ? `${normalized}:00` : normalized}`);
   }
   return new Date(normalized);
-}
-
-function weightedAverage(entries: { value: number; weight: number }[]) {
-  if (!entries.length) return null;
-  const weightSum = entries.reduce((sum, entry) => sum + entry.weight, 0);
-  if (weightSum <= 0) return null;
-  return entries.reduce((sum, entry) => sum + entry.value * entry.weight, 0) / weightSum;
 }
 
 function pickFirstFinite(values: Array<number | null | undefined>) {
@@ -271,11 +265,14 @@ function finalizeHours(map: Map<string, MutableHour>): HourlyPoint[] {
       key: row.key,
       dayKey: row.dayKey,
       time: row.time,
-      temperature: weightedAverage(row.temps),
-      precipMm: weightedAverage(row.precips),
-      precipProb: weightedAverage(row.precipProbs),
-      windSpeed: weightedAverage(row.winds),
-      windDirection: weightedAverage(row.dirs),
+      temperature: robustAggregate(row.temps, ROBUST_FIELD.temperature),
+      precipMm: robustAggregate(row.precips, ROBUST_FIELD.precipitation),
+      precipProb: robustAggregate(row.precipProbs, ROBUST_FIELD.precipitationProbability),
+      windSpeed: robustAggregate(row.winds, ROBUST_FIELD.windSpeed),
+      windDirection: robustAggregate(row.dirs, {
+        ...ROBUST_FIELD.windDirection,
+        circular: true,
+      }),
       weatherCode: pickFirstFinite(row.codes.map((entry) => entry.value)),
       sources: [...row.sources],
     }))
@@ -309,22 +306,28 @@ function buildDaysFromHours(hours: HourlyPoint[], daily?: any): ForecastDay[] {
   }
 
   return [...byDay.keys()].sort().map((key) => {
-    const dayHours = byDay.get(key) || [];
-    const temps = dayHours.map((hour) => hour.temperature).filter((value): value is number => value != null);
-    const precips = dayHours.map((hour) => hour.precipMm).filter((value): value is number => value != null);
-    const fromDaily = dailyByKey.get(key);
-    const noon = dayHours[Math.floor(dayHours.length / 2)] || dayHours[0];
+    const dayHours = byDay.get(key) || []
+    const temps = dayHours.map((hour) => hour.temperature).filter((value): value is number => value != null)
+    const precips = dayHours.map((hour) => hour.precipMm).filter((value): value is number => value != null)
+    const fromDaily = dailyByKey.get(key)
+    const noon = dayHours[Math.floor(dayHours.length / 2)] || dayHours[0]
+
+    // Prefer extremes from the same hourly series the chart plots — Open-Meteo
+    // daily max/min often disagrees with the multi-source hourly consensus.
+    const hourlyMin = temps.length ? Math.min(...temps) : null
+    const hourlyMax = temps.length ? Math.max(...temps) : null
+    const hourlyPrecip = precips.length ? precips.reduce((sum, value) => sum + value, 0) : null
 
     return {
       key,
       date: fromDaily?.date || noon.time,
-      tempMin: fromDaily?.tempMin ?? (temps.length ? Math.min(...temps) : null),
-      tempMax: fromDaily?.tempMax ?? (temps.length ? Math.max(...temps) : null),
-      precipSum: fromDaily?.precipSum ?? (precips.length ? precips.reduce((sum, value) => sum + value, 0) : null),
+      tempMin: hourlyMin ?? fromDaily?.tempMin ?? null,
+      tempMax: hourlyMax ?? fromDaily?.tempMax ?? null,
+      precipSum: hourlyPrecip ?? fromDaily?.precipSum ?? null,
       weatherCode: fromDaily?.weatherCode ?? noon?.weatherCode ?? null,
       hours: dayHours,
-    };
-  });
+    }
+  })
 }
 
 /**

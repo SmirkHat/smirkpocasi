@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { HiArrowsPointingOut } from 'react-icons/hi2'
 import { ClientOnly, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -20,6 +20,7 @@ import { PullToRefreshIndicator, usePullToRefresh } from '../hooks/usePullToRefr
 import { usePlaceImage } from '../hooks/usePlaceImage'
 import { useWeatherStore } from '../store/weatherStore'
 import { firstDailyValue } from '../utils/forecast'
+import { buildMergedForecastDays } from '../utils/hourlyForecast'
 import { getWeatherInfo } from '../utils/weatherCodes'
 
 function photoCredit(image) {
@@ -69,10 +70,21 @@ export default function HomePage() {
   const weatherData: any = home.weather
   const current = weatherData?.current
   const daily = weatherData?.daily
+  const hourly = weatherData?.hourly
   const consensus = home.consensus
   const consensusValues = consensus?.consensus
   const info = getWeatherInfo(consensusValues?.weatherCode ?? current?.weathercode)
   const showPageSkeleton = home.loading && !home.weather
+
+  // Same merged day extremes as the temperature chart / week overview.
+  const todayForecast = useMemo(() => {
+    const { days } = buildMergedForecastDays({
+      hourly,
+      daily,
+      forecastSeries: consensus?.forecastSeries,
+    })
+    return days[0] ?? null
+  }, [hourly, daily, consensus?.forecastSeries])
 
   const hero = home.loading && !current ? (
     <WeatherHeroSkeleton />
@@ -82,8 +94,8 @@ export default function HomePage() {
       info={info}
       WeatherIcon={info.Icon}
       temperature={consensusValues?.temperature ?? current?.temperature_2m}
-      tempMax={firstDailyValue(daily, 'temperature_2m_max')}
-      tempMin={firstDailyValue(daily, 'temperature_2m_min')}
+      tempMax={todayForecast?.tempMax ?? firstDailyValue(daily, 'temperature_2m_max')}
+      tempMin={todayForecast?.tempMin ?? firstDailyValue(daily, 'temperature_2m_min')}
       image={placeImage}
       credit={photoCredit(placeImage)}
       offline={home.offline}

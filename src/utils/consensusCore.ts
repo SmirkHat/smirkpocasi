@@ -2,6 +2,12 @@
 import { PROVIDERS } from '../config/providers';
 import { extractForecastSeries } from './forecastSeries';
 import {
+  partitionOutliers,
+  weightedCircularMean,
+  weightedMedian,
+  weightedStandardDeviation,
+} from './robustAggregate';
+import {
   calculateAbsoluteHumidity,
   calculateApparentTemperature,
   calculateDewPoint,
@@ -102,36 +108,9 @@ const FIELD_LABELS = {
   absoluteHumidity: 'abs. vlhkost'
 };
 
-function numbers(values) {
-  return values.map(numberOrNull).filter((value) => Number.isFinite(value));
-}
-
-function median(values) {
-  const sorted = [...numbers(values)].sort((a, b) => a - b);
-  if (!sorted.length) return null;
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-}
-
 function sourceWeight(source) {
   const weight = numberOrNull(source?.weight);
   return weight !== null && weight >= 0 ? weight : 1;
-}
-
-function weightedMedian(entries) {
-  const usable = entries.filter((entry) => Number.isFinite(entry.value) && Number.isFinite(entry.weight) && entry.weight > 0);
-  if (!usable.length) return null;
-
-  const sorted = [...usable].sort((a, b) => a.value - b.value);
-  const totalWeight = sorted.reduce((sum, entry) => sum + entry.weight, 0);
-  let weightSoFar = 0;
-
-  for (const entry of sorted) {
-    weightSoFar += entry.weight;
-    if (weightSoFar >= totalWeight / 2) return entry.value;
-  }
-
-  return sorted[sorted.length - 1].value;
 }
 
 function weightedMode(entries) {
@@ -144,16 +123,6 @@ function weightedMode(entries) {
   if (!counts.size) return null;
 
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
-}
-
-function weightedStandardDeviation(entries) {
-  const usable = entries.filter((entry) => Number.isFinite(entry.value) && Number.isFinite(entry.weight) && entry.weight > 0);
-  if (usable.length < 2) return 0;
-
-  const totalWeight = usable.reduce((sum, entry) => sum + entry.weight, 0);
-  const average = usable.reduce((sum, entry) => sum + entry.value * entry.weight, 0) / totalWeight;
-  const variance = usable.reduce((sum, entry) => sum + (entry.value - average) ** 2 * entry.weight, 0) / totalWeight;
-  return Math.sqrt(variance);
 }
 
 function confidenceFrom(divergence) {
@@ -346,42 +315,9 @@ function numericEntriesForField(sources, field) {
 
 function robustEntriesForField(sources, field) {
   const entries = numericEntriesForField(sources, field);
-  const baseTolerance = OUTLIER_TOLERANCE[field];
-  if (entries.length < 4 || !baseTolerance) return entries;
-
-  const center = weightedMedian(entries);
-  if (center === null) return entries;
-
-  const mad = median(entries.map((entry) => Math.abs(entry.value - center))) || 0;
-  const tolerance = Math.max(baseTolerance, mad * 4);
-  const filtered = entries.filter((entry) => Math.abs(entry.value - center) <= tolerance);
-
-  if (filtered.length < Math.max(2, Math.ceil(entries.length / 2))) return entries;
-
-  entries
-    .filter((entry) => !filtered.includes(entry))
-    .forEach((entry) => addQualityIssue(entry.source, field, 'outlier'));
-
-  return filtered;
-}
-
-function weightedCircularMean(entries) {
-  const usable = entries.filter((entry) => Number.isFinite(entry.value) && Number.isFinite(entry.weight) && entry.weight > 0);
-  if (!usable.length) return null;
-
-  const vector = usable.reduce(
-    (sum, entry) => {
-      const radians = (entry.value * Math.PI) / 180;
-      return {
-        sin: sum.sin + Math.sin(radians) * entry.weight,
-        cos: sum.cos + Math.cos(radians) * entry.weight
-      };
-    },
-    { sin: 0, cos: 0 }
-  );
-
-  if (Math.abs(vector.sin) < 0.0001 && Math.abs(vector.cos) < 0.0001) return weightedMedian(usable);
-  return (Math.atan2(vector.sin, vector.cos) * 180 / Math.PI + 360) % 360;
+  const { kept, rejected } = partitionOutliers(entries, OUTLIER_TOLERANCE[field]);
+  rejected.forEach((entry) => addQualityIssue(entry.source, field, 'outlier'));
+  return kept;
 }
 
 export function buildResult(settled) {
