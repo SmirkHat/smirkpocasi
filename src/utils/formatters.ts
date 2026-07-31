@@ -55,7 +55,14 @@ export function formatWindDirection(value) {
 }
 
 export function formatTime(value) {
-  if (!value) return '—';
+  if (!value && value !== 0) return '—';
+  // Consensus stores sunrise/sunset as minutes since midnight.
+  if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 24 * 60) {
+    const clamped = Math.round(value) % (24 * 60);
+    const hour = Math.floor(clamped / 60);
+    const minute = clamped % 60;
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  }
   const date = parseDate(value);
   if (isNaN(date.getTime())) return String(value);
   return new Intl.DateTimeFormat('cs-CZ', { hour: '2-digit', minute: '2-digit' }).format(date);

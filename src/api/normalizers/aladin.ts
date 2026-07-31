@@ -1,4 +1,4 @@
-import { iconNameToWeatherCode } from '../../utils/weatherMath.ts';
+import { iconNameToWeatherCode, metersPerSecondToKmh } from '../../utils/weatherMath.ts';
 
 function firstValue(values) {
   return Array.isArray(values) && values.length ? values[0] : null;
@@ -33,9 +33,11 @@ export function normalizeAladin(data) {
     apparentTemperature: firstValue(values.APPARENT_TEMPERATURE),
     precipitation: valueAtNow(values.PRECIPITATION_TOTAL, nowIdx),
     dewPoint: firstAvailable(values, ['DEW_POINT', 'DEWPOINT', 'DEW_POINT_TEMPERATURE']),
-    windSpeed: firstValue(values.WIND_SPEED),
+    windSpeed: metersPerSecondToKmh(firstValue(values.WIND_SPEED)),
     windDirection: firstValue(values.WIND_DIRECTION),
-    windGust: firstAvailable(values, ['WIND_GUST', 'WIND_GUSTS', 'WIND_SPEED_GUST']),
+    windGust: metersPerSecondToKmh(
+      firstAvailable(values, ['WIND_GUST_SPEED', 'WIND_GUST', 'WIND_GUSTS', 'WIND_SPEED_GUST']),
+    ),
     humidity: normalizeHumidity(firstValue(values.HUMIDITY)),
     pressure: firstValue(values.PRESSURE) !== null ? firstValue(values.PRESSURE) / 100 : null,
     cloudCover: firstAvailable(values, ['CLOUD_COVER', 'CLOUDS_TOTAL', 'CLOUDINESS']),

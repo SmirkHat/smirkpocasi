@@ -5,6 +5,7 @@ import {
   partitionOutliers,
   weightedCircularMean,
   weightedMedian,
+  weightedMode,
   weightedStandardDeviation,
 } from './robustAggregate';
 import {
@@ -16,7 +17,8 @@ import {
   iconNameToWeatherCode,
   inferWeatherCode,
   normalizeWmoWeatherCode,
-  numberOrNull
+  numberOrNull,
+  toLocalDayMinutes,
 } from './weatherMath';
 
 const FIELDS = [
@@ -36,7 +38,9 @@ const FIELDS = [
   'visibility',
   'uvIndex',
   'vaporPressureDeficit',
-  'absoluteHumidity'
+  'absoluteHumidity',
+  'sunrise',
+  'sunset',
 ];
 export const OBSERVATION_SOURCE_IDS = new Set([
   'opensensemap',
@@ -68,7 +72,10 @@ const FIELD_LIMITS = {
   visibility: [0, 100000],
   uvIndex: [0, 20],
   vaporPressureDeficit: [0, 20],
-  absoluteHumidity: [0, 80]
+  absoluteHumidity: [0, 80],
+  // Minutes since local midnight (Europe/Prague).
+  sunrise: [0, 24 * 60 - 1],
+  sunset: [0, 24 * 60 - 1],
 };
 const OUTLIER_TOLERANCE = {
   temperature: 4,
@@ -86,7 +93,9 @@ const OUTLIER_TOLERANCE = {
   visibility: 20000,
   uvIndex: 4,
   vaporPressureDeficit: 1.2,
-  absoluteHumidity: 5
+  absoluteHumidity: 5,
+  sunrise: 20,
+  sunset: 20,
 };
 const FIELD_LABELS = {
   temperature: 'teplota',
@@ -105,24 +114,14 @@ const FIELD_LABELS = {
   visibility: 'viditelnost',
   uvIndex: 'UV',
   vaporPressureDeficit: 'VPD',
-  absoluteHumidity: 'abs. vlhkost'
+  absoluteHumidity: 'abs. vlhkost',
+  sunrise: 'východ slunce',
+  sunset: 'západ slunce',
 };
 
 function sourceWeight(source) {
   const weight = numberOrNull(source?.weight);
   return weight !== null && weight >= 0 ? weight : 1;
-}
-
-function weightedMode(entries) {
-  const counts = new Map();
-  entries.forEach((entry) => {
-    if (!Number.isFinite(entry.value)) return;
-    counts.set(entry.value, (counts.get(entry.value) || 0) + entry.weight);
-  });
-
-  if (!counts.size) return null;
-
-  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
 }
 
 function confidenceFrom(divergence) {
@@ -138,6 +137,11 @@ function hasNumber(value) {
 export function withDerivedMetrics(value) {
   const next = { ...value };
   const derivedFields = { ...(value?.derivedFields || {}) };
+
+  const sunriseMins = toLocalDayMinutes(next.sunrise);
+  if (sunriseMins !== null) next.sunrise = sunriseMins;
+  const sunsetMins = toLocalDayMinutes(next.sunset);
+  if (sunsetMins !== null) next.sunset = sunsetMins;
 
   if (!hasNumber(next.dewPoint)) {
     const dewPoint = calculateDewPoint(next.temperature, next.humidity);
@@ -236,6 +240,8 @@ export function publicSource(provider, value, status) {
     cloudCoverMedium: enriched.cloudCoverMedium,
     cloudCoverHigh: enriched.cloudCoverHigh,
     fogArea: enriched.fogArea,
+    sunrise: enriched.sunrise,
+    sunset: enriched.sunset,
     distanceKm: enriched.distanceKm,
     symbolCode: enriched.symbolCode,
     iconName: enriched.iconName,
@@ -395,9 +401,16 @@ export function buildResult(settled) {
     included: includedSourceIds.has(source.id)
   }));
 
+  // Per-field inputs that survived outlier filtering (what the consensus value is built from).
+  const fieldSources = Object.fromEntries(
+    [...entriesByField.entries()].map(([field, entries]) => [field, serializeFieldEntries(entries)]),
+  );
+  fieldSources.weatherCode = serializeFieldEntries(weatherCodeEntries);
+
   return {
     consensus,
     sources: includedSources,
+    fieldSources,
     divergence,
     confidence: confidenceFrom(divergence),
     includedSourceIds: [...includedSourceIds],
@@ -406,5 +419,15 @@ export function buildResult(settled) {
     forecastSeries,
     updatedAt: new Date().toISOString()
   };
+}
+
+function serializeFieldEntries(entries) {
+  return entries.map(({ source, value, weight }) => ({
+    id: source.id,
+    name: source.name,
+    url: source.url || null,
+    value,
+    weight,
+  }));
 }
 

@@ -66,6 +66,7 @@ const CURRENT_FIELDS = [
   'apparent_temperature',
   'dew_point_2m',
   'precipitation',
+  'precipitation_probability',
   'weather_code',
   'wind_speed_10m',
   'wind_direction_10m',
@@ -75,6 +76,7 @@ const CURRENT_FIELDS = [
   'surface_pressure',
   'cloud_cover',
   'visibility',
+  'uv_index',
 ].join(',')
 
 const ENSEMBLE_MEAN_FIELDS = [
@@ -83,6 +85,7 @@ const ENSEMBLE_MEAN_FIELDS = [
   'apparent_temperature',
   'dew_point_2m',
   'precipitation',
+  'precipitation_probability',
   'weather_code',
   'wind_speed_10m',
   'wind_direction_10m',
@@ -160,6 +163,7 @@ async function fetchOpenMeteoModelServer(location: { lat: number; lon: number },
     longitude: String(location.lon),
     current: CURRENT_FIELDS,
     hourly: CURRENT_FIELDS,
+    daily: 'sunrise,sunset,uv_index_max,precipitation_probability_max',
     timezone: 'Europe/Prague',
     forecast_days: '7',
   })
@@ -173,6 +177,7 @@ async function fetchOpenMeteoEnsembleServer(location: { lat: number; lon: number
     longitude: String(location.lon),
     models: String(provider.model),
     hourly: ENSEMBLE_MEAN_FIELDS,
+    daily: 'sunrise,sunset,uv_index_max,precipitation_probability_max',
     timezone: 'Europe/Prague',
     forecast_days: '7',
   })

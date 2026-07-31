@@ -3,6 +3,8 @@
  * Full provider `raw` stays off public sources / localStorage.
  */
 
+import { symbolCodeToWeatherCode } from './weatherMath';
+
 function pickArray(hourly, ...keys) {
   for (const key of keys) {
     if (Array.isArray(hourly?.[key])) return hourly[key];
@@ -29,6 +31,7 @@ export function slimAladinForecast(raw) {
   return {
     forecastTimeIso: raw.forecastTimeIso,
     forecastLength: raw.forecastLength,
+    weatherIconNames: Array.isArray(raw.weatherIconNames) ? raw.weatherIconNames : [],
     parameterValues: {
       PRECIPITATION_TOTAL: values.PRECIPITATION_TOTAL || [],
       TEMPERATURE: values.TEMPERATURE || [],
@@ -47,6 +50,7 @@ export function slimYrForecast(raw) {
     .map((step) => {
       const instant = step.data.instant?.details || {};
       const next1 = step.data.next_1_hours?.details || {};
+      const symbol = step.data.next_1_hours?.summary?.symbol_code;
       return {
         time: step.time,
         temperature: instant.air_temperature ?? null,
@@ -54,6 +58,7 @@ export function slimYrForecast(raw) {
         windDirection: instant.wind_from_direction ?? null,
         precipitation: next1.precipitation_amount ?? null,
         precipitationProbability: next1.probability_of_precipitation ?? null,
+        weatherCode: symbolCodeToWeatherCode(symbol),
       };
     });
 

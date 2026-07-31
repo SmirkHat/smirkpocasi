@@ -3,6 +3,7 @@ import {
   iconNameToWeatherCode,
   kilometersToMeters,
   metersPerSecondToKmh,
+  toLocalDayMinutes,
 } from '../../utils/weatherMath.ts';
 
 function numberValue(value) {
@@ -58,6 +59,8 @@ export function normalizeWeatherbit(data) {
       weatherbitCodeToWmo(current.weather?.code) ?? iconNameToWeatherCode(phrase),
     iconName: phrase,
     symbolCode: current.weather?.code ?? current.weather?.icon ?? null,
+    sunrise: toLocalDayMinutes(current.sunrise ?? data?.daily?.[0]?.sunrise_ts),
+    sunset: toLocalDayMinutes(current.sunset ?? data?.daily?.[0]?.sunset_ts),
     raw: data,
   };
 }

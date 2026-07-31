@@ -228,7 +228,6 @@ html {
   background: var(--app-bg);
   /* App-like: no double-tap / pinch browser zoom; maps override via Leaflet. */
   touch-action: manipulation;
-  overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -239,17 +238,8 @@ body {
   font-family: var(--font-sans);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: optimizeLegibility;
-  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-}
-
-/* Standalone PWA: keep chrome flush with the system UI. */
-@media (display-mode: standalone) {
-  html,
-  body {
-    overscroll-behavior: none;
-  }
 }
 
 #root {

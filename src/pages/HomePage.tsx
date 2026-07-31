@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { HiArrowsPointingOut } from 'react-icons/hi2'
 import { ClientOnly, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -16,8 +16,8 @@ import VodaPreview from '../components/VodaPreview'
 import WarningBanner from '../components/WarningBanner'
 import WeatherHero, { WeatherHeroSkeleton } from '../components/WeatherHero'
 import { useHomeBundle } from '../hooks/useHomeBundle'
-import { PullToRefreshIndicator, usePullToRefresh } from '../hooks/usePullToRefresh'
 import { usePlaceImage } from '../hooks/usePlaceImage'
+import { useShowFieldSources } from '../hooks/useShowFieldSources'
 import { useWeatherStore } from '../store/weatherStore'
 import { firstDailyValue } from '../utils/forecast'
 import { buildMergedForecastDays } from '../utils/hourlyForecast'
@@ -64,8 +64,7 @@ export default function HomePage() {
   const readyLocation = hydrated ? location : null
   const home = useHomeBundle(readyLocation)
   const placeImage = usePlaceImage(readyLocation)
-  const refresh = useCallback(() => home.refresh(), [home.refresh])
-  const pull = usePullToRefresh(refresh, true)
+  const { enabled: showFieldSources, setEnabled: setShowFieldSources } = useShowFieldSources()
 
   const weatherData: any = home.weather
   const current = weatherData?.current
@@ -73,6 +72,7 @@ export default function HomePage() {
   const hourly = weatherData?.hourly
   const consensus = home.consensus
   const consensusValues = consensus?.consensus
+  const fieldSources = showFieldSources ? consensus?.fieldSources : null
   const info = getWeatherInfo(consensusValues?.weatherCode ?? current?.weathercode)
   const showPageSkeleton = home.loading && !home.weather
 
@@ -99,12 +99,12 @@ export default function HomePage() {
       image={placeImage}
       credit={photoCredit(placeImage)}
       offline={home.offline}
+      temperatureSources={fieldSources?.temperature}
     />
   )
 
   return (
     <AppPage hero={hero}>
-      <PullToRefreshIndicator pull={pull.pull} refreshing={pull.refreshing} threshold={pull.threshold} />
       <WarningBanner attribution={home.warningsAttribution} warnings={home.warnings} />
 
       {home.error && !home.weather ? (
@@ -141,7 +141,12 @@ export default function HomePage() {
           {showPageSkeleton ? (
             <HumidityPrecipTilesSkeleton />
           ) : (
-            <HumidityPrecipTiles weather={home.weather} consensusValues={consensusValues} />
+            <HumidityPrecipTiles
+              weather={home.weather}
+              consensusValues={consensusValues}
+              todayPrecipMm={todayForecast?.precipSum}
+              fieldSources={fieldSources}
+            />
           )}
         </aside>
 
@@ -153,7 +158,7 @@ export default function HomePage() {
           {showPageSkeleton ? (
             <MetricsGridSkeleton />
           ) : (
-            <MetricsGrid weather={home.weather} consensusValues={consensusValues} />
+            <MetricsGrid weather={home.weather} consensusValues={consensusValues} fieldSources={fieldSources} />
           )}
         </section>
 
@@ -164,7 +169,13 @@ export default function HomePage() {
 
       {!showPageSkeleton ? (
         <div className="anim-rise mt-5" style={{ animationDelay: '260ms' }}>
-          <NerdZone consensus={consensus} updatedAt={home.weatherUpdatedAt} offline={home.offline} />
+          <NerdZone
+            consensus={consensus}
+            updatedAt={home.weatherUpdatedAt}
+            offline={home.offline}
+            showFieldSources={showFieldSources}
+            onShowFieldSourcesChange={setShowFieldSources}
+          />
         </div>
       ) : null}
 

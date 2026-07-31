@@ -1,5 +1,5 @@
-import { metersPerSecondToKmh } from './weatherMath';
-import { ROBUST_FIELD, robustAggregate } from './robustAggregate';
+import { iconNameToWeatherCode, metersPerSecondToKmh } from './weatherMath';
+import { ROBUST_FIELD, robustAggregate, weightedMode } from './robustAggregate';
 
 const TZ = 'Europe/Prague';
 
@@ -75,13 +75,6 @@ function parseLooseTime(value: string) {
   return new Date(normalized);
 }
 
-function pickFirstFinite(values: Array<number | null | undefined>) {
-  for (const value of values) {
-    if (value != null && Number.isFinite(value)) return value;
-  }
-  return null;
-}
-
 type MutableHour = {
   key: string;
   dayKey: string;
@@ -91,7 +84,7 @@ type MutableHour = {
   precipProbs: { value: number; weight: number; source: string }[];
   winds: { value: number; weight: number; source: string }[];
   dirs: { value: number; weight: number; source: string }[];
-  codes: { value: number; source: string }[];
+  codes: { value: number; weight: number; source: string }[];
   sources: Set<string>;
 };
 
@@ -145,7 +138,7 @@ export function ingestOpenMeteoHourly(
     pushMetric(row.winds, finite(hourly.wind_speed_10m?.[i] ?? hourly.windspeed_10m?.[i]), weight, sourceId);
     pushMetric(row.dirs, finite(hourly.wind_direction_10m?.[i] ?? hourly.winddirection_10m?.[i]), weight, sourceId);
     const code = finite(hourly.weather_code?.[i] ?? hourly.weathercode?.[i]);
-    if (code != null) row.codes.push({ value: code, source: sourceId });
+    if (code != null) row.codes.push({ value: code, weight, source: sourceId });
   }
 }
 
@@ -162,7 +155,14 @@ export function ingestAladinHourly(map: Map<string, MutableHour>, aladin: any, w
   const temp = values.TEMPERATURE || [];
   const wind = values.WIND_SPEED || [];
   const dir = values.WIND_DIRECTION || [];
-  const length = Math.max(precip.length, temp.length, wind.length, Number(aladin.forecastLength) || 0);
+  const icons = Array.isArray(aladin.weatherIconNames) ? aladin.weatherIconNames : [];
+  const length = Math.max(
+    precip.length,
+    temp.length,
+    wind.length,
+    icons.length,
+    Number(aladin.forecastLength) || 0,
+  );
 
   for (let i = 0; i < length; i += 1) {
     const time = new Date(start.getTime() + i * 60 * 60 * 1000);
@@ -172,6 +172,8 @@ export function ingestAladinHourly(map: Map<string, MutableHour>, aladin: any, w
     pushMetric(row.precips, finite(precip[i]), weight, sourceId);
     pushMetric(row.winds, metersPerSecondToKmh(wind[i]), weight, sourceId);
     pushMetric(row.dirs, finite(dir[i]), weight, sourceId);
+    const code = finite(iconNameToWeatherCode(icons[i]));
+    if (code != null) row.codes.push({ value: code, weight, source: sourceId });
   }
 }
 
@@ -188,6 +190,8 @@ export function ingestYrHourly(map: Map<string, MutableHour>, yr: any, weight = 
       pushMetric(row.precipProbs, finite(step.precipitationProbability), weight, sourceId);
       pushMetric(row.winds, metersPerSecondToKmh(step.windSpeed), weight, sourceId);
       pushMetric(row.dirs, finite(step.windDirection), weight, sourceId);
+      const code = finite(step.weatherCode);
+      if (code != null) row.codes.push({ value: code, weight, source: sourceId });
     }
     return;
   }
@@ -212,7 +216,7 @@ export function ingestYrHourly(map: Map<string, MutableHour>, yr: any, weight = 
   }
 }
 
-/** wttr.in 3-hourly steps (already in km/h). */
+/** wttr.in / generic steps (already in km/h). */
 export function ingestWttrHourly(map: Map<string, MutableHour>, wttr: any, weight = 1, sourceId = 'wttr') {
   const steps = wttr?.steps;
   if (!Array.isArray(steps)) return;
@@ -227,6 +231,8 @@ export function ingestWttrHourly(map: Map<string, MutableHour>, wttr: any, weigh
     pushMetric(row.precipProbs, finite(step.precipitationProbability), weight, sourceId);
     pushMetric(row.winds, finite(step.windSpeed), weight, sourceId);
     pushMetric(row.dirs, finite(step.windDirection), weight, sourceId);
+    const code = finite(step.weatherCode);
+    if (code != null) row.codes.push({ value: code, weight, source: sourceId });
   }
 }
 
@@ -273,7 +279,7 @@ function finalizeHours(map: Map<string, MutableHour>): HourlyPoint[] {
         ...ROBUST_FIELD.windDirection,
         circular: true,
       }),
-      weatherCode: pickFirstFinite(row.codes.map((entry) => entry.value)),
+      weatherCode: weightedMode(row.codes),
       sources: [...row.sources],
     }))
     .sort((a, b) => a.time.getTime() - b.time.getTime());
@@ -312,11 +318,16 @@ function buildDaysFromHours(hours: HourlyPoint[], daily?: any): ForecastDay[] {
     const fromDaily = dailyByKey.get(key)
     const noon = dayHours[Math.floor(dayHours.length / 2)] || dayHours[0]
 
-    // Prefer extremes from the same hourly series the chart plots — Open-Meteo
-    // daily max/min often disagrees with the multi-source hourly consensus.
+    // Prefer extremes / codes from the same hourly series the chart plots —
+    // Open-Meteo daily often disagrees with the multi-source hourly consensus.
     const hourlyMin = temps.length ? Math.min(...temps) : null
     const hourlyMax = temps.length ? Math.max(...temps) : null
     const hourlyPrecip = precips.length ? precips.reduce((sum, value) => sum + value, 0) : null
+    const dayCode = weightedMode(
+      dayHours
+        .filter((hour) => hour.weatherCode != null)
+        .map((hour) => ({ value: hour.weatherCode as number, weight: 1 })),
+    )
 
     return {
       key,
@@ -324,7 +335,7 @@ function buildDaysFromHours(hours: HourlyPoint[], daily?: any): ForecastDay[] {
       tempMin: hourlyMin ?? fromDaily?.tempMin ?? null,
       tempMax: hourlyMax ?? fromDaily?.tempMax ?? null,
       precipSum: hourlyPrecip ?? fromDaily?.precipSum ?? null,
-      weatherCode: fromDaily?.weatherCode ?? noon?.weatherCode ?? null,
+      weatherCode: dayCode ?? noon?.weatherCode ?? fromDaily?.weatherCode ?? null,
       hours: dayHours,
     }
   })

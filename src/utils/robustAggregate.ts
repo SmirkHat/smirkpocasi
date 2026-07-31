@@ -70,12 +70,13 @@ export function weightedCircularMean(entries: WeightedValue[]): number | null {
  * Drop values far from the weighted median (MAD-based), same rule as current-weather consensus.
  * Needs ≥4 entries and a baseTolerance; otherwise returns input unchanged.
  */
-export function partitionOutliers(
-  entries: WeightedValue[],
+export function partitionOutliers<T extends WeightedValue>(
+  entries: T[],
   baseTolerance: number | undefined,
-): { kept: WeightedValue[]; rejected: WeightedValue[] } {
+): { kept: T[]; rejected: T[] } {
   const usable = entries.filter(
-    (entry) => Number.isFinite(entry.value) && Number.isFinite(entry.weight) && entry.weight > 0,
+    (entry): entry is T =>
+      Number.isFinite(entry.value) && Number.isFinite(entry.weight) && entry.weight > 0,
   )
   if (usable.length < 4 || !baseTolerance) {
     return { kept: usable, rejected: [] }
@@ -99,6 +100,17 @@ export function partitionOutliers(
 export function withinLimits(value: number, limits?: [number, number]): boolean {
   if (!limits) return true
   return value >= limits[0] && value <= limits[1]
+}
+
+/** Weighted mode for discrete values (WMO weather codes). */
+export function weightedMode(entries: WeightedValue[]): number | null {
+  const counts = new Map<number, number>()
+  for (const entry of entries) {
+    if (!Number.isFinite(entry.value) || !Number.isFinite(entry.weight) || entry.weight <= 0) continue
+    counts.set(entry.value, (counts.get(entry.value) || 0) + entry.weight)
+  }
+  if (!counts.size) return null
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0]
 }
 
 /** Field tolerances / hard limits — shared by current + hourly consensus. */

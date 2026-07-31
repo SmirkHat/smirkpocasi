@@ -2,6 +2,7 @@ import {
   calculateDewPoint,
   metersPerSecondToKmh,
   openWeatherMapCodeToWeatherCode,
+  toLocalDayMinutes,
 } from '../../utils/weatherMath.ts';
 
 function numberValue(value) {
@@ -28,13 +29,21 @@ export function normalizeOpenWeatherMap(data) {
   const temperature = numberValue(current.main?.temp) ?? numberValue(onecallCurrent?.temp);
   const humidity = numberValue(current.main?.humidity) ?? numberValue(onecallCurrent?.humidity);
   const weather = current.weather?.[0] || onecallCurrent?.weather?.[0];
+  const forecast0 = data?.forecast?.list?.[0];
+  const onecallHourly0 = data?.onecall?.hourly?.[0];
+  const popRaw =
+    numberValue(onecallHourly0?.pop) ??
+    numberValue(forecast0?.pop) ??
+    numberValue(data?.onecall?.daily?.[0]?.pop);
+  const precipitationProbability = popRaw == null ? null : popRaw <= 1 ? popRaw * 100 : popRaw;
 
   return {
     id: 'openweathermap',
     temperature,
     apparentTemperature:
       numberValue(current.main?.feels_like) ?? numberValue(onecallCurrent?.feels_like),
-    precipitation: precipMm(current) ?? precipMm(onecallCurrent) ?? 0,
+    precipitation: precipMm(current) ?? precipMm(onecallCurrent) ?? precipMm(onecallHourly0) ?? 0,
+    precipitationProbability,
     dewPoint:
       numberValue(onecallCurrent?.dew_point) ?? calculateDewPoint(temperature, humidity),
     windSpeed:
@@ -46,9 +55,15 @@ export function normalizeOpenWeatherMap(data) {
     pressure: numberValue(current.main?.pressure) ?? numberValue(onecallCurrent?.pressure),
     cloudCover: numberValue(current.clouds?.all) ?? numberValue(onecallCurrent?.clouds),
     visibility: numberValue(current.visibility) ?? numberValue(onecallCurrent?.visibility),
-    uvIndex: numberValue(onecallCurrent?.uvi),
+    uvIndex: numberValue(onecallCurrent?.uvi) ?? numberValue(data?.onecall?.daily?.[0]?.uvi),
     weatherCode: openWeatherMapCodeToWeatherCode(weather?.id),
     iconName: weather?.description || weather?.main || null,
+    sunrise: toLocalDayMinutes(
+      onecallCurrent?.sunrise ?? current.sys?.sunrise ?? data?.onecall?.daily?.[0]?.sunrise,
+    ),
+    sunset: toLocalDayMinutes(
+      onecallCurrent?.sunset ?? current.sys?.sunset ?? data?.onecall?.daily?.[0]?.sunset,
+    ),
     raw: isBundle ? data : { current: data, forecast: null, pollution: null, onecall: null },
   };
 }

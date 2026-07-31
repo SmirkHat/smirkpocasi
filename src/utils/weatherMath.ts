@@ -235,6 +235,101 @@ export function iconNameToWeatherCode(iconName) {
   return null;
 }
 
+const SUN_TZ = 'Europe/Prague';
+
+/** Clock minutes since local midnight (0–1439) in `timeZone`. */
+export function toLocalDayMinutes(value, timeZone = SUN_TZ) {
+  if (value == null || value === '') return null;
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    // Already minutes-since-midnight (consensus field).
+    if (value >= 0 && value < 24 * 60) return Math.round(value);
+    const ms = value < 1e12 ? value * 1000 : value;
+    return epochMsToLocalDayMinutes(ms, timeZone);
+  }
+
+  const str = String(value).trim();
+  const ampm = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (ampm) {
+    let hour = Number(ampm[1]);
+    const minute = Number(ampm[2]);
+    const ap = ampm[3].toUpperCase();
+    if (ap === 'PM' && hour < 12) hour += 12;
+    if (ap === 'AM' && hour === 12) hour = 0;
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+    return hour * 60 + minute;
+  }
+
+  // Open-Meteo daily sunrise/sunset with timezone=Europe/Prague are civil-time
+  // strings without an offset — read the clock fields directly.
+  const isoCivil = str.match(/^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})(?::\d{2})?$/);
+  if (isoCivil) {
+    return Number(isoCivil[1]) * 60 + Number(isoCivil[2]);
+  }
+
+  const hm = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (hm && !str.includes('T') && !str.includes('-')) {
+    const hour = Number(hm[1]);
+    const minute = Number(hm[2]);
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+    return hour * 60 + minute;
+  }
+
+  const date = new Date(str);
+  if (Number.isNaN(date.getTime())) return null;
+  return epochMsToLocalDayMinutes(date.getTime(), timeZone);
+}
+
+function epochMsToLocalDayMinutes(ms, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(ms));
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value);
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  return hour * 60 + minute;
+}
+
+/** Format minutes-since-midnight as HH:MM. */
+export function formatDayMinutes(value) {
+  const mins = numberOrNull(value);
+  if (mins === null) return null;
+  const clamped = ((Math.round(mins) % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hour = Math.floor(clamped / 60);
+  const minute = clamped % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+/** Yr.no / MET Norway symbol_code → WMO. */
+export function symbolCodeToWeatherCode(symbolCode) {
+  const symbol = String(symbolCode || '').replace(/_(day|night|polartwilight)$/u, '');
+  if (!symbol) return null;
+
+  if (symbol.includes('thunder')) return 95;
+  if (symbol.includes('fog')) return 45;
+  if (symbol.includes('heavyrainshowers')) return 82;
+  if (symbol.includes('lightrainshowers')) return 80;
+  if (symbol.includes('rainshowers')) return 81;
+  if (symbol.includes('heavysnowshowers')) return 86;
+  if (symbol.includes('snowshowers')) return 85;
+  if (symbol.includes('heavysleet')) return 67;
+  if (symbol.includes('sleet')) return 66;
+  if (symbol.includes('heavyrain')) return 65;
+  if (symbol.includes('lightrain')) return 61;
+  if (symbol.includes('rain')) return 63;
+  if (symbol.includes('heavysnow')) return 75;
+  if (symbol.includes('lightsnow')) return 71;
+  if (symbol.includes('snow')) return 73;
+  if (symbol.includes('cloudy')) return symbol.includes('partly') ? 2 : 3;
+  if (symbol.includes('fair')) return 1;
+  if (symbol.includes('clearsky')) return 0;
+
+  return null;
+}
+
 export function inferWeatherCode({ temperature, dewPoint, precipitation, cloudCover, fogArea, humidity, visibility }) {
   const temp = numberOrNull(temperature);
   const dew = numberOrNull(dewPoint);

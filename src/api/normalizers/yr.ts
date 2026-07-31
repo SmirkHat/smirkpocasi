@@ -1,33 +1,7 @@
-import { calculateDewPoint, metersPerSecondToKmh } from '../../utils/weatherMath.ts';
+import { calculateDewPoint, metersPerSecondToKmh, symbolCodeToWeatherCode } from '../../utils/weatherMath.ts';
 
 function firstAvailable(...values) {
   return values.find((value) => value !== null && value !== undefined) ?? null;
-}
-
-function symbolCodeToWeatherCode(symbolCode) {
-  const symbol = String(symbolCode || '').replace(/_(day|night|polartwilight)$/u, '');
-  if (!symbol) return null;
-
-  if (symbol.includes('thunder')) return 95;
-  if (symbol.includes('fog')) return 45;
-  if (symbol.includes('heavyrainshowers')) return 82;
-  if (symbol.includes('lightrainshowers')) return 80;
-  if (symbol.includes('rainshowers')) return 81;
-  if (symbol.includes('heavysnowshowers')) return 86;
-  if (symbol.includes('snowshowers')) return 85;
-  if (symbol.includes('heavysleet')) return 67;
-  if (symbol.includes('sleet')) return 66;
-  if (symbol.includes('heavyrain')) return 65;
-  if (symbol.includes('lightrain')) return 61;
-  if (symbol.includes('rain')) return 63;
-  if (symbol.includes('heavysnow')) return 75;
-  if (symbol.includes('lightsnow')) return 71;
-  if (symbol.includes('snow')) return 73;
-  if (symbol.includes('cloudy')) return symbol.includes('partly') ? 2 : 3;
-  if (symbol.includes('fair')) return 1;
-  if (symbol.includes('clearsky')) return 0;
-
-  return null;
 }
 
 export function normalizeYr(data) {

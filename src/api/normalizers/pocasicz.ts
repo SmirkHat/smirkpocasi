@@ -1,4 +1,4 @@
-import { metersPerSecondToKmh, numberOrNull } from '../../utils/weatherMath.ts';
+import { metersPerSecondToKmh, numberOrNull, toLocalDayMinutes } from '../../utils/weatherMath.ts';
 
 const ICON_WEATHER_CODES = {
   0: 0,
@@ -58,6 +58,8 @@ export function normalizePocasiCz(data) {
     uvIndex: numberOrNull(current.uv),
     weatherCode: icon === null ? null : ICON_WEATHER_CODES[icon] ?? null,
     symbolCode: icon === null ? null : `pocasicz:${icon}`,
+    sunrise: toLocalDayMinutes(daily?.sunrise),
+    sunset: toLocalDayMinutes(daily?.sunset),
     raw: data
   };
 }

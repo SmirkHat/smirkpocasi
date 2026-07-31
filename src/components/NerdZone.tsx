@@ -3,8 +3,11 @@ import { HiArrowTopRightOnSquare, HiBeaker, HiChevronDown, HiChevronUp } from 'r
 import { WiThermometer } from 'react-icons/wi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { FieldSources, type FieldSourceEntry } from './FieldSources';
 import {
   formatAbsoluteHumidity,
   formatCloudCover,
@@ -13,6 +16,7 @@ import {
   formatPrecipitation,
   formatPressure,
   formatTemperature,
+  formatTime,
   formatUvIndex,
   formatVaporPressureDeficit,
   formatVisibility,
@@ -239,6 +243,8 @@ const apiSecondaryFields: ApiField[] = [
   { label: 'Mlha', field: 'fogArea', value: (source) => formatPercent(source.fogArea) },
   { label: 'Viditelnost', field: 'visibility', value: (source) => formatVisibility(source.visibility) },
   { label: 'UV', field: 'uvIndex', value: (source) => formatUvIndex(source.uvIndex) },
+  { label: 'Východ', field: 'sunrise', value: (source) => formatTime(source.sunrise) },
+  { label: 'Západ', field: 'sunset', value: (source) => formatTime(source.sunset) },
   { label: 'VPD', field: 'vaporPressureDeficit', value: (source) => formatVaporPressureDeficit(source.vaporPressureDeficit) },
   { label: 'Abs. vlhkost', field: 'absoluteHumidity', value: (source) => formatAbsoluteHumidity(source.absoluteHumidity) },
   { label: 'Nejistota', field: 'temperatureSpread', value: (source) => formatTemperature(source.temperatureSpread) }
@@ -271,7 +277,13 @@ const expertMetrics = [
   }
 ];
 
-function ExpertMetricsGrid({ consensusValues }) {
+function ExpertMetricsGrid({
+  consensusValues,
+  fieldSources = null,
+}: {
+  consensusValues?: any
+  fieldSources?: Record<string, FieldSourceEntry[] | undefined> | null
+}) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {expertMetrics.map((metric) => (
@@ -283,6 +295,7 @@ function ExpertMetricsGrid({ consensusValues }) {
           <div className="mt-1 text-xl font-semibold tabular-nums text-foreground">
             {metric.format(consensusValues?.[metric.key])}
           </div>
+          <FieldSources formatValue={metric.format} sources={fieldSources?.[metric.key]} />
           <p className="mt-1 text-xs leading-snug text-muted-foreground">{metric.description}</p>
         </div>
       ))}
@@ -426,7 +439,19 @@ function ApiSourcesTable({ rows }) {
 /**
  * Expertní data (rozptyl zdrojů, VPD, dopočtené metriky) — inline dropdown dolů.
  */
-export default function NerdZone({ consensus, updatedAt, offline }) {
+export default function NerdZone({
+  consensus,
+  updatedAt,
+  offline,
+  showFieldSources = false,
+  onShowFieldSourcesChange,
+}: {
+  consensus?: any
+  updatedAt?: string | null
+  offline?: boolean
+  showFieldSources?: boolean
+  onShowFieldSourcesChange?: (enabled: boolean) => void
+}) {
   const [open, setOpen] = useState(false);
   const rows = getApiRows(consensus);
   const okCount = rows.filter((source) => source.status === 'ok').length;
@@ -435,6 +460,7 @@ export default function NerdZone({ consensus, updatedAt, offline }) {
   const confidence = confidenceCopy[consensus?.confidence] || confidenceCopy.low;
   const divergence = Number.isFinite(consensus?.divergence) ? `±${consensus.divergence.toFixed(1)}°` : '—';
   const consensusValues = consensus?.consensus;
+  const fieldSources = showFieldSources ? consensus?.fieldSources : null;
   const panelId = 'nerd-zone-panel';
 
   return (
@@ -464,11 +490,23 @@ export default function NerdZone({ consensus, updatedAt, offline }) {
 
       {open ? (
         <div id={panelId} className="border-t border-border px-4 py-5">
-          <p className="mb-5 text-sm text-muted-foreground">
-            Konsensus skládá modely a API do jednoho výstupu; pozorování slouží jako kontrolní vrstva.
-            {updatedAt ? ` Aktualizováno ${formatDateTime(updatedAt)}.` : ''}
-            {offline ? ' Zobrazuji offline data.' : ''}
-          </p>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Konsensus skládá modely a API do jednoho výstupu; pozorování slouží jako kontrolní vrstva.
+              {updatedAt ? ` Aktualizováno ${formatDateTime(updatedAt)}.` : ''}
+              {offline ? ' Zobrazuji offline data.' : ''}
+            </p>
+            {onShowFieldSourcesChange ? (
+              <Label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+                <span>Zdroje u hodnot</span>
+                <Switch
+                  checked={showFieldSources}
+                  onCheckedChange={onShowFieldSourcesChange}
+                  aria-label="Zdroje u hodnot"
+                />
+              </Label>
+            ) : null}
+          </div>
 
           <div className="flex flex-col gap-5">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -480,7 +518,7 @@ export default function NerdZone({ consensus, updatedAt, offline }) {
 
             <section aria-label="Expertní metriky" className="flex flex-col gap-2">
               <h3 className="text-sm font-semibold text-foreground">Expertní metriky</h3>
-              <ExpertMetricsGrid consensusValues={consensusValues} />
+              <ExpertMetricsGrid consensusValues={consensusValues} fieldSources={fieldSources} />
             </section>
 
             <section aria-label="Zdroje počasí" className="flex flex-col gap-2">

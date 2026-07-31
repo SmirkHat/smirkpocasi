@@ -1,10 +1,10 @@
+import { CloudRain } from 'lucide-react';
 import {
   WiBarometer,
   WiCloudy,
   WiDaySunny,
   WiDirectionUp,
   WiHumidity,
-  WiRaindrops,
   WiStrongWind,
   WiSunrise,
   WiSunset,
@@ -14,8 +14,20 @@ import { Card } from '@/components/ui/card';
 import { Meter, MeterIndicator, MeterTrack } from '@/components/ui/meter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { formatTime, formatVisibility } from '../utils/formatters';
+import { FieldSources, type FieldSourceEntry } from './FieldSources';
+import {
+  formatPrecipitation,
+  formatPressure,
+  formatTemperature,
+  formatTime,
+  formatUvIndex,
+  formatVisibility,
+  formatWind,
+} from '../utils/formatters';
+import { formatDayMinutes, toLocalDayMinutes } from '../utils/weatherMath';
 import { firstAvailable, firstDailyValue, nextHourlyValue } from '../utils/forecast';
+
+type FieldSourcesMap = Record<string, FieldSourceEntry[] | undefined> | null | undefined;
 
 function windCompass(value) {
   const degrees = Number(value);
@@ -52,7 +64,21 @@ function MetricTile({
   meter = null,
   meterMax = 100,
   className = null,
-  children = null
+  children = null,
+  sources = null,
+  formatSourceValue = null,
+}: {
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
+  label: string
+  value?: string | number | null
+  unit?: string | null
+  detail?: string | null
+  meter?: number | null
+  meterMax?: number
+  className?: string | null
+  children?: React.ReactNode
+  sources?: FieldSourceEntry[] | null
+  formatSourceValue?: ((value: number) => string) | null
 }) {
   const meterValue = meter == null ? null : clampPercent(meter, meterMax);
 
@@ -77,6 +103,7 @@ function MetricTile({
           </Meter>
         ) : null}
         {detail ? <p className="truncate text-xs text-muted-foreground">{detail}</p> : null}
+        <FieldSources formatValue={formatSourceValue ?? undefined} sources={sources} />
       </div>
     </Card>
   );
@@ -121,7 +148,25 @@ export function MetricsGridSkeleton() {
 }
 
 /** Compact humidity + precip pair for the sidebar under air quality. */
-export function HumidityPrecipTiles({ weather, consensusValues, className = null }) {
+function formatPercentSource(value: number) {
+  return `${Math.round(value)} %`;
+}
+
+/** Compact humidity + precip pair for the sidebar under air quality. */
+export function HumidityPrecipTiles({
+  weather,
+  consensusValues,
+  /** Prefer merged hourly-day sum (same series as ForecastExplorer). */
+  todayPrecipMm = null,
+  fieldSources = null,
+  className = null,
+}: {
+  weather?: any
+  consensusValues?: any
+  todayPrecipMm?: number | null
+  fieldSources?: FieldSourcesMap
+  className?: string | null
+}) {
   const current = weather?.current;
   const daily = weather?.daily;
   const hourly = weather?.hourly;
@@ -129,7 +174,10 @@ export function HumidityPrecipTiles({ weather, consensusValues, className = null
   const humidity = consensusValues?.humidity ?? current?.relative_humidity_2m;
   const precipitationChance =
     consensusValues?.precipitationProbability ?? nextHourlyValue(hourly, 'precipitation_probability');
-  const todayPrecipitation = firstDailyValue(daily, 'precipitation_sum');
+  const todayPrecipitation =
+    todayPrecipMm != null && Number.isFinite(Number(todayPrecipMm))
+      ? Number(todayPrecipMm)
+      : firstDailyValue(daily, 'precipitation_sum');
 
   return (
     <div className={cn('grid grid-cols-2 gap-3', className)}>
@@ -139,21 +187,33 @@ export function HumidityPrecipTiles({ weather, consensusValues, className = null
         value={humidity == null ? '—' : Math.round(humidity)}
         unit="%"
         meter={humidity}
+        sources={fieldSources?.humidity}
+        formatSourceValue={formatPercentSource}
       />
       <MetricTile
-        icon={WiRaindrops}
+        icon={CloudRain}
         label="Srážky"
         value={precipitationChance == null ? '—' : Math.round(precipitationChance)}
         unit="%"
         meter={precipitationChance}
-        detail={todayPrecipitation == null ? null : `Dnes ${Number(todayPrecipitation).toFixed(1)} mm`}
+        detail={todayPrecipitation == null ? null : `Dnes ${formatPrecipitation(todayPrecipitation)}`}
+        sources={fieldSources?.precipitationProbability}
+        formatSourceValue={formatPercentSource}
       />
     </div>
   );
 }
 
 /** Bento tiles for current conditions — 4-col desktop grid under the forecast/radar row. */
-export default function MetricsGrid({ weather, consensusValues }) {
+export default function MetricsGrid({
+  weather,
+  consensusValues,
+  fieldSources = null,
+}: {
+  weather?: any
+  consensusValues?: any
+  fieldSources?: FieldSourcesMap
+}) {
   const current = weather?.current;
   const daily = weather?.daily;
   const hourly = weather?.hourly;
@@ -167,8 +227,10 @@ export default function MetricsGrid({ weather, consensusValues }) {
   const pressure = consensusValues?.pressure ?? current?.pressure_msl ?? current?.surface_pressure;
   const cloudCover = consensusValues?.cloudCover ?? current?.cloud_cover;
   const visibility = consensusValues?.visibility ?? current?.visibility;
-  const sunrise = firstDailyValue(daily, 'sunrise');
-  const sunset = firstDailyValue(daily, 'sunset');
+  const sunrise =
+    consensusValues?.sunrise ?? toLocalDayMinutes(firstDailyValue(daily, 'sunrise'));
+  const sunset =
+    consensusValues?.sunset ?? toLocalDayMinutes(firstDailyValue(daily, 'sunset'));
 
   return (
     <>
@@ -179,6 +241,8 @@ export default function MetricsGrid({ weather, consensusValues }) {
         value={apparent == null ? '—' : Math.round(apparent)}
         unit="°C"
         detail={dewPoint == null ? null : `Rosný bod ${Math.round(dewPoint)} °C`}
+        sources={fieldSources?.apparentTemperature}
+        formatSourceValue={formatTemperature}
       />
 
       <MetricTile
@@ -186,6 +250,8 @@ export default function MetricsGrid({ weather, consensusValues }) {
         icon={WiStrongWind}
         label="Vítr"
         detail={windGust == null ? null : `Nárazy až ${Math.round(windGust)} km/h`}
+        sources={fieldSources?.windSpeed}
+        formatSourceValue={formatWind}
       >
         <div className="flex items-center gap-2.5">
           <div className="flex items-baseline gap-1">
@@ -211,6 +277,8 @@ export default function MetricsGrid({ weather, consensusValues }) {
         meter={uvIndex}
         meterMax={11}
         detail={uvLevel(uvIndex)}
+        sources={fieldSources?.uvIndex}
+        formatSourceValue={formatUvIndex}
       />
 
       <MetricTile
@@ -220,6 +288,8 @@ export default function MetricsGrid({ weather, consensusValues }) {
         value={pressure == null ? '—' : Math.round(pressure)}
         unit="hPa"
         detail="Přepočet na hladinu moře"
+        sources={fieldSources?.pressure}
+        formatSourceValue={formatPressure}
       />
 
       <MetricTile
@@ -230,23 +300,31 @@ export default function MetricsGrid({ weather, consensusValues }) {
         unit="%"
         meter={cloudCover}
         detail={visibility == null ? null : `Viditelnost ${formatVisibility(visibility)}`}
+        sources={fieldSources?.cloudCover}
+        formatSourceValue={formatPercentSource}
       />
 
       <MetricTile className="col-span-1 lg:col-span-2" icon={WiSunrise} label="Slunce">
-        <div className="flex items-center gap-4">
-          <div>
+        <div className="flex items-start gap-4">
+          <div className="min-w-0">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <WiSunrise className="size-4" aria-hidden="true" />
               Východ
             </div>
-            <div className="mt-0.5 text-lg font-semibold text-foreground tabular-nums">{formatTime(sunrise)}</div>
+            <div className="mt-0.5 text-lg font-semibold text-foreground tabular-nums">
+              {formatDayMinutes(sunrise) ?? '—'}
+            </div>
+            <FieldSources formatValue={formatTime} sources={fieldSources?.sunrise} />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <WiSunset className="size-4" aria-hidden="true" />
               Západ
             </div>
-            <div className="mt-0.5 text-lg font-semibold text-foreground tabular-nums">{formatTime(sunset)}</div>
+            <div className="mt-0.5 text-lg font-semibold text-foreground tabular-nums">
+              {formatDayMinutes(sunset) ?? '—'}
+            </div>
+            <FieldSources formatValue={formatTime} sources={fieldSources?.sunset} />
           </div>
         </div>
       </MetricTile>

@@ -84,11 +84,11 @@ export default async function handler(req, res) {
       if (result.status === 'fulfilled') bundle[label] = result.value;
     });
 
-    // Opportunistic One Call 3.0 (hourly 48h) — ignore if key lacks the product.
-    if (parts.has('forecast') || parts.has('onecall')) {
+    // One Call 3.0 — UV, dew point, reliable sunrise; ignore if key lacks the product.
+    if (parts.has('forecast') || parts.has('onecall') || parts.has('current')) {
       try {
         const onecallParams = new URLSearchParams(common);
-        onecallParams.set('exclude', 'minutely');
+        onecallParams.set('exclude', 'minutely,alerts');
         bundle.onecall = await fetchJson(`${ONECALL_URL}?${onecallParams}`);
       } catch {
         bundle.onecall = null;

@@ -2,6 +2,7 @@ import { MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { FieldSources, type FieldSourceEntry } from './FieldSources';
 import { useUiStore } from '../store/uiStore';
 import { formatTemperature, formatPlaceName } from '../utils/formatters';
 
@@ -61,6 +62,18 @@ export default function WeatherHero({
   image,
   credit,
   offline,
+  temperatureSources = null,
+}: {
+  location?: any
+  info: { label: string }
+  WeatherIcon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
+  temperature?: number | null
+  tempMax?: number | null
+  tempMin?: number | null
+  image?: any
+  credit?: string | null
+  offline?: boolean
+  temperatureSources?: FieldSourceEntry[] | null
 }) {
   const openLocationPicker = useUiStore((state) => state.openLocationPicker);
   const placeName = formatPlaceName(location?.name) || 'Vybraná poloha';
@@ -107,12 +120,19 @@ export default function WeatherHero({
           </div>
 
           <div className="flex items-end justify-between gap-4">
-            <p
-              className="text-[clamp(4rem,13vw,7.5rem)] font-bold leading-none tracking-tighter text-white tabular-nums [text-shadow:0_4px_24px_rgb(0_0_0/0.5)]"
-              aria-label={`Teplota ${formatTemperature(temperature)}`}
-            >
-              {temperature == null ? '—' : `${Math.round(temperature)}°`}
-            </p>
+            <div className="min-w-0">
+              <p
+                className="text-[clamp(4rem,13vw,7.5rem)] font-bold leading-none tracking-tighter text-white tabular-nums [text-shadow:0_4px_24px_rgb(0_0_0/0.5)]"
+                aria-label={`Teplota ${formatTemperature(temperature)}`}
+              >
+                {temperature == null ? '—' : `${Math.round(temperature)}°`}
+              </p>
+              <FieldSources
+                className="mt-2 [text-shadow:none] [&_li_span]:border-white/25 [&_li_span]:bg-white/10 [&_li_span_span]:text-white/75"
+                formatValue={formatTemperature}
+                sources={temperatureSources}
+              />
+            </div>
             <WeatherIcon
               aria-hidden="true"
               className="size-[clamp(4.5rem,12vw,8rem)] shrink-0 text-white/95 drop-shadow-[0_4px_20px_rgb(0_0_0/0.5)]"
