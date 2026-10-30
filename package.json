@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev --port 5173",
     "generate-routes": "tsr generate",
-    "build": "vite build && node scripts/finalize-pwa.mjs",
+    "build": "vite build",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "screenshots:pwa": "node scripts/capture-pwa-screenshots.mjs",

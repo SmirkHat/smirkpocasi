@@ -139,7 +139,7 @@ function RootDocument({ children }: { children: ReactNode }) {
           <script
             dangerouslySetInnerHTML={{
               __html:
-                "if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}",
+                "if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}",
             }}
           />
         )}

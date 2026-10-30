@@ -1,7 +1,7 @@
 /* SmirkPočasí static service worker.
  * Always present at /sw.js so installability crawlers (PWABuilder) can find it.
- * Production builds overwrite this file with a Workbox SW that adds asset precaching
- * (see scripts/finalize-pwa.mjs) — same URL, same registration. */
+ * Production builds replace this file with a Workbox SW that adds asset precaching
+ * (see VitePWA in vite.config.ts) — same URL, same registration. */
 
 const API_CACHE = 'smirkpocasi-api'
 const TILE_CACHE = 'smirkpocasi-map-tiles'
