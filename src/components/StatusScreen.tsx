@@ -145,10 +145,11 @@ export function RouteErrorScreen({
   error,
   onRetry,
 }: {
-  error: Error
+  error: unknown
   onRetry?: () => void
 }) {
-  const staleChunk = isStaleChunkError(error)
+  const failure = error instanceof Error ? error : new Error(String(error))
+  const staleChunk = isStaleChunkError(failure)
 
   useEffect(() => {
     document.title = 'Chyba · SmirkPočasí'
@@ -177,7 +178,7 @@ export function RouteErrorScreen({
             ? 'Aplikace se nepodařilo načíst po hot-reloadu. Obnovení s vyčištěním cache to obvykle spraví.'
             : 'Při načítání stránky nastala chyba. Zkus to znovu, nebo se vrať na přehled počasí.'
         }
-        detail={import.meta.env.DEV ? error.message : null}
+        detail={import.meta.env.DEV ? failure.message : null}
         primary={
           <Button type="button" onClick={() => void hardRecoverApp('retry')}>
             <RefreshCw aria-hidden="true" />
