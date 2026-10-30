@@ -1,5 +1,11 @@
 import { iconNameToWeatherCode, metersPerSecondToKmh, parsePragueTime } from './weatherMath';
-import { ROBUST_FIELD, robustAggregate, weatherCodeConsensus } from './robustAggregate';
+import {
+  ROBUST_FIELD,
+  robustAggregate,
+  robustAggregateDetails,
+  weatherCodeConsensus,
+  type AggregateExclusionReason,
+} from './robustAggregate';
 
 const TZ = 'Europe/Prague';
 // Building an Intl formatter is slow and this runs for every hour of every source on the main thread.
@@ -24,6 +30,29 @@ export type HourlyPoint = {
   windDirection: number | null;
   weatherCode: number | null;
   sources: string[];
+  calculations: () => HourlyCalculations;
+};
+
+export type HourlyCalculationInput = {
+  source: string;
+  value: number;
+  weight: number;
+  included: boolean;
+  exclusionReason?: AggregateExclusionReason;
+};
+
+export type HourlyCalculation = {
+  method: 'robust-mean' | 'weighted-mean' | 'circular-mean';
+  result: number | null;
+  inputs: HourlyCalculationInput[];
+};
+
+export type HourlyCalculations = {
+  temperature: HourlyCalculation;
+  precipMm: HourlyCalculation;
+  precipProb: HourlyCalculation;
+  windSpeed: HourlyCalculation;
+  windDirection: HourlyCalculation;
 };
 
 export type ForecastDay = {
@@ -43,6 +72,8 @@ type ForecastSeries = {
   kind: string;
   data: any;
 };
+
+type WeightedSourceValue = { value: number; weight: number; source: string };
 
 function finite(value: unknown): number | null {
   const n = Number(value);
@@ -81,12 +112,12 @@ type MutableHour = {
   key: string;
   dayKey: string;
   time: Date;
-  temps: { value: number; weight: number; source: string }[];
-  precips: { value: number; weight: number; source: string }[];
-  precipProbs: { value: number; weight: number; source: string }[];
-  winds: { value: number; weight: number; source: string }[];
-  dirs: { value: number; weight: number; source: string }[];
-  codes: { value: number; weight: number; source: string }[];
+  temps: WeightedSourceValue[];
+  precips: WeightedSourceValue[];
+  precipProbs: WeightedSourceValue[];
+  winds: WeightedSourceValue[];
+  dirs: WeightedSourceValue[];
+  codes: WeightedSourceValue[];
   sources: Set<string>;
 };
 
@@ -112,13 +143,32 @@ function ensureHour(map: Map<string, MutableHour>, time: Date) {
 }
 
 function pushMetric(
-  list: { value: number; weight: number; source: string }[],
+  list: WeightedSourceValue[],
   value: number | null,
   weight: number,
   source: string
 ) {
   if (value == null || !Number.isFinite(value)) return;
   list.push({ value, weight, source });
+}
+
+function robustCalculation(
+  entries: WeightedSourceValue[],
+  options: { tolerance?: number; limits?: [number, number]; circular?: boolean; mean?: boolean },
+): HourlyCalculation {
+  const details = robustAggregateDetails(entries, options);
+  const kept = new Set(details.kept);
+  const rejected = new Map(details.rejected.map(({ entry, reason }) => [entry, reason]));
+
+  return {
+    method: options.circular ? 'circular-mean' : options.mean ? 'weighted-mean' : 'robust-mean',
+    result: details.value,
+    inputs: entries.map((entry) => ({
+      ...entry,
+      included: kept.has(entry),
+      ...(rejected.has(entry) ? { exclusionReason: rejected.get(entry) } : {}),
+    })),
+  };
 }
 
 /** Open-Meteo-shaped hourly block (UI weather API or model raw). */
@@ -276,6 +326,19 @@ function speedWeightedDirections(row: MutableHour) {
   }));
 }
 
+function hourCalculations(row: MutableHour): HourlyCalculations {
+  return {
+    temperature: robustCalculation(row.temps, ROBUST_FIELD.temperature),
+    precipMm: robustCalculation(row.precips, ROBUST_FIELD.precipitation),
+    precipProb: robustCalculation(row.precipProbs, ROBUST_FIELD.precipitationProbability),
+    windSpeed: robustCalculation(row.winds, ROBUST_FIELD.windSpeed),
+    windDirection: robustCalculation(speedWeightedDirections(row), {
+      ...ROBUST_FIELD.windDirection,
+      circular: true,
+    }),
+  };
+}
+
 function finalizeHours(map: Map<string, MutableHour>): HourlyPoint[] {
   return [...map.values()]
     .map((row) => ({
@@ -292,6 +355,8 @@ function finalizeHours(map: Map<string, MutableHour>): HourlyPoint[] {
       }),
       weatherCode: weatherCodeConsensus(row.codes),
       sources: [...row.sources],
+      // Built on request: most visitors never open the calculation view.
+      calculations: () => hourCalculations(row),
     }))
     .sort((a, b) => a.time.getTime() - b.time.getTime());
 }

@@ -19,6 +19,7 @@ import { apiUrl } from '@/lib/apiBase'
 const RAINVIEWER_MAX_NATIVE_ZOOM = 7;
 const MAP_MAX_ZOOM = 20;
 const OSM_MAX_NATIVE_ZOOM = 19;
+const RAW_RADAR_SOURCE_SCHEME = 0;
 const DEFAULT_CHMI_BOUNDS = [
   [CHMI_RADAR_BOUNDS.latMin, CHMI_RADAR_BOUNDS.lonMin],
   [CHMI_RADAR_BOUNDS.latMax, CHMI_RADAR_BOUNDS.lonMax]
@@ -121,7 +122,10 @@ function colorizeRadarTile(imageData, colorTable) {
     const tableIndex = rawTile ? pixels[index] * 4 : (estimateDbzFromUniversalBlue(pixels[index], pixels[index + 1], pixels[index + 2], sourceAlpha) + 32) * 4;
     const targetAlpha = colorTable[tableIndex + 3];
 
-    if (!rawTile && targetAlpha === 0) continue;
+    if (!rawTile && targetAlpha === 0) {
+      pixels[index + 3] = 0;
+      continue;
+    }
 
     pixels[index] = colorTable[tableIndex];
     pixels[index + 1] = colorTable[tableIndex + 1];
@@ -199,12 +203,16 @@ function RainviewerFrame({ frame }) {
         }
       };
       image.onerror = () => done(new Error('RainViewer raw tile failed.'), canvas);
-      image.src = `${frame.host}${frame.path}/256/${coords.z}/${coords.x}/${coords.y}/${RAINVIEWER_RECOLOR_SOURCE_SCHEME}/1_1.png`;
+      const colorScheme = frame.source === 'librewxr' ? RAW_RADAR_SOURCE_SCHEME : RAINVIEWER_RECOLOR_SOURCE_SCHEME;
+      image.src = `${frame.host}${frame.path}/256/${coords.z}/${coords.x}/${coords.y}/${colorScheme}/1_1.png`;
 
       return canvas;
     };
 
+    let active = true;
+    let delayedRaf;
     const applyShift = () => {
+      if (!active || !map.getContainer().isConnected) return;
       const center = map.getCenter();
       const from = map.latLngToLayerPoint(center);
       const to = map.latLngToLayerPoint([center.lat + shiftLat, center.lng + shiftLon]);
@@ -214,12 +222,16 @@ function RainviewerFrame({ frame }) {
     layer.addTo(map);
     applyShift();
     const raf1 = window.requestAnimationFrame(applyShift);
-    const raf2 = window.requestAnimationFrame(() => window.requestAnimationFrame(applyShift));
+    const raf2 = window.requestAnimationFrame(() => {
+      delayedRaf = window.requestAnimationFrame(applyShift);
+    });
     map.on('move zoom viewreset', applyShift);
 
     return () => {
+      active = false;
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
+      if (delayedRaf) window.cancelAnimationFrame(delayedRaf);
       map.off('move zoom viewreset', applyShift);
       wrap.style.transform = '';
       layer.removeFrom(map);
@@ -240,6 +252,8 @@ function ChmiFrame({ frame, bounds }) {
     }
 
     let cancelled = false;
+    let objectUrl = null;
+    const controller = new AbortController();
     const image = new Image();
     image.crossOrigin = 'anonymous';
     image.onload = () => {
@@ -254,16 +268,42 @@ function ChmiFrame({ frame, bounds }) {
         context.putImageData(imageData, 0, 0);
         if (!cancelled) setOverlayUrl(canvas.toDataURL('image/png'));
       } catch {
-        if (!cancelled) setOverlayUrl(frame.url);
+        if (!cancelled) setOverlayUrl(objectUrl);
       }
     };
     image.onerror = () => {
-      if (!cancelled) setOverlayUrl(frame.url);
+      if (!cancelled) setOverlayUrl(null);
     };
-    image.src = frame.url;
+
+    const load = async () => {
+      let response = await fetch(frame.url, { signal: controller.signal });
+      if (!response.ok) {
+        await new Promise((resolve) => window.setTimeout(resolve, 300));
+        if (cancelled) return;
+        const separator = frame.url.includes('?') ? '&' : '?';
+        response = await fetch(`${frame.url}${separator}retry=${Date.now()}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+      }
+      if (cancelled) return;
+      if (!response.ok) {
+        setOverlayUrl(null);
+        return;
+      }
+      const blob = await response.blob();
+      if (cancelled) return;
+      objectUrl = URL.createObjectURL(blob);
+      image.src = objectUrl;
+    };
+    void load().catch(() => {
+      if (!cancelled) setOverlayUrl(null);
+    });
 
     return () => {
       cancelled = true;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [colorTable, frame]);
 
@@ -277,9 +317,15 @@ function Recenter({ center, zoom }) {
   useEffect(() => {
     const [lat, lon] = center || [];
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-    map.setView([lat, lon], zoom, { animate: true });
-    // Leaflet often needs a size refresh after layout (aside card / fullscreen).
-    window.requestAnimationFrame(() => map.invalidateSize());
+    map.stop();
+    map.setView([lat, lon], zoom, { animate: false });
+    const raf = window.requestAnimationFrame(() => {
+      if (map.getContainer().isConnected) map.invalidateSize({ animate: false });
+    });
+    return () => {
+      window.cancelAnimationFrame(raf);
+      map.stop();
+    };
   }, [center, map, zoom]);
 
   return null;
@@ -311,7 +357,9 @@ function LocationMarker({ position, label }) {
 
 const RAINVIEWER_CACHE_KEY = 'smirkpocasi:rainviewer-frames-v7';
 const RAINVIEWER_CACHE_TTL = 5 * 60 * 1000;
-const CHMI_CACHE_KEY = 'smirkpocasi:chmi-radar-frames-v5';
+const LIBREWXR_CACHE_KEY = 'smirkpocasi:librewxr-frames-v1';
+const LIBREWXR_CACHE_TTL = 5 * 60 * 1000;
+const CHMI_CACHE_KEY = 'smirkpocasi:chmi-radar-frames-v6';
 const CHMI_CACHE_TTL = 2 * 60 * 1000;
 const SOURCE_KEY = 'smirkpocasi:radar-source';
 
@@ -330,12 +378,17 @@ function writeJsonCache(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-function buildRainviewerFrames(data) {
-  const host = data.host || 'https://tilecache.rainviewer.com';
+const TILE_SOURCE_HOST = {
+  rainviewer: 'https://tilecache.rainviewer.com',
+  librewxr: 'https://api.librewxr.net'
+};
+
+function buildRainviewerFrames(data, source = 'rainviewer') {
+  const host = data.host || TILE_SOURCE_HOST[source] || 'https://tilecache.rainviewer.com';
   const past = (data.radar?.past || []).map((frame) => ({
     ...frame,
     host,
-    source: 'rainviewer',
+    source,
     kind: 'history',
     timeMs: Number(frame.time) * 1000
   }));
@@ -347,7 +400,7 @@ function buildRainviewerFrames(data) {
     return {
       ...frame,
       host,
-      source: 'rainviewer',
+      source,
       kind: 'nowcast',
       timeMs,
       lead: lead > 0 ? lead : undefined
@@ -442,16 +495,65 @@ function fetchRainviewerMaps() {
   return rainviewerRequest;
 }
 
+let libreWxrRequest = null;
+
+function fetchLibreWxrMaps() {
+  libreWxrRequest ||= fetch(apiUrl('/api/librewxr'))
+    .then((response) => {
+      if (!response.ok) throw new Error('LibreWXR metadata request failed.');
+      return response.json();
+    })
+    .finally(() => {
+      libreWxrRequest = null;
+    });
+  return libreWxrRequest;
+}
+
+function rememberSource(source) {
+  try {
+    localStorage.setItem(SOURCE_KEY, source);
+  } catch {
+    // ignore
+  }
+}
+
+function RadarAttribution({ source }) {
+  const className = 'rounded-md border border-border bg-background px-1.5 py-0.5';
+  if (source !== 'librewxr') {
+    return <span className={className}>{source === 'chmi' ? 'ČHMÚ' : 'RainViewer'}</span>;
+  }
+
+  return (
+    <span className={className}>
+      Data:{' '}
+      <a className="underline underline-offset-2" href="https://librewxr.net/" rel="noreferrer" target="_blank">
+        LibreWXR (librewxr.net)
+      </a>
+      {' · '}
+      <a
+        className="underline underline-offset-2"
+        href="https://github.com/JoshuaKimsey/LibreWXR#data-sources"
+        rel="noreferrer"
+        target="_blank"
+        title="EUMETNET OPERA, DPC, NOAA, ECMWF, DMI, DWD a další"
+      >
+        zdroje dat
+      </a>
+    </span>
+  );
+}
+
 function defaultSourceFor(location) {
   const chmiOk = locationInChmiRadarCoverage(location);
   try {
     const stored = localStorage.getItem(SOURCE_KEY);
+    if (stored === 'librewxr') return 'librewxr';
     if (stored === 'chmi' && chmiOk) return 'chmi';
     if (stored === 'rainviewer') return 'rainviewer';
   } catch {
     // ignore
   }
-  return chmiOk ? 'chmi' : 'rainviewer';
+  return 'librewxr';
 }
 
 export default function RadarMap({ location, fullscreen = false }) {
@@ -468,19 +570,11 @@ export default function RadarMap({ location, fullscreen = false }) {
 
   useEffect(() => {
     if (!chmiAvailable && source === 'chmi') {
-      setSource('rainviewer');
+      setSource('librewxr');
       setAnimationEnabled(false);
       setFrames([]);
     }
   }, [chmiAvailable, source]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SOURCE_KEY, source);
-    } catch {
-      // ignore
-    }
-  }, [source]);
 
   useEffect(() => {
     let alive = true;
@@ -514,16 +608,19 @@ export default function RadarMap({ location, fullscreen = false }) {
       };
     }
 
-    const cached = readJsonCache(RAINVIEWER_CACHE_KEY);
-    const cacheFresh = Boolean(cached?.pastFrames?.length && Date.now() - cached.updatedAt < RAINVIEWER_CACHE_TTL);
+    const tileConfig =
+      source === 'rainviewer'
+        ? { cacheKey: RAINVIEWER_CACHE_KEY, ttl: RAINVIEWER_CACHE_TTL, fetchMaps: fetchRainviewerMaps, sourceName: 'rainviewer' }
+        : { cacheKey: LIBREWXR_CACHE_KEY, ttl: LIBREWXR_CACHE_TTL, fetchMaps: fetchLibreWxrMaps, sourceName: 'librewxr' };
+
+    const cached = readJsonCache(tileConfig.cacheKey);
+    const cacheFresh = Boolean(cached?.pastFrames?.length && Date.now() - cached.updatedAt < tileConfig.ttl);
 
     const showFrames = (nextFrames) => {
       if (!alive || !nextFrames?.length) return;
       setFrames(nextFrames);
       setFrameIndex(latestObservationIndex(nextFrames));
     };
-
-    if (cached?.pastFrames?.length) showFrames(cached.pastFrames);
 
     const enrich = async (baseFrames) => {
       try {
@@ -534,21 +631,23 @@ export default function RadarMap({ location, fullscreen = false }) {
     };
 
     if (cacheFresh) {
+      showFrames(cached.pastFrames);
       enrich(cached.pastFrames);
       return () => {
         alive = false;
       };
     }
 
-    fetchRainviewerMaps()
+    tileConfig
+      .fetchMaps()
       .then(async (data) => {
         if (!alive) return;
-        const pastAndApiNowcast = buildRainviewerFrames(data);
+        const pastAndApiNowcast = buildRainviewerFrames(data, tileConfig.sourceName);
         if (!pastAndApiNowcast.length) {
-          if (!cached?.pastFrames?.length) setFrames([]);
+          setFrames([]);
           return;
         }
-        writeJsonCache(RAINVIEWER_CACHE_KEY, {
+        writeJsonCache(tileConfig.cacheKey, {
           pastFrames: pastAndApiNowcast,
           updatedAt: Date.now()
         });
@@ -556,20 +655,22 @@ export default function RadarMap({ location, fullscreen = false }) {
         await enrich(pastAndApiNowcast);
       })
       .catch(() => {
-        if (alive && !cached?.pastFrames?.length) setFrames([]);
+        if (!alive) return;
+        setFrames([]);
+        // The public LibreWXR instance promises no uptime: an outage must not leave the default radar empty.
+        if (source === 'librewxr') setSource(chmiAvailable ? 'chmi' : 'rainviewer');
       });
 
     return () => {
       alive = false;
     };
-  }, [center, source]);
+  }, [center, chmiAvailable, source]);
 
   const activeFrame = frames[frameIndex];
   const activeOverlay = activeFrame?.source || source;
   const observationIndex = latestObservationIndex(frames);
   const hasForecast = frames.some((frame) => frame.kind === 'nowcast');
   const nowMarkerProgress = frames.length > 1 ? observationIndex / (frames.length - 1) : 0;
-  const attribution = source === 'chmi' ? 'ČHMÚ' : 'RainViewer';
 
   useEffect(() => {
     if (!animationEnabled || frames.length < 2) return undefined;
@@ -626,9 +727,10 @@ export default function RadarMap({ location, fullscreen = false }) {
         <Tabs
           value={source}
           onValueChange={(next) => {
-            if (next !== 'chmi' && next !== 'rainviewer') return;
+            if (next !== 'librewxr' && next !== 'chmi' && next !== 'rainviewer') return;
             if (next === 'chmi' && !chmiAvailable) return;
             setSource(next);
+            rememberSource(next);
             setAnimationEnabled(false);
           }}
         >
@@ -637,6 +739,7 @@ export default function RadarMap({ location, fullscreen = false }) {
             className="border border-border bg-background shadow-xs"
             aria-label="Zdroj radaru"
           >
+            <TabsTab value="librewxr">LibreWXR</TabsTab>
             <TabsTab
               value="chmi"
               disabled={!chmiAvailable}
@@ -726,7 +829,7 @@ export default function RadarMap({ location, fullscreen = false }) {
           </div>
 
           <div className="flex items-end justify-between gap-2 text-[0.625rem] text-muted-foreground">
-            <span className="rounded-md border border-border bg-background px-1.5 py-0.5">{attribution}</span>
+            <RadarAttribution source={source} />
             <div
               className="flex shrink-0 items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5"
               aria-label="Legenda intenzity srážek"

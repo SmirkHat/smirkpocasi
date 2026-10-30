@@ -12,10 +12,10 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   server: {
-    allowedHosts: ['prcek.snapper-darter.ts.net', 'prcek.local'],
+    allowedHosts: ['prcek.snapper-darter.ts.net', 'prcek.local', '.trycloudflare.com'],
   },
   plugins: [
-    devtools(),
+    devtools({ consolePiping: { enabled: false } }),
     viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     tanstackStart(),
@@ -62,6 +62,8 @@ export default defineConfig({
             },
           },
           {
+            // LibreWXR stays out: a forecast frame and its later observation share one URL,
+            // so CacheFirst would replay the old forecast as the observed radar.
             urlPattern: /^https:\/\/(tile\.openstreetmap\.org|tilecache\.rainviewer\.com)\//,
             handler: 'CacheFirst',
             options: {

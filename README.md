@@ -19,7 +19,7 @@ Open-source Czech weather PWA for the SmirkHat.org community. The UI is Czech; c
 - City autocomplete through Open-Meteo Geocoding via `/api/geocode`
 - Favorite locations stored in `localStorage`
 - RainViewer radar layer and Blitzortung lightning layer
-- ČHMÚ radar OpenData (MAX_Z) as the default Czech radar source, with RainViewer toggle
+- LibreWXR radar as the default source, with ČHMÚ OpenData (MAX_Z) and RainViewer toggles
 - ČHMÚ hydrology overview through `/api/hydro`
 - PWA manifest and service worker cache strategies
 - Offline fallback to last stored weather and hydro data
@@ -116,7 +116,7 @@ Keep private values in `.env`; use `.env.example` as the public template.
 - Weather forecast: Open-Meteo
 - Optional experimental forecast: Počasí.cz / Seznam.cz, described by Seznam as using data from Windy.com
 - Maps: OpenStreetMap contributors
-- Radar: ČHMÚ OpenData (MAX_Z), optional RainViewer tiles
+- Radar: LibreWXR (data CC-BY-4.0, see https://librewxr.net/terms), ČHMÚ OpenData (MAX_Z), optional RainViewer tiles
 - Lightning data: Blitzortung
 - Warnings: ČHMÚ CAP bulletins
 - Air quality: ČHMÚ IMIS (OpenData), fallback Open-Meteo CAMS

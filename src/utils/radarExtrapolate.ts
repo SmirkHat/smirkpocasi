@@ -6,6 +6,7 @@ const GRID = 3;
 const CORR_SIZE = 128;
 const MAX_OFFSET = 28;
 const FORECAST_LEADS_MIN = [10, 20, 30, 40, 50, 60];
+const RAW_RADAR_SOURCE_SCHEME = 0;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -33,7 +34,8 @@ function loadTileImage(url) {
 }
 
 function tileUrl(frame, z, x, y) {
-  return `${frame.host}${frame.path}/256/${z}/${x}/${y}/${RAINVIEWER_RECOLOR_SOURCE_SCHEME}/1_1.png`;
+  const colorScheme = frame.source === 'librewxr' ? RAW_RADAR_SOURCE_SCHEME : RAINVIEWER_RECOLOR_SOURCE_SCHEME;
+  return `${frame.host}${frame.path}/256/${z}/${x}/${y}/${colorScheme}/1_1.png`;
 }
 
 async function stitchFramePatch(frame, centerLat, centerLon) {

@@ -235,9 +235,10 @@ async function fetchOneProvider(provider: (typeof PROVIDERS)[number], location: 
   }
 
   const budget = timeoutMs(provider)
+  const controller = provider.id === 'opensensemap' ? new AbortController() : null
   const run = async () => {
     if (provider.id === 'brightsky') return fetchBrightsky(location)
-    if (provider.id === 'opensensemap') return fetchOpenSenseMap(location)
+    if (provider.id === 'opensensemap') return fetchOpenSenseMap(location, { signal: controller?.signal })
 
     if (typeof provider.model === 'string' && String(provider.model).includes('ensemble')) {
       return fetchOpenMeteoEnsembleServer(location, provider)
@@ -256,7 +257,13 @@ async function fetchOneProvider(provider: (typeof PROVIDERS)[number], location: 
   }
 
   // The budget belongs to the shared run, not each request: a hung upstream fails once for everybody.
-  return cachedProviderRun(provider, location, () => withTimeout(run(), budget, provider.name))
+  return cachedProviderRun(provider, location, async () => {
+    try {
+      return await withTimeout(run(), budget, provider.name)
+    } finally {
+      controller?.abort()
+    }
+  })
 }
 
 function isForecastAnswer(provider: (typeof PROVIDERS)[number], result: any) {

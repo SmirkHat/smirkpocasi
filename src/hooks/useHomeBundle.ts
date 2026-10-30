@@ -10,7 +10,7 @@ const INSTANT_MAX_AGE_MS = 5 * 60 * 1000
 const OFFLINE_MAX_AGE_MS = 12 * 60 * 60 * 1000
 const SKIP_REVALIDATE_MS = 60 * 1000
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000
-const PARTIAL_RETRY_MS = 2500
+const PROVISIONAL_RETRY_MS = 2500
 const MAX_RECENT_BUNDLES = 8
 /** GPS refining a position by a few hundred metres is still the same place: no skeleton flash. */
 const SAME_PLACE_M = 2000
@@ -67,7 +67,7 @@ function rememberBundle(key, bundle) {
 }
 
 function needsRevalidation(bundle, key) {
-  if (!bundle || bundle.partial) return true
+  if (!bundle || bundle.partial || bundle.stale) return true
   const sameCell = locationKey({ lat: bundle.requestLat, lon: bundle.requestLon }) === key
   return !sameCell || bundleAge(bundle) >= SKIP_REVALIDATE_MS
 }
@@ -152,7 +152,7 @@ export function useHomeBundle(location) {
   const visibleRef = useRef(visible)
   visibleRef.current = visible
 
-  const load = useCallback((target, { retryIfPartial = true } = {}) => {
+  const load = useCallback((target, { retryIfProvisional = true } = {}) => {
     const targetKey = locationKey(target)
     if (!targetKey) return Promise.resolve()
 
@@ -166,8 +166,8 @@ export function useHomeBundle(location) {
         if (controller.signal.aborted) return
         rememberBundle(targetKey, payload)
         setState({ key: targetKey, bundle: payload, loading: false, error: null })
-        if (payload.partial && retryIfPartial) {
-          retryRef.current = setTimeout(() => load(locationRef.current, { retryIfPartial: false }), PARTIAL_RETRY_MS)
+        if ((payload.partial || payload.stale) && retryIfProvisional) {
+          retryRef.current = setTimeout(() => load(locationRef.current, { retryIfProvisional: false }), PROVISIONAL_RETRY_MS)
         }
       })
       .catch((fetchError) => {

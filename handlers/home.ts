@@ -8,6 +8,7 @@ import { runLegacyHandler, runLegacyJson } from '../src/server/runLegacyHandler'
 import openweathermapHandler from './openweathermap'
 
 const MEMORY_TTL_MS = 90_000
+const STALE_TTL_MS = 5 * 60_000
 const MAX_CACHED_BUNDLES = 100
 const WEATHER_BUDGET_MS = 6000
 // Warnings and AQI answer quickly when healthy; a stuck upstream must not hold the whole page.
@@ -22,7 +23,7 @@ function cacheKey(lat, lon) {
 function rememberBundle(key, payload) {
   const now = Date.now()
   for (const [entryKey, entry] of cache) {
-    if (now - entry.at >= MEMORY_TTL_MS) cache.delete(entryKey)
+    if (now - entry.at >= STALE_TTL_MS) cache.delete(entryKey)
   }
   while (cache.size >= MAX_CACHED_BUNDLES) cache.delete(cache.keys().next().value)
   cache.set(key, { at: now, payload })
@@ -188,6 +189,20 @@ async function buildHomeBundle(lat, lon) {
   }
 }
 
+function refreshHomeBundle(key, lat, lon) {
+  let pending = inFlight.get(key)
+  if (pending) return pending
+
+  pending = buildHomeBundle(lat, lon)
+    .then((payload) => {
+      if (!payload.partial) rememberBundle(key, payload)
+      return payload
+    })
+    .finally(() => inFlight.delete(key))
+  inFlight.set(key, pending)
+  return pending
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
@@ -201,26 +216,29 @@ export default async function handler(req, res) {
 
   const key = cacheKey(lat, lon)
   const cached = cache.get(key)
-  if (cached && Date.now() - cached.at < MEMORY_TTL_MS) {
+  const cacheAge = cached ? Date.now() - cached.at : Number.POSITIVE_INFINITY
+  if (cached && cacheAge < MEMORY_TTL_MS) {
     res.setHeader('Cache-Control', 'public, s-maxage=90, stale-while-revalidate=300')
     res.setHeader('X-Home-Cache', 'HIT')
     return res.status(200).json(cached.payload)
   }
 
+  if (cached && cacheAge < STALE_TTL_MS) {
+    void refreshHomeBundle(key, lat, lon).catch(() => undefined)
+    // The client asks again in a moment for the refreshed copy, so this one must not stay on a CDN.
+    res.setHeader('Cache-Control', 'no-store')
+    res.setHeader('X-Home-Cache', 'STALE')
+    return res.status(200).json({ ...cached.payload, stale: true })
+  }
+
   try {
-    let pending = inFlight.get(key)
-    if (!pending) {
-      pending = buildHomeBundle(lat, lon).finally(() => inFlight.delete(key))
-      inFlight.set(key, pending)
-    }
-    const payload = await pending
+    const payload = await refreshHomeBundle(key, lat, lon)
     if (payload.partial) {
       // The client asks again in a moment and must not get this incomplete copy back from a CDN.
       res.setHeader('Cache-Control', 'no-store')
       res.setHeader('X-Home-Cache', 'PARTIAL')
       return res.status(200).json(payload)
     }
-    rememberBundle(key, payload)
     res.setHeader('Cache-Control', 'public, s-maxage=90, stale-while-revalidate=300')
     res.setHeader('X-Home-Cache', 'MISS')
     return res.status(200).json(payload)

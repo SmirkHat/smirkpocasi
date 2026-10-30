@@ -29,6 +29,7 @@ import { Route as ApiHomeRouteImport } from './routes/api/home'
 import { Route as ApiHydroRouteImport } from './routes/api/hydro'
 import { Route as ApiImgwRouteImport } from './routes/api/imgw'
 import { Route as ApiInpocasiStationsRouteImport } from './routes/api/inpocasi-stations'
+import { Route as ApiLibrewxrRouteImport } from './routes/api/librewxr'
 import { Route as ApiMarineRouteImport } from './routes/api/marine'
 import { Route as ApiMeteoamRouteImport } from './routes/api/meteoam'
 import { Route as ApiMeteosourceRouteImport } from './routes/api/meteosource'
@@ -153,6 +154,11 @@ const ApiImgwRoute = ApiImgwRouteImport.update({
 const ApiInpocasiStationsRoute = ApiInpocasiStationsRouteImport.update({
   id: '/api/inpocasi-stations',
   path: '/api/inpocasi-stations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLibrewxrRoute = ApiLibrewxrRouteImport.update({
+  id: '/api/librewxr',
+  path: '/api/librewxr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMarineRoute = ApiMarineRouteImport.update({
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/api/hydro': typeof ApiHydroRoute
   '/api/imgw': typeof ApiImgwRoute
   '/api/inpocasi-stations': typeof ApiInpocasiStationsRoute
+  '/api/librewxr': typeof ApiLibrewxrRoute
   '/api/marine': typeof ApiMarineRoute
   '/api/meteoam': typeof ApiMeteoamRoute
   '/api/meteosource': typeof ApiMeteosourceRoute
@@ -349,6 +356,7 @@ export interface FileRoutesByTo {
   '/api/hydro': typeof ApiHydroRoute
   '/api/imgw': typeof ApiImgwRoute
   '/api/inpocasi-stations': typeof ApiInpocasiStationsRoute
+  '/api/librewxr': typeof ApiLibrewxrRoute
   '/api/marine': typeof ApiMarineRoute
   '/api/meteoam': typeof ApiMeteoamRoute
   '/api/meteosource': typeof ApiMeteosourceRoute
@@ -397,6 +405,7 @@ export interface FileRoutesById {
   '/api/hydro': typeof ApiHydroRoute
   '/api/imgw': typeof ApiImgwRoute
   '/api/inpocasi-stations': typeof ApiInpocasiStationsRoute
+  '/api/librewxr': typeof ApiLibrewxrRoute
   '/api/marine': typeof ApiMarineRoute
   '/api/meteoam': typeof ApiMeteoamRoute
   '/api/meteosource': typeof ApiMeteosourceRoute
@@ -446,6 +455,7 @@ export interface FileRouteTypes {
     | '/api/hydro'
     | '/api/imgw'
     | '/api/inpocasi-stations'
+    | '/api/librewxr'
     | '/api/marine'
     | '/api/meteoam'
     | '/api/meteosource'
@@ -493,6 +503,7 @@ export interface FileRouteTypes {
     | '/api/hydro'
     | '/api/imgw'
     | '/api/inpocasi-stations'
+    | '/api/librewxr'
     | '/api/marine'
     | '/api/meteoam'
     | '/api/meteosource'
@@ -540,6 +551,7 @@ export interface FileRouteTypes {
     | '/api/hydro'
     | '/api/imgw'
     | '/api/inpocasi-stations'
+    | '/api/librewxr'
     | '/api/marine'
     | '/api/meteoam'
     | '/api/meteosource'
@@ -588,6 +600,7 @@ export interface RootRouteChildren {
   ApiHydroRoute: typeof ApiHydroRoute
   ApiImgwRoute: typeof ApiImgwRoute
   ApiInpocasiStationsRoute: typeof ApiInpocasiStationsRoute
+  ApiLibrewxrRoute: typeof ApiLibrewxrRoute
   ApiMarineRoute: typeof ApiMarineRoute
   ApiMeteoamRoute: typeof ApiMeteoamRoute
   ApiMeteosourceRoute: typeof ApiMeteosourceRoute
@@ -755,6 +768,13 @@ declare module '@tanstack/react-router' {
       path: '/api/inpocasi-stations'
       fullPath: '/api/inpocasi-stations'
       preLoaderRoute: typeof ApiInpocasiStationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/librewxr': {
+      id: '/api/librewxr'
+      path: '/api/librewxr'
+      fullPath: '/api/librewxr'
+      preLoaderRoute: typeof ApiLibrewxrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/marine': {
@@ -956,6 +976,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHydroRoute: ApiHydroRoute,
   ApiImgwRoute: ApiImgwRoute,
   ApiInpocasiStationsRoute: ApiInpocasiStationsRoute,
+  ApiLibrewxrRoute: ApiLibrewxrRoute,
   ApiMarineRoute: ApiMarineRoute,
   ApiMeteoamRoute: ApiMeteoamRoute,
   ApiMeteosourceRoute: ApiMeteosourceRoute,

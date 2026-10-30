@@ -5,6 +5,14 @@ export type WeightedValue = {
   weight: number
 }
 
+export type AggregateExclusionReason = 'invalid' | 'outlier'
+
+export type RobustAggregateDetails<T extends WeightedValue> = {
+  value: number | null
+  kept: T[]
+  rejected: Array<{ entry: T; reason: AggregateExclusionReason }>
+}
+
 export function median(values: number[]): number | null {
   const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b)
   if (!sorted.length) return null
@@ -209,18 +217,46 @@ export function robustAggregate(
     mean?: boolean
   } = {},
 ): number | null {
-  const limited = entries.filter(
-    (entry) =>
+  return robustAggregateDetails(entries, options).value
+}
+
+/** Same consensus calculation as `robustAggregate`, with its audit trail. */
+export function robustAggregateDetails<T extends WeightedValue>(
+  entries: T[],
+  options: {
+    tolerance?: number
+    limits?: [number, number]
+    circular?: boolean
+    mean?: boolean
+  } = {},
+): RobustAggregateDetails<T> {
+  const limited: T[] = []
+  const invalid: RobustAggregateDetails<T>['rejected'] = []
+  for (const entry of entries) {
+    const usable =
       Number.isFinite(entry.value) &&
       Number.isFinite(entry.weight) &&
       entry.weight > 0 &&
-      withinLimits(entry.value, options.limits),
-  )
-
-  if (options.circular) {
-    return weightedCircularMean(limited)
+      withinLimits(entry.value, options.limits)
+    if (usable) limited.push(entry)
+    else invalid.push({ entry, reason: 'invalid' })
   }
 
-  const { kept } = partitionOutliers(limited, options.tolerance)
-  return options.mean ? weightedMean(kept) : robustMean(kept)
+  if (options.circular) {
+    return {
+      value: weightedCircularMean(limited),
+      kept: limited,
+      rejected: invalid,
+    }
+  }
+
+  const { kept, rejected } = partitionOutliers(limited, options.tolerance)
+  return {
+    value: options.mean ? weightedMean(kept) : robustMean(kept),
+    kept,
+    rejected: [
+      ...invalid,
+      ...rejected.map((entry) => ({ entry, reason: 'outlier' as const })),
+    ],
+  }
 }

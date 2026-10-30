@@ -198,7 +198,8 @@ These providers need no user API key and are included in the consensus or source
 | Yr.no / MET Norway | Forecast provider | `/api/yr`, `src/api/yr.js` | Proxied for required User-Agent. Uses Locationforecast `complete` and normalizes symbol code, precipitation range/probability, cloud layers, fog fraction, wind, pressure, dew point, and UV clear-sky. |
 | wttr.in | Simple forecast/current fallback | `/api/wttr`, `src/api/wttr.js` | Low weight. Good fallback, not a precision source. |
 | openSenseMap | Nearby station observations | direct client fetch | Observation source only; excluded from the forecast aggregate, but fresh nearby readings are blended into the current temperature, humidity and dew point (trust 0.4, as a citizen-science station). |
-| ČHMÚ radar | Map layer | `/api/chmi-radar` | Default Czech radar; RainViewer remains a toggle. |
+| LibreWXR radar | Map layer | `/api/librewxr` | Default radar, tiles from the public instance `api.librewxr.net`. Data under CC-BY-4.0 (tiles with Italian DPC radar CC-BY-SA-4.0); the UI credits LibreWXR and links its source list. Best effort without uptime guarantee, so an outage falls back to ČHMÚ or RainViewer. |
+| ČHMÚ radar | Map layer | `/api/chmi-radar` | Czech radar toggle. RainViewer remains a toggle too. |
 | ČHMÚ warnings | CAP alerts | `/api/warnings` | Home banner + radar badge. |
 | ČHMÚ AQI | Air quality | `/api/chmi-aqi` | Primary; Open-Meteo CAMS fallback. |
 | Hydro HPPS | Hydrology | `/api/hydro` | OpenData-first (nearest stations), scrape fallback. |

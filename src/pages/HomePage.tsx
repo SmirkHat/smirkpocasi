@@ -113,8 +113,8 @@ export default function HomePage() {
   const showPageSkeleton = home.loading && !home.weather
 
   // Same merged days for the hero, the temperature chart and the week overview.
-  const forecastDays = useMemo(
-    () => buildMergedForecastDays({ hourly, daily, forecastSeries: consensus?.forecastSeries }).days,
+  const { days: forecastDays, sourceNames: forecastSourceNames } = useMemo(
+    () => buildMergedForecastDays({ hourly, daily, forecastSeries: consensus?.forecastSeries }),
     [hourly, daily, consensus?.forecastSeries],
   )
   const todayForecast = forecastDays[0] ?? null
@@ -162,7 +162,13 @@ export default function HomePage() {
             <ForecastExplorerSkeleton />
           ) : (
             <Suspense fallback={<ForecastExplorerSkeleton />}>
-              <ForecastExplorer days={forecastDays} fallback={home.error ? null : <ForecastExplorerSkeleton />} />
+              <ForecastExplorer
+                days={forecastDays}
+                seriesNames={forecastSourceNames}
+                sourceMeta={consensus?.sources}
+                showCalculations={showFieldSources}
+                fallback={home.error ? null : <ForecastExplorerSkeleton />}
+              />
             </Suspense>
           )}
         </section>

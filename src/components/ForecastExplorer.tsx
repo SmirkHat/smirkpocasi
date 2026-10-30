@@ -15,14 +15,61 @@ import {
 import { Card, CardDescription, CardHeader, CardPanel, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import type { ForecastDay, HourlyPoint } from '../utils/hourlyForecast';
-import { formatDay, formatPrecipitation, formatTemperature, formatTime, formatWind } from '../utils/formatters';
+import type { ForecastDay, HourlyCalculation, HourlyCalculations, HourlyPoint } from '../utils/hourlyForecast';
+import { ROBUST_FIELD } from '../utils/robustAggregate';
+import {
+  formatDay,
+  formatPercent,
+  formatPrecipitation,
+  formatTemperature,
+  formatTime,
+  formatWind,
+  formatWindDirection,
+} from '../utils/formatters';
 import { getWeatherInfo } from '../utils/weatherCodes';
 import { ChartFrame } from './charts/ChartFrame';
 import { ChartTooltip } from './charts/ChartTooltip';
 import { getChartTheme } from './charts/chartTheme';
 
 type TabId = 'temp' | 'precip' | 'wind';
+
+type CalculationKey = keyof HourlyCalculations;
+
+type ForecastSourceMeta = {
+  id: string;
+  name?: string;
+  url?: string | null;
+};
+
+const EMPTY_SERIES_NAMES: Record<string, string> = {};
+const EMPTY_SOURCE_META: ForecastSourceMeta[] = [];
+// Rows past the tooltip's height are only reachable by scrolling it, which recharts blocks by default.
+const CALCULATION_TOOLTIP_STYLE = { pointerEvents: 'auto' as const };
+
+const calculationConfig: Record<
+  TabId,
+  Array<{
+    key: CalculationKey;
+    label: string;
+    format: (value: number | null) => string;
+  }>
+> = {
+  temp: [{ key: 'temperature', label: 'Teplota', format: formatTemperature }],
+  precip: [
+    { key: 'precipMm', label: 'Srážky', format: formatPrecipitation },
+    { key: 'precipProb', label: 'Pravděpodobnost', format: formatPercent },
+  ],
+  wind: [
+    { key: 'windSpeed', label: 'Rychlost', format: formatWind },
+    { key: 'windDirection', label: 'Směr', format: formatWindDirection },
+  ],
+};
+
+const calculationMethodLabel = {
+  'robust-mean': 'robustní vážený průměr',
+  'weighted-mean': 'vážený průměr',
+  'circular-mean': 'kruhový vážený průměr',
+};
 
 function dayLabel(day: ForecastDay, index: number) {
   if (index === 0) return 'Dnes';
@@ -112,12 +159,13 @@ function chartRows(hours: HourlyPoint[]) {
   return hours.map((hour) => ({
     key: hour.key,
     label: formatTime(hour.time),
-    fullLabel: hour.time.toLocaleString('cs-CZ'),
+    fullLabel: `${formatDay(hour.time)} ${formatTime(hour.time)}`,
     temperature: hour.temperature,
     precipMm: hour.precipMm ?? 0,
     precipProb: hour.precipProb,
     windSpeed: hour.windSpeed,
     windDirection: hour.windDirection,
+    calculations: hour.calculations,
     tempLabel: hour.temperature == null ? '' : `${Math.round(hour.temperature)}`,
     precipLabel:
       (hour.precipMm ?? 0) < 0.05
@@ -127,6 +175,87 @@ function chartRows(hours: HourlyPoint[]) {
           : hour.precipMm!.toFixed(1),
     windLabel: hour.windSpeed == null ? '' : `${Math.round(hour.windSpeed)}`,
   }));
+}
+
+function formatWeight(weight: number) {
+  return Number(weight).toLocaleString('cs-CZ', { maximumFractionDigits: 2 });
+}
+
+function ForecastCalculationSection({
+  calculation,
+  label,
+  formatValue,
+  sourceNames,
+}: {
+  calculation?: HourlyCalculation;
+  label: string;
+  formatValue: (value: number | null) => string;
+  sourceNames: Record<string, string>;
+}) {
+  if (!calculation?.inputs.length) return null;
+
+  return (
+    <section className="border-t border-border/70 pt-2 first:border-0 first:pt-0">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-semibold text-foreground">{label}</span>
+        <span className="font-semibold tabular-nums text-foreground">{formatValue(calculation.result)}</span>
+      </div>
+      <p className="mt-0.5 text-[0.6875rem] text-muted-foreground">
+        {calculationMethodLabel[calculation.method]}
+      </p>
+      <div className="mt-1.5 grid gap-x-4 gap-y-1 sm:grid-cols-2">
+        {calculation.inputs.map((input, index) => (
+          <div
+            className={cn(
+              'flex min-w-0 items-baseline justify-between gap-2 tabular-nums',
+              input.included ? 'text-muted-foreground' : 'text-destructive-foreground line-through',
+            )}
+            key={`${input.source}-${index}`}
+          >
+            <span className="min-w-0 truncate">{sourceNames[input.source] || input.source}</span>
+            <span className="shrink-0">
+              {formatValue(input.value)} · váha {formatWeight(input.weight)}
+              {input.exclusionReason === 'outlier' ? ' · odlehlé' : ''}
+              {input.exclusionReason === 'invalid' ? ' · mimo rozsah' : ''}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ForecastCalculationTooltip({
+  active,
+  payload,
+  tab,
+  sourceNames,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: ReturnType<typeof chartRows>[number] }>;
+  tab: TabId;
+  sourceNames: Record<string, string>;
+}) {
+  const row = payload?.[0]?.payload;
+  if (!active || !row) return null;
+  const calculations = row.calculations();
+
+  return (
+    <div className="max-h-[50vh] w-80 max-w-[calc(100vw-3rem)] overflow-y-auto overscroll-contain rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-md sm:max-h-[70vh] sm:w-[36rem]">
+      <div className="mb-2 font-medium text-foreground">{row.fullLabel}</div>
+      <div className="flex flex-col gap-2">
+        {calculationConfig[tab].map((metric) => (
+          <ForecastCalculationSection
+            calculation={calculations[metric.key]}
+            formatValue={metric.format}
+            key={metric.key}
+            label={metric.label}
+            sourceNames={sourceNames}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /** Show tick/label every 3 hours (Google-style density). */
@@ -151,7 +280,15 @@ function WindArrow({ degrees }: { degrees: number | null | undefined }) {
   );
 }
 
-function TempChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
+function TempChart({
+  rows,
+  showCalculations,
+  sourceNames,
+}: {
+  rows: ReturnType<typeof chartRows>;
+  showCalculations: boolean;
+  sourceNames: Record<string, string>;
+}) {
   const theme = useMemo(() => getChartTheme(), []);
   return (
     <ChartFrame label="Hodinová teplota" height={220}>
@@ -180,8 +317,13 @@ function TempChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
             tickFormatter={(value) => `${Math.round(value)}°`}
           />
           <Tooltip
+            wrapperStyle={showCalculations ? CALCULATION_TOOLTIP_STYLE : undefined}
             content={
-              <ChartTooltip formatter={(value) => `Teplota: ${formatTemperature(value)}`} />
+              showCalculations ? (
+                <ForecastCalculationTooltip sourceNames={sourceNames} tab="temp" />
+              ) : (
+                <ChartTooltip formatter={(value) => `Teplota: ${formatTemperature(value)}`} />
+              )
             }
           />
           <Area
@@ -223,7 +365,15 @@ function TempChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
   );
 }
 
-function PrecipChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
+function PrecipChart({
+  rows,
+  showCalculations,
+  sourceNames,
+}: {
+  rows: ReturnType<typeof chartRows>;
+  showCalculations: boolean;
+  sourceNames: Record<string, string>;
+}) {
   const theme = useMemo(() => getChartTheme(), []);
   const maxPrecip = Math.max(...rows.map((row) => row.precipMm), 0.5);
 
@@ -249,14 +399,19 @@ function PrecipChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
             tickFormatter={(value) => `${Number(value).toFixed(value >= 1 ? 0 : 1)}`}
           />
           <Tooltip
+            wrapperStyle={showCalculations ? CALCULATION_TOOLTIP_STYLE : undefined}
             content={
-              <ChartTooltip
-                formatter={(value, name) =>
-                  name === 'precipProb'
-                    ? `Pravděpodobnost: ${Math.round(Number(value))} %`
-                    : `Srážky: ${formatPrecipitation(value)}`
-                }
-              />
+              showCalculations ? (
+                <ForecastCalculationTooltip sourceNames={sourceNames} tab="precip" />
+              ) : (
+                <ChartTooltip
+                  formatter={(value, name) =>
+                    name === 'precipProb'
+                      ? `Pravděpodobnost: ${Math.round(Number(value))} %`
+                      : `Srážky: ${formatPrecipitation(value)}`
+                  }
+                />
+              )
             }
           />
           <Bar
@@ -288,7 +443,15 @@ function PrecipChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
   );
 }
 
-function WindChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
+function WindChart({
+  rows,
+  showCalculations,
+  sourceNames,
+}: {
+  rows: ReturnType<typeof chartRows>;
+  showCalculations: boolean;
+  sourceNames: Record<string, string>;
+}) {
   const theme = useMemo(() => getChartTheme(), []);
 
   return (
@@ -312,7 +475,16 @@ function WindChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
               width={40}
               tickFormatter={(value) => `${Math.round(value)}`}
             />
-            <Tooltip content={<ChartTooltip formatter={(value) => `Vítr: ${formatWind(value)}`} />} />
+            <Tooltip
+              wrapperStyle={showCalculations ? CALCULATION_TOOLTIP_STYLE : undefined}
+              content={
+                showCalculations ? (
+                  <ForecastCalculationTooltip sourceNames={sourceNames} tab="wind" />
+                ) : (
+                  <ChartTooltip formatter={(value) => `Vítr: ${formatWind(value)}`} />
+                )
+              }
+            />
             <Line
               type="monotone"
               dataKey="windSpeed"
@@ -356,17 +528,171 @@ function WindChart({ rows }: { rows: ReturnType<typeof chartRows> }) {
   );
 }
 
-/**
- * Google-style day explorer: tabs for temp / precip mm / wind,
- * merged hourly series from every forecast-capable source.
- */
+type ForecastSourceStat = {
+  id: string;
+  name: string;
+  url: string | null;
+  weight: number;
+  included: number;
+  total: number;
+  excluded: number;
+};
+
+function summarizeForecastSources(
+  day: ForecastDay,
+  tab: TabId,
+  sourceNames: Record<string, string>,
+  sourceUrls: Record<string, string | null>,
+): ForecastSourceStat[] {
+  const stats = new Map<string, ForecastSourceStat>();
+
+  for (const hour of day.hours) {
+    const calculations = hour.calculations();
+    for (const metric of calculationConfig[tab]) {
+      for (const input of calculations[metric.key].inputs) {
+        const current = stats.get(input.source) || {
+          id: input.source,
+          name: sourceNames[input.source] || input.source,
+          url: sourceUrls[input.source] || null,
+          weight: input.weight,
+          included: 0,
+          total: 0,
+          excluded: 0,
+        };
+        current.total += 1;
+        current.included += input.included ? 1 : 0;
+        current.excluded += input.included ? 0 : 1;
+        stats.set(input.source, current);
+      }
+    }
+  }
+
+  return [...stats.values()].sort(
+    (a, b) => b.included - a.included || b.weight - a.weight || a.name.localeCompare(b.name, 'cs'),
+  );
+}
+
+function dailyCalculationCopy(day: ForecastDay, tab: TabId) {
+  if (tab === 'temp') {
+    const count = day.hours.filter((hour) => hour.temperature != null).length;
+    return `Denní ${formatTemperature(day.tempMin)} / ${formatTemperature(day.tempMax)} = minimum / maximum z ${count} hodinových výsledků.`;
+  }
+  if (tab === 'precip') {
+    const count = day.hours.filter((hour) => hour.precipMm != null).length;
+    return `Denní úhrn ${formatPrecipitation(day.precipSum)} = součet ${count} hodinových výsledků.`;
+  }
+  return null;
+}
+
+const calculationExplanation: Record<TabId, string> = {
+  temp: `Hodinový bod je robustní vážený průměr: vzdálené hodnoty se přitáhnou k ostatním, takže jeden model výsledek neodtáhne. Při alespoň 4 vstupech se odlehlé teploty vyřadí s minimální tolerancí ${ROBUST_FIELD.temperature.tolerance} °C.`,
+  precip: `Srážky i pravděpodobnost jsou vážené průměry. Při alespoň 4 vstupech se vyřadí jen odlehlé hodnoty, s minimální tolerancí ${ROBUST_FIELD.precipitation.tolerance} mm, respektive ${ROBUST_FIELD.precipitationProbability.tolerance} procentních bodů.`,
+  wind: `Rychlost je robustní vážený průměr s minimální tolerancí filtru ${ROBUST_FIELD.windSpeed.tolerance} km/h. Směr je kruhový průměr vážený rychlostí větru, takže slabý vítr ho skoro neovlivní.`,
+};
+
+function ForecastCalculationPanel({
+  day,
+  tab,
+  sourceNames,
+  sourceUrls,
+}: {
+  day: ForecastDay;
+  tab: TabId;
+  sourceNames: Record<string, string>;
+  sourceUrls: Record<string, string | null>;
+}) {
+  const stats = useMemo(
+    () => summarizeForecastSources(day, tab, sourceNames, sourceUrls),
+    [day, tab, sourceNames, sourceUrls],
+  );
+  const dailyCopy = dailyCalculationCopy(day, tab);
+
+  return (
+    <section
+      className="rounded-lg border border-border/70 bg-muted/25 p-3"
+      aria-label="Zdroje a výpočet předpovědi"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground">Výpočet předpovědi</h3>
+        <span className="text-[0.6875rem] text-muted-foreground">Zdroje: {stats.length}</span>
+      </div>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        {calculationExplanation[tab]} Odlehlost = max(základní tolerance, 4× MAD); pokud by po filtru
+        zůstala menšina vstupů, filtr se nepoužije.
+      </p>
+      {dailyCopy ? <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{dailyCopy}</p> : null}
+
+      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Modely použité ve vybraném dni">
+        {stats.map((source) => {
+          const content = (
+            <>
+              <span className="font-medium text-foreground">{source.name}</span>
+              <span>váha {formatWeight(source.weight)}</span>
+              <span>{source.included}/{source.total} vstupů</span>
+              {source.excluded ? <span className="text-destructive-foreground">−{source.excluded}</span> : null}
+            </>
+          );
+          const className =
+            'inline-flex flex-wrap items-center gap-x-1.5 rounded-md border border-border/65 bg-background/60 px-2 py-1 text-[0.6875rem] text-muted-foreground';
+          const title =
+            `${source.name}: váha ${formatWeight(source.weight)}, ve výpočtu ${source.included} z ${source.total} vstupů` +
+            (source.excluded ? `, vyřazeno ${source.excluded}` : '');
+
+          return (
+            <li key={source.id}>
+              {source.url ? (
+                <a
+                  className={cn(className, 'transition-colors hover:border-foreground/30 hover:bg-muted/70')}
+                  href={source.url}
+                  rel="noreferrer"
+                  target="_blank"
+                  title={title}
+                >
+                  {content}
+                </a>
+              ) : (
+                <span className={className} title={title}>
+                  {content}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-[0.6875rem] text-muted-foreground">
+        Přesné hodnoty, váhy a případně vyřazené vstupy zobrazíš najetím nebo klepnutím na konkrétní bod grafu.
+      </p>
+    </section>
+  );
+}
+
 export default function ForecastExplorer({
   days,
+  seriesNames = EMPTY_SERIES_NAMES,
+  sourceMeta = EMPTY_SOURCE_META,
+  showCalculations = false,
   fallback = null,
 }: {
   days: ForecastDay[];
+  seriesNames?: Record<string, string>;
+  sourceMeta?: ForecastSourceMeta[];
+  showCalculations?: boolean;
   fallback?: ReactNode;
 }) {
+  const sourceNames = useMemo(
+    () => ({
+      ...seriesNames,
+      ...Object.fromEntries(sourceMeta.map((source) => [source.id, source.name || source.id])),
+    }),
+    [seriesNames, sourceMeta],
+  );
+  const sourceUrls = useMemo(
+    () => ({
+      openmeteo: 'https://open-meteo.com/en/docs',
+      ...Object.fromEntries(sourceMeta.map((source) => [source.id, source.url || null])),
+    }),
+    [sourceMeta],
+  );
   const [tab, setTab] = useState<TabId>('precip');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -393,20 +719,29 @@ export default function ForecastExplorer({
           </div>
 
           <TabsPanel value="temp" className="pt-3">
-            <TempChart rows={rows} />
+            <TempChart rows={rows} showCalculations={showCalculations} sourceNames={sourceNames} />
           </TabsPanel>
           <TabsPanel value="precip" className="pt-3">
-            <PrecipChart rows={rows} />
+            <PrecipChart rows={rows} showCalculations={showCalculations} sourceNames={sourceNames} />
             <p className="mt-2 text-center text-xs text-muted-foreground">
               mm / hodinu
               {activeDay.precipSum != null ? ` · denní úhrn ${formatPrecipitation(activeDay.precipSum)}` : ''}
             </p>
           </TabsPanel>
           <TabsPanel value="wind" className="pt-3">
-            <WindChart rows={rows} />
+            <WindChart rows={rows} showCalculations={showCalculations} sourceNames={sourceNames} />
             <p className="mt-2 text-center text-xs text-muted-foreground">km/h · šipka ve směru proudění</p>
           </TabsPanel>
         </Tabs>
+
+        {showCalculations ? (
+          <ForecastCalculationPanel
+            day={activeDay}
+            sourceNames={sourceNames}
+            sourceUrls={sourceUrls}
+            tab={tab}
+          />
+        ) : null}
 
         <WeekOverview days={days} activeKey={activeKey!} onSelect={setSelectedKey} />
       </CardPanel>

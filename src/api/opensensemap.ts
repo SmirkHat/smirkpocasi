@@ -41,13 +41,13 @@ function average(values) {
   return usable.length ? usable.reduce((sum, value) => sum + value, 0) / usable.length : null;
 }
 
-export async function fetchOpenSenseMap(location) {
+export async function fetchOpenSenseMap(location, { signal }: { signal?: AbortSignal } = {}) {
   const params = new URLSearchParams({
     near: `${location.lon},${location.lat}`,
     maxDistance: String(SEARCH_RADIUS_METERS),
     full: 'true'
   });
-  const response = await fetch(`https://api.opensensemap.org/boxes?${params}`);
+  const response = await fetch(`https://api.opensensemap.org/boxes?${params}`, { signal });
 
   if (!response.ok) throw new Error('openSenseMap request failed.');
 
