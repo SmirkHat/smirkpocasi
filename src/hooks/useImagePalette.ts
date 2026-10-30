@@ -8,22 +8,11 @@ function cacheKey(imageUrl, count, aspectRatio) {
 }
 
 export function useImagePalette(imageUrl, { count = 5, aspectRatio = HERO_COVER_ASPECT } = {}) {
-  const [palette, setPalette] = useState(() =>
-    imageUrl ? cache.get(cacheKey(imageUrl, count, aspectRatio)) ?? null : null,
-  );
+  const key = imageUrl ? cacheKey(imageUrl, count, aspectRatio) : null;
+  const [extracted, setExtracted] = useState<{ key: string; colors: any } | null>(null);
 
   useEffect(() => {
-    if (!imageUrl) {
-      setPalette(null);
-      return undefined;
-    }
-
-    const key = cacheKey(imageUrl, count, aspectRatio);
-    const cached = cache.get(key);
-    if (cached) {
-      setPalette(cached);
-      return undefined;
-    }
+    if (!key || cache.has(key)) return undefined;
 
     let cancelled = false;
 
@@ -31,16 +20,19 @@ export function useImagePalette(imageUrl, { count = 5, aspectRatio = HERO_COVER_
       .then((colors) => {
         if (cancelled) return;
         if (colors) cache.set(key, colors);
-        setPalette(colors);
+        setExtracted({ key, colors });
       })
       .catch(() => {
-        if (!cancelled) setPalette(null);
+        if (!cancelled) setExtracted({ key, colors: null });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [imageUrl, count, aspectRatio]);
+  }, [key, imageUrl, count, aspectRatio]);
 
-  return palette;
+  // Decided while rendering so the previous place's colors never tint the new one.
+  if (!key) return null;
+  if (cache.has(key)) return cache.get(key);
+  return extracted?.key === key ? extracted.colors : null;
 }

@@ -1,7 +1,17 @@
-import { iconNameToWeatherCode, metersPerSecondToKmh } from './weatherMath';
-import { ROBUST_FIELD, robustAggregate, weightedMode } from './robustAggregate';
+import { iconNameToWeatherCode, metersPerSecondToKmh, parsePragueTime } from './weatherMath';
+import { ROBUST_FIELD, robustAggregate, weatherCodeConsensus } from './robustAggregate';
 
 const TZ = 'Europe/Prague';
+// Building an Intl formatter is slow and this runs for every hour of every source on the main thread.
+const PRAGUE_FORMAT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: TZ,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  hourCycle: 'h23',
+});
+const praguePartsCache = new Map<number, { year: string; month: string; day: string; hour: string }>();
 
 export type HourlyPoint = {
   key: string;
@@ -40,21 +50,21 @@ function finite(value: unknown): number | null {
 }
 
 function pragueParts(date: Date) {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: TZ,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(date);
+  const epoch = date.getTime();
+  const cached = praguePartsCache.get(epoch);
+  if (cached) return cached;
+
+  const parts = PRAGUE_FORMAT.formatToParts(date);
   const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || '00';
-  return {
+  const result = {
     year: get('year'),
     month: get('month'),
     day: get('day'),
     hour: get('hour'),
   };
+  if (praguePartsCache.size > 2000) praguePartsCache.clear();
+  praguePartsCache.set(epoch, result);
+  return result;
 }
 
 export function pragueDayKey(date: Date) {
@@ -65,14 +75,6 @@ export function pragueDayKey(date: Date) {
 export function pragueHourKey(date: Date) {
   const { year, month, day, hour } = pragueParts(date);
   return `${year}-${month}-${day}T${hour}`;
-}
-
-function parseLooseTime(value: string) {
-  const normalized = String(value).trim().replace(' ', 'T');
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(normalized) && !/[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized)) {
-    return new Date(`${normalized.length === 16 ? `${normalized}:00` : normalized}`);
-  }
-  return new Date(normalized);
 }
 
 type MutableHour = {
@@ -128,7 +130,7 @@ export function ingestOpenMeteoHourly(
 ) {
   if (!hourly?.time?.length) return;
   for (let i = 0; i < hourly.time.length; i += 1) {
-    const time = parseLooseTime(hourly.time[i]);
+    const time = parsePragueTime(hourly.time[i]);
     if (Number.isNaN(time.getTime())) continue;
     const row = ensureHour(map, time);
     row.sources.add(sourceId);
@@ -148,7 +150,7 @@ export function ingestAladinHourly(map: Map<string, MutableHour>, aladin: any, w
   const startRaw = aladin?.forecastTimeIso;
   if (!values || !startRaw) return;
 
-  const start = parseLooseTime(startRaw);
+  const start = parsePragueTime(startRaw);
   if (Number.isNaN(start.getTime())) return;
 
   const precip = values.PRECIPITATION_TOTAL || [];
@@ -222,7 +224,7 @@ export function ingestWttrHourly(map: Map<string, MutableHour>, wttr: any, weigh
   if (!Array.isArray(steps)) return;
 
   for (const step of steps) {
-    const time = parseLooseTime(step.time);
+    const time = parsePragueTime(step.time);
     if (Number.isNaN(time.getTime())) continue;
     const row = ensureHour(map, time);
     row.sources.add(sourceId);
@@ -265,6 +267,15 @@ function ingestSeries(map: Map<string, MutableHour>, series: ForecastSeries) {
   }
 }
 
+/** A calm model's direction is noise; weight directions by that model's own wind speed. */
+function speedWeightedDirections(row: MutableHour) {
+  const speedBySource = new Map(row.winds.map((wind) => [wind.source, wind.value]));
+  return row.dirs.map((dir) => ({
+    ...dir,
+    weight: dir.weight * Math.max(speedBySource.get(dir.source) ?? 1, 1),
+  }));
+}
+
 function finalizeHours(map: Map<string, MutableHour>): HourlyPoint[] {
   return [...map.values()]
     .map((row) => ({
@@ -275,11 +286,11 @@ function finalizeHours(map: Map<string, MutableHour>): HourlyPoint[] {
       precipMm: robustAggregate(row.precips, ROBUST_FIELD.precipitation),
       precipProb: robustAggregate(row.precipProbs, ROBUST_FIELD.precipitationProbability),
       windSpeed: robustAggregate(row.winds, ROBUST_FIELD.windSpeed),
-      windDirection: robustAggregate(row.dirs, {
+      windDirection: robustAggregate(speedWeightedDirections(row), {
         ...ROBUST_FIELD.windDirection,
         circular: true,
       }),
-      weatherCode: weightedMode(row.codes),
+      weatherCode: weatherCodeConsensus(row.codes),
       sources: [...row.sources],
     }))
     .sort((a, b) => a.time.getTime() - b.time.getTime());
@@ -299,7 +310,7 @@ function buildDaysFromHours(hours: HourlyPoint[], daily?: any): ForecastDay[] {
   >();
   if (daily?.time?.length) {
     for (let i = 0; i < daily.time.length; i += 1) {
-      const date = parseLooseTime(String(daily.time[i]).length <= 10 ? `${daily.time[i]}T12:00` : daily.time[i]);
+      const date = parsePragueTime(String(daily.time[i]).length <= 10 ? `${daily.time[i]}T12:00` : daily.time[i]);
       const key = pragueDayKey(date);
       dailyByKey.set(key, {
         date,
@@ -323,7 +334,7 @@ function buildDaysFromHours(hours: HourlyPoint[], daily?: any): ForecastDay[] {
     const hourlyMin = temps.length ? Math.min(...temps) : null
     const hourlyMax = temps.length ? Math.max(...temps) : null
     const hourlyPrecip = precips.length ? precips.reduce((sum, value) => sum + value, 0) : null
-    const dayCode = weightedMode(
+    const dayCode = weatherCodeConsensus(
       dayHours
         .filter((hour) => hour.weatherCode != null)
         .map((hour) => ({ value: hour.weatherCode as number, weight: 1 })),
@@ -383,7 +394,8 @@ export function adaptAladinNowcast(aladin: any, limit = 10) {
   if (!Array.isArray(moments) || !moments.length) return [];
 
   const rawNow = aladin?.nowCasting?.nowUtc;
-  let anchor = rawNow ? parseLooseTime(String(rawNow)) : new Date();
+  // Unlike forecastTimeIso, nowUtc really is UTC despite having no zone marker.
+  let anchor = rawNow ? new Date(`${String(rawNow).trim().replace(' ', 'T')}Z`) : new Date();
   if (Number.isNaN(anchor.getTime())) anchor = new Date();
 
   return moments.slice(nowIdx, nowIdx + limit).map((moment: any, i: number) => {

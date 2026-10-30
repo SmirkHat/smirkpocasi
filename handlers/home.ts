@@ -3,16 +3,29 @@ import warningsHandler from './warnings'
 import chmiAqiHandler from './chmi-aqi'
 import { fetchAQI } from '../src/api/aqi'
 import { normalizeOpenWeatherMapPollution } from '../src/api/normalizers/openweathermap'
-import { buildServerConsensus } from '../src/server/fetchProvidersServer'
+import { buildServerConsensus, withTimeout } from '../src/server/fetchProvidersServer'
 import { runLegacyHandler, runLegacyJson } from '../src/server/runLegacyHandler'
 import openweathermapHandler from './openweathermap'
 
 const MEMORY_TTL_MS = 90_000
+const MAX_CACHED_BUNDLES = 100
+const WEATHER_BUDGET_MS = 6000
+// Warnings and AQI answer quickly when healthy; a stuck upstream must not hold the whole page.
+const OPTIONAL_BUDGET_MS = 1500
 const cache = new Map()
 const inFlight = new Map()
 
 function cacheKey(lat, lon) {
   return `${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}`
+}
+
+function rememberBundle(key, payload) {
+  const now = Date.now()
+  for (const [entryKey, entry] of cache) {
+    if (now - entry.at >= MEMORY_TTL_MS) cache.delete(entryKey)
+  }
+  while (cache.size >= MAX_CACHED_BUNDLES) cache.delete(cache.keys().next().value)
+  cache.set(key, { at: now, payload })
 }
 
 function inCzechia(lat, lon) {
@@ -127,21 +140,30 @@ function aggregateAqi(chmiPayload, openPayload, owmPayload) {
 async function buildHomeBundle(lat, lon) {
   const location = { lat, lon }
   const query = { lat: String(lat), lon: String(lon) }
+  let optionalMissing = false
+  const optional = <T,>(promise: Promise<T>, label: string): Promise<T | null> =>
+    withTimeout(promise, OPTIONAL_BUDGET_MS, label).catch(() => {
+      optionalMissing = true
+      return null
+    })
 
   const [weatherResult, warningsResult, consensus, chmiAqi, openAqi, owmPollution] = await Promise.all([
-    runLegacyHandler(weatherHandler, query),
-    runLegacyHandler(warningsHandler, query),
+    withTimeout(runLegacyHandler(weatherHandler, query), WEATHER_BUDGET_MS, 'Weather'),
+    optional(runLegacyHandler(warningsHandler, query), 'Warnings'),
     buildServerConsensus(location),
     inCzechia(lat, lon)
-      ? runLegacyJson(chmiAqiHandler, query).catch(() => null)
+      ? optional(runLegacyJson(chmiAqiHandler, query), 'ČHMÚ AQI')
       : Promise.resolve(null),
-    fetchAQI(lat, lon).catch(() => null),
-    runLegacyHandler(openweathermapHandler, { ...query, parts: 'pollution' }).then((result) => {
-      if (!result.ok) return null
-      const body = result.body
-      if (!body || typeof body !== 'object' || !('pollution' in body)) return null
-      return normalizeOpenWeatherMapPollution(body.pollution)
-    }).catch(() => null),
+    optional(fetchAQI(lat, lon), 'CAMS AQI'),
+    optional(
+      runLegacyHandler(openweathermapHandler, { ...query, parts: 'pollution' }).then((result) => {
+        if (!result.ok) return null
+        const body = result.body
+        if (!body || typeof body !== 'object' || !('pollution' in body)) return null
+        return normalizeOpenWeatherMapPollution(body.pollution)
+      }),
+      'OWM pollution',
+    ),
   ])
 
   if (!weatherResult.ok) {
@@ -149,7 +171,7 @@ async function buildHomeBundle(lat, lon) {
   }
 
   const warningsBody =
-    warningsResult.ok && warningsResult.body && typeof warningsResult.body === 'object'
+    warningsResult?.ok && warningsResult.body && typeof warningsResult.body === 'object'
       ? warningsResult.body
       : { warnings: [], attribution: null }
 
@@ -159,6 +181,7 @@ async function buildHomeBundle(lat, lon) {
     warningsAttribution: warningsBody.attribution || null,
     aqi: aggregateAqi(chmiAqi, openAqi, owmPollution),
     consensus,
+    partial: optionalMissing || consensus.partial,
     requestLat: lat,
     requestLon: lon,
     updatedAt: new Date().toISOString(),
@@ -191,7 +214,13 @@ export default async function handler(req, res) {
       inFlight.set(key, pending)
     }
     const payload = await pending
-    cache.set(key, { at: Date.now(), payload })
+    if (payload.partial) {
+      // The client asks again in a moment and must not get this incomplete copy back from a CDN.
+      res.setHeader('Cache-Control', 'no-store')
+      res.setHeader('X-Home-Cache', 'PARTIAL')
+      return res.status(200).json(payload)
+    }
+    rememberBundle(key, payload)
     res.setHeader('Cache-Control', 'public, s-maxage=90, stale-while-revalidate=300')
     res.setHeader('X-Home-Cache', 'MISS')
     return res.status(200).json(payload)

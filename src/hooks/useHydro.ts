@@ -2,47 +2,55 @@ import { useEffect, useRef, useState } from 'react'
 import { CHMI_MAX_STATION_KM, locationInHydroCoverage } from '../utils/geo'
 import { apiUrl } from '@/lib/apiBase'
 
-const CACHE_KEY = 'smirkpocasi:last-hydro-v7'
+const CACHE_KEY = 'smirkpocasi:last-hydro-v8'
+const FRESH_MS = 10 * 60 * 1000
+const OFFLINE_MAX_AGE_MS = 12 * 60 * 60 * 1000
 
-function readCache() {
+type HydroState = { key: string | null; data: any; loading: boolean; error: string | null }
+
+const EMPTY_STATE: HydroState = { key: null, data: null, loading: false, error: null }
+
+function requestKey(limit, lat, lon, query) {
+  return `${limit}|${Number(lat).toFixed(2)},${Number(lon).toFixed(2)}|${query}`
+}
+
+function readCache(key, maxAgeMs) {
   if (typeof window === 'undefined') return null
   try {
-    return JSON.parse(localStorage.getItem(CACHE_KEY))
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) as string)
+    if (cached?.key !== key) return null
+    return Date.now() - Date.parse(cached.payload?.updatedAt) < maxAgeMs ? cached.payload : null
   } catch {
     return null
   }
 }
 
-export function useHydro(limit = 20, location = null, query = '') {
+function writeCache(key, payload) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ key, payload }))
+  } catch {
+    localStorage.removeItem(CACHE_KEY)
+  }
+}
+
+export function useHydro(limit = 20, location: any = null, query = '') {
   const lat = location?.lat
   const lon = location?.lon
   const inCoverage = locationInHydroCoverage({ lat, lon })
+  const key = inCoverage ? requestKey(limit, lat, lon, query) : null
   // Always start empty so SSR and the first client paint match.
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(Boolean(inCoverage))
-  const [error, setError] = useState(null)
-  const timerRef = useRef(null)
+  const [state, setState] = useState<HydroState>(EMPTY_STATE)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!locationInHydroCoverage({ lat, lon })) {
-      setData(null)
-      setLoading(false)
-      setError(null)
-      return undefined
-    }
+    if (!key) return undefined
 
-    const cached = !query ? readCache() : null
-    if (cached) {
-      setData(cached)
-      setLoading(false)
-    } else {
-      setLoading(true)
-    }
+    const cached = !query ? readCache(key, FRESH_MS) : null
+    setState({ key, data: cached, loading: true, error: null })
 
     const controller = new AbortController()
 
     const fetchData = () => {
-      setLoading(true)
       const params = new URLSearchParams({ limit: String(limit) })
       if (query) params.set('q', query)
       if (lat !== undefined && lon !== undefined) {
@@ -57,14 +65,18 @@ export function useHydro(limit = 20, location = null, query = '') {
         })
         .then((hydro) => {
           const payload = { ...hydro, updatedAt: new Date().toISOString() }
-          if (!query) localStorage.setItem(CACHE_KEY, JSON.stringify(payload))
-          setData(payload)
-          setError(null)
+          if (!query) writeCache(key, payload)
+          setState({ key, data: payload, loading: false, error: null })
         })
         .catch((fetchError) => {
-          if (fetchError.name !== 'AbortError') setError(fetchError.message)
+          if (fetchError.name === 'AbortError') return
+          setState({
+            key,
+            data: !query ? readCache(key, OFFLINE_MAX_AGE_MS) : null,
+            loading: false,
+            error: fetchError.message,
+          })
         })
-        .finally(() => setLoading(false))
     }
 
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -74,7 +86,11 @@ export function useHydro(limit = 20, location = null, query = '') {
       controller.abort()
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [limit, query, lat, lon])
+  }, [key, limit, query, lat, lon])
+
+  // Stations from the previous place are dropped while rendering, before the effect above runs.
+  const { data, loading, error } =
+    state.key === key ? state : { ...EMPTY_STATE, loading: key != null || location == null }
 
   const sortedProfiles = (data?.profiles || [])
     .map((p) => ({
@@ -95,6 +111,7 @@ export function useHydro(limit = 20, location = null, query = '') {
     loading,
     error,
     offline: Boolean(error && data),
-    available: inCoverage,
+    // Until the place is known, assume rivers rather than flashing the seaside layout.
+    available: inCoverage || location == null,
   }
 }

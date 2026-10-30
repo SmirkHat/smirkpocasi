@@ -3,9 +3,10 @@ import { PROVIDERS } from '../config/providers';
 import { extractForecastSeries } from './forecastSeries';
 import {
   partitionOutliers,
+  robustMean,
+  weatherCodeConsensus,
   weightedCircularMean,
-  weightedMedian,
-  weightedMode,
+  weightedMean,
   weightedStandardDeviation,
 } from './robustAggregate';
 import {
@@ -54,6 +55,12 @@ export const OBSERVATION_SOURCE_IDS = new Set([
   'wunderground',
   'inpocasi',
 ]);
+const PERSONAL_STATION_IDS = new Set(['opensensemap', 'inpocasi', 'netatmo', 'wunderground']);
+const OBSERVATION_BLEND_FIELDS = ['temperature', 'humidity', 'dewPoint'];
+const OBSERVATION_MAX_AGE_MINUTES = 90;
+const OBSERVATION_MAX_DISTANCE_KM = 50;
+const OBSERVATION_MAX_BLEND = 0.8;
+const RAIN_GAUGE_MAX_DISTANCE_KM = 25;
 const PRECIPITATION_WEATHER_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]);
 const FIELD_LIMITS = {
   temperature: [-70, 60],
@@ -82,7 +89,7 @@ const OUTLIER_TOLERANCE = {
   apparentTemperature: 5,
   dewPoint: 6,
   wetBulbTemperature: 5,
-  precipitation: 3,
+  precipitation: 25,
   precipitationProbability: 45,
   windSpeed: 18,
   windGust: 30,
@@ -121,7 +128,8 @@ const FIELD_LABELS = {
 
 function sourceWeight(source) {
   const weight = numberOrNull(source?.weight);
-  return weight !== null && weight >= 0 ? weight : 1;
+  // Stations carry weight 0, but when they are the only data left they still have to count.
+  return weight !== null && weight > 0 ? weight : 1;
 }
 
 function confidenceFrom(divergence) {
@@ -327,14 +335,101 @@ function numericEntriesForField(sources, field) {
 function robustEntriesForField(sources, field) {
   const entries = numericEntriesForField(sources, field);
   const { kept, rejected } = partitionOutliers(entries, OUTLIER_TOLERANCE[field]);
-  rejected.forEach((entry) => addQualityIssue(entry.source, field, 'outlier'));
+  rejected.forEach((entry: any) => addQualityIssue(entry.source, field, 'outlier'));
   return kept;
 }
 
-export function buildResult(settled) {
+/** Direction of the mean wind vector: a calm model's direction is noise and must not outvote a windy one. */
+function windDirectionMean(entries) {
+  return weightedCircularMean(entries.map((entry) => ({
+    value: entry.value,
+    weight: entry.weight * Math.max(numberOrNull(entry.source.windSpeed) ?? 1, 1),
+  })));
+}
+
+function stationEvidence(sources, now) {
+  return sources.flatMap((source) => {
+    if (source.status !== 'ok' || !OBSERVATION_SOURCE_IDS.has(source.id)) return [];
+    const distanceKm = numberOrNull(source.distanceKm);
+    const observedAt = source.observedAt ? Date.parse(source.observedAt) : NaN;
+    if (distanceKm === null || distanceKm > OBSERVATION_MAX_DISTANCE_KM || !Number.isFinite(observedAt)) return [];
+    const ageMinutes = Math.max(0, (now - observedAt) / 60000);
+    if (ageMinutes > OBSERVATION_MAX_AGE_MINUTES) return [];
+    const trust = PERSONAL_STATION_IDS.has(source.id) ? 0.4 : 1;
+    return [{ source, weight: trust * Math.exp(-distanceKm / 25) * Math.exp(-ageMinutes / 60) }];
+  });
+}
+
+/**
+ * Models say what the air should be doing, stations measure what it is doing. Nudge the "now" values
+ * towards fresh nearby measurements: a close station can carry most of the value, a far one barely moves it.
+ * Forecast series stay model-only.
+ */
+function blendObservations(consensus, sources, now) {
+  const evidence = stationEvidence(sources, now);
+  const modelTemperature = numberOrNull(consensus.temperature);
+  const blended: Record<string, { value: number; weight: number; entries: any[] }> = {};
+
+  for (const field of OBSERVATION_BLEND_FIELDS) {
+    const modelValue = numberOrNull(consensus[field]);
+    if (modelValue === null) continue;
+    const entries = evidence.flatMap(({ source, weight }) => {
+      const value = numberOrNull(source[field]);
+      // Too far from every model to be the same air: a mountain-top station, a sensor in the sun, a bad feed.
+      if (value === null || !fieldWithinLimits(field, value) || Math.abs(value - modelValue) > OUTLIER_TOLERANCE[field]) {
+        return [];
+      }
+      return [{ source, value, weight }];
+    });
+    if (!entries.length) continue;
+
+    const observed = robustMean(entries);
+    const blendWeight = Math.min(
+      OBSERVATION_MAX_BLEND,
+      1 - entries.reduce((remaining, entry) => remaining * (1 - 0.8 * entry.weight), 1),
+    );
+    consensus[field] = modelValue + (observed - modelValue) * blendWeight;
+    blended[field] = { value: observed, weight: blendWeight, entries };
+  }
+
+  if (blended.temperature && hasNumber(consensus.apparentTemperature)) {
+    consensus.apparentTemperature += consensus.temperature - modelTemperature;
+  }
+  if (blended.temperature || blended.humidity) {
+    const derived = {
+      wetBulbTemperature: calculateWetBulbTemperature(consensus.temperature, consensus.humidity),
+      vaporPressureDeficit: calculateVaporPressureDeficit(consensus.temperature, consensus.humidity),
+      absoluteHumidity: calculateAbsoluteHumidity(consensus.temperature, consensus.humidity),
+    };
+    for (const [field, value] of Object.entries(derived)) {
+      if (hasNumber(value)) consensus[field] = value;
+    }
+  }
+
+  return blended;
+}
+
+/** Fresh rain gauges outrank what the models expected to be happening right now. */
+function reconcileWeatherCode(code, currentRain, temperature) {
+  if (code === null) return code;
+  const expectsPrecipitation = PRECIPITATION_WEATHER_CODES.has(code);
+  const freezing = numberOrNull(temperature) !== null && temperature <= 0;
+
+  if (currentRain.state === 'raining' && !expectsPrecipitation) {
+    const heavy = (currentRain.observedMm60 ?? 0) >= 2.5;
+    if (freezing) return heavy ? 73 : 71;
+    return heavy ? 63 : 61;
+  }
+  // Unheated gauges stay at zero through snowfall, so only trust the "dry" reading above freezing.
+  if (currentRain.state === 'not-raining' && expectsPrecipitation && code < 95 && numberOrNull(temperature) > 2) {
+    return 3;
+  }
+  return code;
+}
+
+export function buildResult(settled, now = Date.now()) {
   const enabledProviders = PROVIDERS.filter((provider) => provider.enabled);
   let aladin = null;
-  let yr = null;
   const forecastSeries = [];
   const sources = settled.map((result, index) => {
     const provider = enabledProviders[index];
@@ -374,7 +469,6 @@ export function buildResult(settled) {
 
     const value = withDerivedMetrics(result.value || {});
     if (provider.id === 'aladin') aladin = value.raw || null;
-    if (provider.id === 'yr') yr = value.raw || null;
     const series = extractForecastSeries(provider, value, OBSERVATION_SOURCE_IDS);
     if (series) forecastSeries.push(series);
     const status = Number.isFinite(numberOrNull(value.temperature)) ? 'ok' : 'no-data';
@@ -393,20 +487,25 @@ export function buildResult(settled) {
     entriesByField.set(field, entries);
     entries.forEach((entry) => includedSourceIds.add(entry.source.id));
 
-    return [field, field === 'windDirection' ? weightedCircularMean(entries) : weightedMedian(entries)];
+    return [field, field === 'windDirection' ? windDirectionMean(entries) : robustMean(entries)];
   }));
   const weatherCodeEntries = consensusSources
     .map((source) => ({ source, value: numberOrNull(source.weatherCode), weight: sourceWeight(source) }))
     .filter((entry) => entry.value !== null);
   weatherCodeEntries.forEach((entry) => includedSourceIds.add(entry.source.id));
-  consensus.weatherCode = weightedMode(weatherCodeEntries);
+  consensus.weatherCode = weatherCodeConsensus(weatherCodeEntries);
   const precipitationGroups = buildPrecipitationGroups(sources);
   const precipitationGroupEntries = Object.values(precipitationGroups as Record<string, { value: number | null }>)
     .filter((group) => group.value !== null)
     .map((group) => ({ value: group.value as number, weight: 1 }));
-  consensus.precipitation = weightedAverage(precipitationGroupEntries);
-  const currentRain = buildCurrentRain(sources);
+  consensus.precipitation = weightedMean(precipitationGroupEntries);
+  const currentRain = buildCurrentRain(sources, now);
   const divergence = weightedStandardDeviation(entriesByField.get('temperature') || []);
+  const blended = forecastSources.length ? blendObservations(consensus, sources, now) : {};
+  consensus.weatherCode = reconcileWeatherCode(consensus.weatherCode, currentRain, consensus.temperature);
+  Object.values(blended).forEach(({ entries }) => {
+    entries.forEach((entry) => includedSourceIds.add(entry.source.id));
+  });
   const includedSources = sources.map((source) => ({
     ...source,
     included: includedSourceIds.has(source.id)
@@ -416,6 +515,9 @@ export function buildResult(settled) {
   const fieldSources = Object.fromEntries(
     [...entriesByField.entries()].map(([field, entries]) => [field, serializeFieldEntries(entries)]),
   );
+  for (const [field, { entries }] of Object.entries(blended)) {
+    fieldSources[field] = [...fieldSources[field], ...serializeFieldEntries(entries)];
+  }
   fieldSources.weatherCode = serializeFieldEntries(weatherCodeEntries);
   fieldSources.precipitationGroups = precipitationGroups;
 
@@ -425,11 +527,13 @@ export function buildResult(settled) {
     precipitationGroups,
     sources: includedSources,
     fieldSources,
+    observationBlend: Object.fromEntries(
+      Object.entries(blended).map(([field, { value, weight, entries }]) => [field, { value, weight, stations: entries.length }]),
+    ),
     divergence,
     confidence: confidenceFrom(divergence),
     includedSourceIds: [...includedSourceIds],
     aladin,
-    yr,
     forecastSeries,
     updatedAt: new Date().toISOString()
   };
@@ -440,15 +544,12 @@ const OPEN_METEO_SOURCE_IDS = new Set([
   'gfs', 'graphcast', 'gefs025_mean', 'gem', 'gem_geps_mean', 'ecmwf_ifs_eps_mean', 'jma', 'cma',
 ]);
 
-function weightedAverage(entries) {
-  let total = 0;
-  let weight = 0;
-  for (const entry of entries) {
-    const entryWeight = Math.max(0, Number(entry.weight) || 0);
-    total += entry.value * entryWeight;
-    weight += entryWeight;
-  }
-  return weight > 0 ? total / weight : null;
+/** mm/h, whatever interval the source reports over. */
+function precipitationRate(source) {
+  const value = numberOrNull(source.precipitation);
+  if (value === null || !fieldWithinLimits('precipitation', value)) return null;
+  const interval = numberOrNull(source.precipitationIntervalMinutes);
+  return interval ? value * (60 / interval) : value;
 }
 
 export function buildPrecipitationGroups(sources) {
@@ -458,27 +559,30 @@ export function buildPrecipitationGroups(sources) {
     ['otherForecast', forecastSources.filter((source) => !OPEN_METEO_SOURCE_IDS.has(source.id))],
   ];
   return Object.fromEntries(groups.map(([id, groupSources]) => {
-    const entries = groupSources.flatMap((source) => {
-      const value = numberOrNull(source.precipitation);
+    const { kept: entries } = partitionOutliers(groupSources.flatMap((source) => {
+      const value = precipitationRate(source);
       return value === null ? [] : [{ source, value, weight: sourceWeight(source) }];
-    });
+    }), OUTLIER_TOLERANCE.precipitation);
     return [id, {
-      value: weightedAverage(entries),
-      sourceIds: entries.map((entry) => entry.source.id),
+      value: weightedMean(entries),
+      sourceIds: entries.map((entry: any) => entry.source.id),
       sources: serializeFieldEntries(entries),
     }];
   }));
 }
 
-export function buildCurrentRain(sources) {
-  const now = Date.now();
+export function buildCurrentRain(sources, now = Date.now()) {
   const observations = sources.filter((source) => OBSERVATION_SOURCE_IDS.has(source.id) && source.status === 'ok');
   const evidence = observations.flatMap((source) => {
     const value = numberOrNull(source.precipitation);
     const observedAt = source.observedAt ? Date.parse(source.observedAt) : NaN;
     const ageMinutes = Number.isFinite(observedAt) ? Math.max(0, (now - observedAt) / 60000) : null;
-    const maxAge = source.id === 'chmi' ? 30 : 120;
+    // The ČHMÚ 10-minute feed itself lags by about half an hour.
+    const maxAge = source.id === 'chmi' ? 45 : 90;
+    const distanceKm = numberOrNull(source.distanceKm);
     if (value === null || ageMinutes === null || ageMinutes > maxAge) return [];
+    // Rain is too local for a gauge further away to say anything about this place.
+    if (distanceKm !== null && distanceKm > RAIN_GAUGE_MAX_DISTANCE_KM) return [];
     return [{
       sourceId: source.id,
       sourceName: source.name,
@@ -487,12 +591,12 @@ export function buildCurrentRain(sources) {
       observedAt: source.observedAt,
       distanceKm: source.distanceKm ?? null,
       ageMinutes: Math.round(ageMinutes),
-      weight: source.id === 'chmi' ? 1 : 0.6,
+      weight: (source.id === 'chmi' ? 1 : 0.6) * Math.exp(-(distanceKm ?? 0) / RAIN_GAUGE_MAX_DISTANCE_KM),
     }];
   });
   const positive = evidence.filter((entry) => entry.value > 0);
   const observedMm60 = positive.length
-    ? weightedAverage(positive.map((entry) => ({
+    ? weightedMean(positive.map((entry) => ({
         value: entry.intervalMinutes ? entry.value * (60 / entry.intervalMinutes) : entry.value,
         weight: entry.weight,
       })))
@@ -515,13 +619,13 @@ function serializeFieldEntries(entries) {
   return entries.map(({ source, value, weight }) => ({
     id: source.id,
     name: source.name,
-    url: source.url || null,
+    url: source.url || undefined,
     value,
     weight,
-    precipitationIntervalMinutes: source.precipitationIntervalMinutes ?? null,
-    observedAt: source.observedAt ?? null,
-    fetchedAt: source.fetchedAt ?? null,
-    distanceKm: source.distanceKm ?? null,
+    precipitationIntervalMinutes: source.precipitationIntervalMinutes ?? undefined,
+    observedAt: source.observedAt ?? undefined,
+    fetchedAt: source.fetchedAt ?? undefined,
+    distanceKm: source.distanceKm ?? undefined,
   }));
 }
 

@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     const row = synop.get(String(nearest.id));
     const time =
       row.data_pomiaru && row.godzina_pomiaru != null
-        ? `${row.data_pomiaru}T${String(row.godzina_pomiaru).padStart(2, '0')}:00:00`
+        ? `${row.data_pomiaru}T${String(row.godzina_pomiaru).padStart(2, '0')}:00:00Z`
         : null;
 
     return res.status(200).json({

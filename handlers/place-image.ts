@@ -77,7 +77,7 @@ function hasPhotoExtension(value) {
 
 function hasBadPhotoToken(value) {
   const text = normalizeText(value);
-  return /(coat[_ -]?of[_ -]?arms|wappen|(?:^|[_ -])herb(?:[_ -.]|$)|(?:^|[_ -])flag(?:[_ -.]|$)|vlajka|locator|location[_ -]?map|(?:^|[_ -\.])map(?:[_ -\.]|$)|mapa|(?:^|[_ -])seal(?:[_ -.]|$)|(?:^|[_ -])logo(?:[_ -.]|$)|montage|montaz|collage|kolaz|mosaic|mozaik|(?:red|blue|green)[_ -]?pog|pog\.png|map[_ -]?pin|map[_ -]?marker|(?:^|[_ -])pin(?:[_ -.]|$)|pointer|pictogram|(?:^|[_ -])symbol(?:[_ -.]|$)|(?:^|[_ -])icon(?:[_ -.]|$)|(?:^|[_ -])badge(?:[_ -.]|$)|(?:^|[_ -])button(?:[_ -.]|$)|commons[_ -]?logo|(?:^|[_ -])(?:film|movie|cinema|kino)(?:[_ -.]|$)|film[_ -]?poster|movie[_ -]?poster|theatrical[_ -]?poster|dvd[_ -]?cover|blu[_ -]?ray|bluray|cover[_ -]?art|box[_ -]?art|affiche|(?:^|[_ -])plakat(?:[_ -.]|$)|screenshot|screencap|screen[_ -]?capture|trailer|promotional[_ -]?still|movie[_ -]?still|film[_ -]?still|lobby[_ -]?card)/u.test(text);
+  return /(coat[_ -]?of[_ -]?arms|wappen|(?:^|[_ -])herb(?:[_ -.]|$)|(?:^|[_ -])flag(?:[_ -.]|$)|vlajka|locator|location[_ -]?map|(?:^|[_ .-])map(?:[_ .-]|$)|mapa|(?:^|[_ -])seal(?:[_ -.]|$)|(?:^|[_ -])logo(?:[_ -.]|$)|montage|montaz|collage|kolaz|mosaic|mozaik|(?:red|blue|green)[_ -]?pog|pog\.png|map[_ -]?pin|map[_ -]?marker|(?:^|[_ -])pin(?:[_ -.]|$)|pointer|pictogram|(?:^|[_ -])symbol(?:[_ -.]|$)|(?:^|[_ -])icon(?:[_ -.]|$)|(?:^|[_ -])badge(?:[_ -.]|$)|(?:^|[_ -])button(?:[_ -.]|$)|commons[_ -]?logo|(?:^|[_ -])(?:film|movie|cinema|kino)(?:[_ -.]|$)|film[_ -]?poster|movie[_ -]?poster|theatrical[_ -]?poster|dvd[_ -]?cover|blu[_ -]?ray|bluray|cover[_ -]?art|box[_ -]?art|affiche|(?:^|[_ -])plakat(?:[_ -.]|$)|screenshot|screencap|screen[_ -]?capture|trailer|promotional[_ -]?still|movie[_ -]?still|film[_ -]?still|lobby[_ -]?card)/u.test(text);
 }
 
 /** Parentheticals that mean a creative work, not a geographic place. */
@@ -636,40 +636,32 @@ async function pushWikiCandidate(candidates, page, filename) {
 
 /** Named places: only article title match (Wikidata P18 / page photo). No nearby POI fishing. */
 async function wikimediaTitleImage(lat, lon, name) {
-  const candidates = [];
-
-  for (const project of WIKIMEDIA_PROJECTS) {
-    let page = null;
-    try {
-      page = await searchWikimediaTitlePage(project, lat, lon, name);
-    } catch {
-      continue;
-    }
-    if (!page) continue;
+  const perProject = await Promise.all(WIKIMEDIA_PROJECTS.map(async (project) => {
+    const found = [];
+    const page = await searchWikimediaTitlePage(project, lat, lon, name).catch(() => null);
+    if (!page) return found;
 
     const filename = await resolveArticlePhoto(project, page).catch(() => null);
-    await pushWikiCandidate(candidates, page, filename);
-  }
+    await pushWikiCandidate(found, page, filename);
+    return found;
+  }));
 
-  return selectBestImage(candidates, name);
+  return selectBestImage(perProject.flat(), name);
 }
 
 /** GPS pin: nearest Wikimedia / Commons photos around coordinates. */
 async function wikimediaNearbyImage(lat, lon, name) {
-  const candidates = [];
+  const [perProject, commons] = await Promise.all([
+    Promise.all(WIKIMEDIA_PROJECTS.map(async (project) => {
+      const found = [];
+      const page = await searchWikimediaNearby(project, lat, lon).catch(() => null);
+      if (page) await pushWikiCandidate(found, page, page.filename);
+      return found;
+    })),
+    searchCommons(lat, lon).catch(() => null),
+  ]);
+  const candidates = perProject.flat();
 
-  for (const project of WIKIMEDIA_PROJECTS) {
-    let page = null;
-    try {
-      page = await searchWikimediaNearby(project, lat, lon);
-    } catch {
-      continue;
-    }
-    if (!page) continue;
-    await pushWikiCandidate(candidates, page, page.filename);
-  }
-
-  const commons = await searchCommons(lat, lon).catch(() => null);
   if (commons && isUsablePlacePhoto(commons)) {
     candidates.push({
       source: 'Wikimedia Commons',

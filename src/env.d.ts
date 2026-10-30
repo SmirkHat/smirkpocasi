@@ -17,6 +17,11 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
+interface Window {
+  /** Started by the inline head script in __root.tsx; consumed once by useHomeBundle. */
+  __homePrefetch?: { url: string; response: Promise<Response> } | null
+}
+
 declare module '*.css?url' {
   const href: string
   export default href

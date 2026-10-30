@@ -119,7 +119,7 @@ export const PROVIDERS = [
     enabled: true,
     weight: 4,
     endpoint: '/v1/ecmwf',
-    model: 'ecmwf_aifs025',
+    model: 'ecmwf_aifs025_single',
     fetchFn: fetchOpenMeteoModel
   },
   {
@@ -179,7 +179,8 @@ export const PROVIDERS = [
   {
     id: 'graphcast',
     name: 'AI GFS GraphCast',
-    enabled: true,
+    // Open-Meteo returns only nulls for this model.
+    enabled: false,
     weight: 1,
     endpoint: '/v1/gfs',
     model: 'gfs_graphcast025',

@@ -31,12 +31,14 @@ function matchesFilter(station, filter) {
 }
 
 export default function HydroPage() {
+  const hydrated = useWeatherStore((state) => state.hydrated)
   const location = useWeatherStore((state) => state.location)
   const openLocationPicker = useUiStore((state) => state.openLocationPicker)
   const [filter, setFilter] = useState('')
   const [selectedStationId, setSelectedStationId] = useState(null)
-  const hydro = useHydro(50, location, '')
-  const marine = useMarine(location, 16)
+  const readyLocation = hydrated ? location : null
+  const hydro = useHydro(50, readyLocation, '')
+  const marine = useMarine(readyLocation, 16)
   const placeName = formatPlaceName(location?.name) || 'Vybraná poloha'
 
   const profiles = useMemo(() => {

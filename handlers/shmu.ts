@@ -111,7 +111,8 @@ export default async function handler(req, res) {
         lon: nearest.lon,
       },
       current: {
-        time: row.minuta,
+        // SHMÚ publishes UTC without a zone marker.
+        time: row.minuta && !String(row.minuta).endsWith('Z') ? `${row.minuta}Z` : row.minuta,
         temperature: row.t ?? null,
         humidity: row.vlh_rel ?? null,
         pressure: row.tlak ?? null,

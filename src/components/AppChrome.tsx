@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { CloudSun, Droplets, Radar } from 'lucide-react'
 import { HiArrowLeft } from 'react-icons/hi2'
@@ -11,10 +11,13 @@ import { usePlaceTheme } from '../hooks/usePlaceTheme'
 import { useUiStore } from '../store/uiStore'
 import { useWeatherStore } from '../store/weatherStore'
 import { backdropThemeFromDominant } from '../utils/imagePalette'
-import LocationPickerDialog from './LocationPickerDialog'
+import { paletteImageUrl } from '../utils/wikimediaThumb'
 import { InstallPrompt } from './InstallPrompt'
 import { NetworkBanner } from './NetworkBanner'
 import { hapticLight } from '../utils/haptics'
+
+const loadLocationPickerDialog = () => import('./LocationPickerDialog')
+const LocationPickerDialog = lazy(loadLocationPickerDialog)
 
 const pageNavItems = [
   { path: '/', label: 'Počasí', Icon: CloudSun },
@@ -160,12 +163,20 @@ export function AppPage({
   /** Lock page to 100dvh with no page scroll (radar). */
   fillViewport?: boolean
 }) {
+  const hydrated = useWeatherStore((state) => state.hydrated)
   const location = useWeatherStore((state) => state.location)
-  const placeImage = usePlaceImage(location)
-  const palette = useImagePalette(placeImage?.imageUrl, { count: 4 })
+  // Before hydration the store still holds the default city, not the user's place.
+  const placeImage = usePlaceImage(hydrated ? location : null)
+  const palette = useImagePalette(paletteImageUrl(placeImage), { count: 4 })
   usePlaceTheme(palette?.[0] ?? null)
   const locationPickerOpen = useUiStore((state) => state.locationPickerOpen)
   const setLocationPickerOpen = useUiStore((state) => state.setLocationPickerOpen)
+  const [pickerRequested, setPickerRequested] = useState(false)
+  if (locationPickerOpen && !pickerRequested) setPickerRequested(true)
+
+  useEffect(() => {
+    void loadLocationPickerDialog()
+  }, [])
 
   return (
     <div
@@ -198,7 +209,11 @@ export function AppPage({
         </main>
         <BottomNav />
       </div>
-      <LocationPickerDialog open={locationPickerOpen} onOpenChange={setLocationPickerOpen} />
+      {pickerRequested ? (
+        <Suspense fallback={null}>
+          <LocationPickerDialog open={locationPickerOpen} onOpenChange={setLocationPickerOpen} />
+        </Suspense>
+      ) : null}
     </div>
   )
 }

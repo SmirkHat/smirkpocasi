@@ -1,56 +1,52 @@
 import { useEffect } from 'react'
-import { resolveLocationCascade } from '@/hooks/useLocation'
 import {
-  LOCATION_BOOTSTRAP_KEY,
-  LOCATION_KEY,
-  useWeatherStore,
-} from '@/store/weatherStore'
+  isDetectingLocation,
+  startLocationDetection,
+  stopLocationDetection,
+} from '@/hooks/useLocation'
+import { hasSavedLocation, useWeatherStore } from '@/store/weatherStore'
+import { isAutoLocation } from '@/utils/locationPolicy'
+
+const REDETECT_AFTER_MS = 30 * 60 * 1000
+
+function detectSilently() {
+  if (isAutoLocation(useWeatherStore.getState().location)) void startLocationDetection()
+}
 
 /**
  * Hydrate Zustand from localStorage after mount (SSR-safe).
- * On the very first visit, ask for GPS immediately, then IP/header, else Praha —
- * before marking the store hydrated so weather waits for the real place.
+ * A saved place loads immediately and is only re-checked in the background.
+ * The first visit asks for GPS, but shows weather as soon as any estimate exists.
  */
 export function StoreHydration() {
-  const hydrateFromStorage = useWeatherStore((s) => s.hydrateFromStorage)
-
   useEffect(() => {
-    let cancelled = false
+    const { hydrateFromStorage } = useWeatherStore.getState()
+    let lastDetectionAt = Date.now()
 
-    async function boot() {
-      try {
-        const alreadyBootstrapped = Boolean(localStorage.getItem(LOCATION_BOOTSTRAP_KEY))
-        const hasSavedLocation = Boolean(localStorage.getItem(LOCATION_KEY))
-
-        if (!alreadyBootstrapped && !hasSavedLocation) {
-          // First launch: prompt for location ASAP, then apply cascade result.
-          const { location, source } = await resolveLocationCascade()
-          if (cancelled) return
-          const store = useWeatherStore.getState()
-          store.setLocation(location)
-          if (source === 'gps') store.addFavorite(location)
-          localStorage.setItem(LOCATION_BOOTSTRAP_KEY, '1')
-        } else if (!alreadyBootstrapped) {
-          // Returning user from before this flag existed — don't re-prompt.
-          localStorage.setItem(LOCATION_BOOTSTRAP_KEY, '1')
-        }
-      } catch {
-        // Storage / cascade failures must not block the app.
-        try {
-          localStorage.setItem(LOCATION_BOOTSTRAP_KEY, '1')
-        } catch {
-          // ignore
-        }
-      }
-
-      if (!cancelled) hydrateFromStorage()
+    if (hasSavedLocation()) {
+      hydrateFromStorage()
+      detectSilently()
+    } else {
+      void startLocationDetection({
+        prompt: true,
+        addToFavorites: true,
+        onFirstPublish: hydrateFromStorage,
+      })
     }
 
-    void boot()
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible' || isDetectingLocation()) return
+      if (Date.now() - lastDetectionAt < REDETECT_AFTER_MS) return
+      lastDetectionAt = Date.now()
+      detectSilently()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
     return () => {
-      cancelled = true
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      stopLocationDetection()
     }
-  }, [hydrateFromStorage])
+  }, [])
 
   return null
 }

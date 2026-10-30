@@ -1,6 +1,11 @@
 const OPEN_METEO_GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const PHOTON_URL = 'https://photon.komoot.io/api/';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
+const PHOTON_REVERSE_URL = 'https://photon.komoot.io/reverse';
+const REVERSE_TIMEOUT_MS = 1500;
+const REVERSE_CACHE_MAX_ENTRIES = 500;
+const PHOTON_GRACE_MS = 350;
 const USER_AGENT = 'SmirkPocasi/1.0 (https://smirkhat.org; weather app)';
 
 /** Prefer inhabited places over peaks / admin-only hits. */
@@ -449,7 +454,108 @@ async function expandWithAliases(fetchFn, query, primary) {
   return dedupeSuggestions([...primary, ...extras.flat()]);
 }
 
+const reverseCache = new Map();
+
+function settle(promise) {
+  return promise.then(
+    (value) => ({ status: 'fulfilled', value }),
+    (reason) => ({ status: 'rejected', reason }),
+  );
+}
+
+/** Photon adds addresses and small places but takes a second: an obvious city must not wait for it. */
+async function primarySuggestions(query, queryNorms) {
+  const photonPending = settle(fetchPhotonSuggestions(query));
+  const openMeteoResult = await settle(fetchOpenMeteoSuggestions(query));
+  const strong = openMeteoResult.status === 'fulfilled'
+    && hasStrongSettlementMatch(openMeteoResult.value, queryNorms);
+  if (!strong) return [openMeteoResult, await photonPending];
+
+  const gracePeriodOver = new Promise((resolve) => {
+    setTimeout(() => resolve({ status: 'fulfilled', value: [] }), PHOTON_GRACE_MS);
+  });
+  return [openMeteoResult, await Promise.race([photonPending, gracePeriodOver])];
+}
+
+function reverseResult(lat, lon, source, { name, area, county }) {
+  if (!name) return null;
+  const label = [area && area !== name ? area : null, county].filter(Boolean).join(' · ');
+  return { name, lat, lon, ...(label ? { label } : {}), source };
+}
+
+async function reverseFromNominatim(lat, lon) {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lon: String(lon),
+    format: 'jsonv2',
+    zoom: '14',
+    'accept-language': 'cs',
+  });
+  const response = await fetch(`${NOMINATIM_REVERSE_URL}?${params}`, {
+    headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+    signal: AbortSignal.timeout(REVERSE_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`Nominatim ${response.status}`);
+  const address = (await response.json())?.address || {};
+  return reverseResult(lat, lon, 'nominatim', {
+    name: address.city || address.town || address.village || address.municipality || address.hamlet || address.suburb,
+    area: address.suburb || address.city_district,
+    county: address.county || address.state,
+  });
+}
+
+async function reverseFromPhoton(lat, lon) {
+  const params = new URLSearchParams({ lat: String(lat), lon: String(lon), limit: '1' });
+  const response = await fetch(`${PHOTON_REVERSE_URL}?${params}`, {
+    headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+    signal: AbortSignal.timeout(REVERSE_TIMEOUT_MS),
+  });
+  if (!response.ok) throw new Error(`Photon ${response.status}`);
+  const properties = (await response.json())?.features?.[0]?.properties || {};
+  return reverseResult(lat, lon, 'photon', {
+    name: properties.city || properties.town || properties.village || properties.district,
+    area: properties.district,
+    county: properties.county || properties.state,
+  });
+}
+
+/** Place name for GPS coordinates. Cached by ~100 m cell: Nominatim allows one request per second. */
+async function reverseGeocode(lat, lon) {
+  const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  if (reverseCache.has(key)) return reverseCache.get(key);
+
+  const place =
+    (await reverseFromNominatim(lat, lon).catch(() => null)) ||
+    (await reverseFromPhoton(lat, lon).catch(() => null));
+  if (place) {
+    if (reverseCache.size >= REVERSE_CACHE_MAX_ENTRIES) reverseCache.delete(reverseCache.keys().next().value);
+    reverseCache.set(key, place);
+  }
+  return place;
+}
+
+async function handleReverse(req, res) {
+  const lat = Number(req.query.lat);
+  const lon = Number(req.query.lon);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    res.status(400).json({ error: 'Chybí platné lat nebo lon.' });
+    return;
+  }
+  const place = await reverseGeocode(lat, lon);
+  if (!place) {
+    res.status(404).json({ error: 'Místo se nepodařilo pojmenovat.' });
+    return;
+  }
+  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  res.status(200).json(place);
+}
+
 export default async function handler(req, res) {
+  if (req.query.lat != null && req.query.lon != null) {
+    await handleReverse(req, res);
+    return;
+  }
+
   const query = String(req.query.q || '').trim();
 
   if (query.length < 2) {
@@ -459,10 +565,7 @@ export default async function handler(req, res) {
 
   try {
     const queryNorms = queryMatchNorms(query);
-    const [openMeteoResult, photonResult] = await Promise.allSettled([
-      fetchOpenMeteoSuggestions(query),
-      fetchPhotonSuggestions(query),
-    ]);
+    const [openMeteoResult, photonResult] = await primarySuggestions(query, queryNorms);
 
     let openMeteo = openMeteoResult.status === 'fulfilled' ? openMeteoResult.value : [];
     let photon = photonResult.status === 'fulfilled' ? photonResult.value : [];

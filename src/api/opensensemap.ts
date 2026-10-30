@@ -68,11 +68,13 @@ export async function fetchOpenSenseMap(location) {
 
   const temperature = average(measurementBoxes.map((box) => sensorValue(box, 'temperatur')));
   const humidity = average(measurementBoxes.map((box) => sensorValue(box, 'luftfeuchte')));
+  const newestMeasurement = Math.max(...measurementBoxes.map(latestTimestamp));
 
   return {
     temperature,
     apparentTemperature: null,
     precipitation: null,
+    observedAt: newestMeasurement > 0 ? new Date(newestMeasurement).toISOString() : null,
     dewPoint: calculateDewPoint(temperature, humidity),
     windSpeed: average(measurementBoxes.map((box) => sensorValue(box, 'wind'))),
     windDirection: null,

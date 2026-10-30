@@ -13,7 +13,17 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { NotFoundScreen, RouteErrorScreen } from '@/components/StatusScreen'
 import { StoreHydration } from '@/components/StoreHydration'
 import { PwaRegister } from '@/components/PwaRegister'
+import { getApiBase } from '@/lib/apiBase'
+import { LOCATION_KEY } from '@/store/weatherStore'
 import appCss from '../styles.css?url'
+
+/**
+ * Starts the home request while the HTML is still parsing, before the app bundle has even
+ * downloaded. useHomeBundle picks the response up; any failure just means a normal fetch.
+ */
+function homePrefetchScript() {
+  return `try{var l=JSON.parse(localStorage.getItem(${JSON.stringify(LOCATION_KEY)}));if(location.pathname==='/'&&l&&isFinite(l.lat)&&isFinite(l.lon)){var u=${JSON.stringify(getApiBase())}+'/api/home?lat='+(+l.lat).toFixed(3)+'&lon='+(+l.lon).toFixed(3);window.__homePrefetch={url:u,response:fetch(u)}}}catch(e){}`
+}
 
 export const Route = createRootRoute({
   head: () => ({
@@ -24,6 +34,7 @@ export const Route = createRootRoute({
       { rel: 'shortcut icon', href: '/favicon.ico' },
       { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       { rel: 'manifest', href: '/site.webmanifest' },
+      { rel: 'preconnect', href: 'https://thumb.wikimedia.org' },
       // iOS splash screens (portrait). media matches device CSS pixel size × DPR.
       {
         rel: 'apple-touch-startup-image',
@@ -122,6 +133,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="cs" className="dark" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: homePrefetchScript() }} />
         {/* Immediate /sw.js registration so PWABuilder (headless) detects the SW before React hydrates. */}
         {import.meta.env.DEV ? null : (
           <script

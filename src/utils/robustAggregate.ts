@@ -19,15 +19,61 @@ export function weightedMedian(entries: WeightedValue[]): number | null {
   if (!usable.length) return null
 
   const sorted = [...usable].sort((a, b) => a.value - b.value)
-  const totalWeight = sorted.reduce((sum, entry) => sum + entry.weight, 0)
+  const half = sorted.reduce((sum, entry) => sum + entry.weight, 0) / 2
   let weightSoFar = 0
 
-  for (const entry of sorted) {
-    weightSoFar += entry.weight
-    if (weightSoFar >= totalWeight / 2) return entry.value
+  for (let index = 0; index < sorted.length; index += 1) {
+    weightSoFar += sorted[index].weight
+    // An exact split has no single middle member; taking the lower one would bias every even vote cold.
+    if (Math.abs(weightSoFar - half) < 1e-9 && sorted[index + 1]) {
+      return (sorted[index].value + sorted[index + 1].value) / 2
+    }
+    if (weightSoFar >= half) return sorted[index].value
   }
 
   return sorted[sorted.length - 1].value
+}
+
+export function weightedMean(entries: WeightedValue[]): number | null {
+  let total = 0
+  let totalWeight = 0
+  for (const entry of entries) {
+    if (!Number.isFinite(entry.value) || !Number.isFinite(entry.weight) || entry.weight <= 0) continue
+    total += entry.value * entry.weight
+    totalWeight += entry.weight
+  }
+  return totalWeight > 0 ? total / totalWeight : null
+}
+
+/**
+ * Huber M-estimate: a weighted mean where far-off members are pulled in instead of counted in full.
+ * A median of 20 models keeps only one member's value and jumps between members from run to run;
+ * the mean verifies better, and clipping stops one bad source from dragging it.
+ */
+export function robustMean(entries: WeightedValue[]): number | null {
+  const usable = entries.filter(
+    (entry) => Number.isFinite(entry.value) && Number.isFinite(entry.weight) && entry.weight > 0,
+  )
+  const center = weightedMedian(usable)
+  if (center === null) return null
+
+  const deviation = weightedMedian(
+    usable.map((entry) => ({ value: Math.abs(entry.value - center), weight: entry.weight })),
+  )
+  const clip = 1.345 * 1.4826 * (deviation ?? 0)
+  if (clip === 0) return center
+
+  const totalWeight = usable.reduce((sum, entry) => sum + entry.weight, 0)
+  let estimate = center
+  for (let step = 0; step < 5; step += 1) {
+    const current = estimate
+    estimate =
+      usable.reduce(
+        (sum, entry) => sum + Math.min(current + clip, Math.max(current - clip, entry.value)) * entry.weight,
+        0,
+      ) / totalWeight
+  }
+  return estimate
 }
 
 export function weightedStandardDeviation(entries: WeightedValue[]): number {
@@ -113,17 +159,46 @@ export function weightedMode(entries: WeightedValue[]): number | null {
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0]
 }
 
+function weatherCodeGroup(code: number) {
+  if (code <= 1) return 'clear'
+  if (code <= 3) return 'cloudy'
+  if (code === 45 || code === 48) return 'fog'
+  if (code >= 95) return 'storm'
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow'
+  return 'rain'
+}
+
+/**
+ * Vote on the kind of weather first, then on the exact code inside it. Sources describe the same
+ * rain as 61, 63 or 80, so a flat vote splits them and hands the win to a lone "overcast".
+ */
+export function weatherCodeConsensus(entries: WeightedValue[]): number | null {
+  const groups = new Map<string, WeightedValue[]>()
+  for (const entry of entries) {
+    if (!Number.isFinite(entry.value) || !Number.isFinite(entry.weight) || entry.weight <= 0) continue
+    const group = weatherCodeGroup(entry.value)
+    groups.set(group, [...(groups.get(group) || []), entry])
+  }
+  if (!groups.size) return null
+
+  const groupWeight = (members: WeightedValue[]) => members.reduce((sum, entry) => sum + entry.weight, 0)
+  const [strongest] = [...groups.values()].sort((a, b) => groupWeight(b) - groupWeight(a))
+  return weightedMode(strongest)
+}
+
 /** Field tolerances / hard limits — shared by current + hourly consensus. */
 export const ROBUST_FIELD = {
   temperature: { tolerance: 4, limits: [-70, 60] as [number, number] },
-  precipitation: { tolerance: 3, limits: [0, 250] as [number, number] },
-  precipitationProbability: { tolerance: 45, limits: [0, 100] as [number, number] },
+  // Rain is zero-inflated: with most models dry the median is 0 every hour, so a day of scattered
+  // showers would sum to 0 mm. Only an absurd value counts as an outlier here.
+  precipitation: { tolerance: 25, limits: [0, 250] as [number, number], mean: true },
+  precipitationProbability: { tolerance: 45, limits: [0, 100] as [number, number], mean: true },
   windSpeed: { tolerance: 18, limits: [0, 250] as [number, number] },
   windDirection: { limits: [0, 360] as [number, number] },
 } as const
 
 /**
- * Filter invalid + outliers, then weighted median (or circular mean for wind direction).
+ * Filter invalid + outliers, then robust mean (or circular mean for wind direction).
  */
 export function robustAggregate(
   entries: WeightedValue[],
@@ -131,6 +206,7 @@ export function robustAggregate(
     tolerance?: number
     limits?: [number, number]
     circular?: boolean
+    mean?: boolean
   } = {},
 ): number | null {
   const limited = entries.filter(
@@ -146,5 +222,5 @@ export function robustAggregate(
   }
 
   const { kept } = partitionOutliers(limited, options.tolerance)
-  return weightedMedian(kept)
+  return options.mean ? weightedMean(kept) : robustMean(kept)
 }

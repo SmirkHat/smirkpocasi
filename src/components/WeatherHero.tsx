@@ -1,10 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { FieldSources, type FieldSourceEntry } from './FieldSources';
 import { useUiStore } from '../store/uiStore';
+import { useWeatherStore } from '../store/weatherStore';
 import { formatTemperature, formatPlaceName } from '../utils/formatters';
+import { isAutoLocation, isPreciseLocation } from '../utils/locationPolicy';
+import { HERO_IMAGE_SIZES, heroImageSources } from '../utils/wikimediaThumb';
 
 function CreditLine({ image, credit }) {
   if (!credit) return null;
@@ -23,6 +27,59 @@ function CreditLine({ image, credit }) {
       <span className="line-clamp-2 break-words">Foto: {text}</span>
     </a>
   );
+}
+
+/** Fades in only once fully decoded, so a half-loaded photo or the previous place's is never visible. */
+function HeroPhoto({ image, credit }) {
+  const [loaded, setLoaded] = useState(false);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const { src, srcSet } = heroImageSources(image);
+
+  // A cached image can finish before React attaches onLoad.
+  useEffect(() => {
+    if (imageRef.current?.complete && imageRef.current.naturalWidth > 0) setLoaded(true);
+  }, []);
+
+  return (
+    <>
+      <img
+        ref={imageRef}
+        // Before src: React sets attributes in this order, and some browsers start fetching on src.
+        sizes={HERO_IMAGE_SIZES}
+        srcSet={thumbnailFailed ? undefined : srcSet}
+        src={src}
+        alt=""
+        decoding="async"
+        fetchPriority="high"
+        onLoad={() => setLoaded(true)}
+        onError={() => setThumbnailFailed(true)}
+        className={cn(
+          'pointer-events-none absolute inset-0 z-0 size-full object-cover object-center transition-opacity duration-300',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+      <div
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.12)_0%,rgb(0_0_0/0.2)_40%,rgb(0_0_0/0.66)_78%,rgb(0_0_0/0.88)_100%)] transition-opacity duration-300',
+          loaded ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+      {loaded ? <CreditLine credit={credit} image={image} /> : null}
+    </>
+  );
+}
+
+function coarseFixLabel(accuracyMeters) {
+  return accuracyMeters >= 1000 ? `± ${Math.round(accuracyMeters / 1000)} km` : null;
+}
+
+function locationPrecisionLabel(location, locating) {
+  if (!location) return null;
+  if (isPreciseLocation(location) && isAutoLocation(location)) return coarseFixLabel(location.accuracyMeters);
+  if (!isAutoLocation(location)) return null;
+  return locating ? 'Zpřesňuji polohu…' : 'Přibližná poloha';
 }
 
 export function WeatherHeroSkeleton() {
@@ -76,28 +133,17 @@ export default function WeatherHero({
   temperatureSources?: FieldSourceEntry[] | null
 }) {
   const openLocationPicker = useUiStore((state) => state.openLocationPicker);
+  const locating = useWeatherStore((state) => state.locating);
   const placeName = formatPlaceName(location?.name) || 'Vybraná poloha';
-  const heroBgStyle = image?.imageUrl
-    ? { backgroundImage: `url("${image.imageUrl.replace(/"/g, '%22')}")` }
-    : undefined;
+  const precisionLabel = locationPrecisionLabel(location, locating);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8">
       <section
         aria-label={`Aktuální počasí pro ${placeName}`}
-        className={cn(
-          'anim-rise relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-cover bg-center sm:min-h-96 lg:min-h-112',
-          !image?.imageUrl &&
-            'bg-[linear-gradient(150deg,var(--card)_0%,var(--app-bg)_50%,var(--card)_100%)]',
-        )}
-        style={heroBgStyle}
+        className="relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-[linear-gradient(150deg,var(--card)_0%,var(--app-bg)_50%,var(--card)_100%)] sm:min-h-96 lg:min-h-112"
       >
-        {image?.imageUrl ? (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgb(0_0_0/0.12)_0%,rgb(0_0_0/0.2)_40%,rgb(0_0_0/0.66)_78%,rgb(0_0_0/0.88)_100%)]"
-          />
-        ) : null}
+        {image?.imageUrl ? <HeroPhoto key={image.imageUrl} image={image} credit={credit} /> : null}
         <div className="relative z-1 flex flex-col gap-1 p-5 sm:p-6 lg:p-8">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -117,6 +163,11 @@ export default function WeatherHero({
               />
             </button>
             {offline ? <Badge variant="warning">Offline</Badge> : null}
+            {precisionLabel ? (
+              <span className="shrink-0 rounded-md bg-black/35 px-1.5 py-0.5 text-[0.6875rem] font-medium text-white/85 backdrop-blur-sm">
+                {precisionLabel}
+              </span>
+            ) : null}
           </div>
 
           <div className="flex items-end justify-between gap-4">
@@ -148,8 +199,6 @@ export default function WeatherHero({
             </p>
           </div>
         </div>
-
-        <CreditLine credit={credit} image={image} />
       </section>
     </div>
   );

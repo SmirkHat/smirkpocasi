@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { HiCheckCircle, HiMagnifyingGlass, HiMapPin, HiStar, HiTrash, HiXMark } from 'react-icons/hi2'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -14,12 +14,13 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { apiUrl } from '@/lib/apiBase'
-import MeteostatHistoryChart from './charts/MeteostatHistoryChart'
 import { useLocation } from '../hooks/useLocation'
 import { useMeteostatHistory } from '../hooks/useMeteostatHistory'
 import { useWeatherStore } from '../store/weatherStore'
 import { formatPlaceName } from '../utils/formatters'
 import { hapticLight, hapticMedium } from '../utils/haptics'
+
+const MeteostatHistoryChart = lazy(() => import('./charts/MeteostatHistoryChart'))
 
 const MIN_QUERY_LENGTH = 2
 const SEARCH_DEBOUNCE_MS = 250
@@ -59,7 +60,7 @@ export default function LocationPickerDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { useGps, loadingGps, gpsError, gpsNotice } = useLocation()
+  const { detectLocation, clearGpsMessages, loadingGps, gpsError, gpsNotice } = useLocation()
   const location = useWeatherStore((state) => state.location)
   const favorites = useWeatherStore((state) => state.favorites)
   const setLocation = useWeatherStore((state) => state.setLocation)
@@ -79,7 +80,9 @@ export default function LocationPickerDialog({
       setResults([])
       setError(null)
       setLoading(false)
+      clearGpsMessages()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- resets once per close; the setter identity is irrelevant
   }, [open])
 
   useEffect(() => {
@@ -136,7 +139,8 @@ export default function LocationPickerDialog({
 
   function chooseFavorite(favorite: any) {
     hapticMedium()
-    setLocation(favorite)
+    // A favorite saved from GPS is still a deliberate choice: detection must leave it alone.
+    setLocation({ ...favorite, source: 'favorite' })
     onOpenChange(false)
   }
 
@@ -153,7 +157,7 @@ export default function LocationPickerDialog({
               size="sm"
               onClick={() => {
                 hapticLight()
-                useGps(() => onOpenChange(false))
+                void detectLocation(() => onOpenChange(false))
               }}
               loading={loadingGps}
             >
@@ -167,7 +171,7 @@ export default function LocationPickerDialog({
             ) : null}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Nejdřív se zeptá na GPS v prohlížeči. Když to nepůjde, odhadne polohu z IP (Vercel geo / veřejná IP).
+            Zeptá se prohlížeče na GPS a polohu dál zpřesňuje. Když GPS nepůjde, odhadne ji podle sítě.
           </p>
         </DialogHeader>
 
@@ -376,7 +380,9 @@ export default function LocationPickerDialog({
               ) : null}
               {meteostat.data?.days?.length ? (
                 <>
-                  <MeteostatHistoryChart days={meteostat.data.days} />
+                  <Suspense fallback={<div className="h-48" />}>
+                    <MeteostatHistoryChart days={meteostat.data.days} />
+                  </Suspense>
                   <div className="mt-3 overflow-x-auto">
                     <table className="w-full min-w-[28rem] text-left text-sm">
                       <thead className="text-xs text-muted-foreground">

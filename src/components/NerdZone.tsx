@@ -492,7 +492,7 @@ export default function NerdZone({
         <div id={panelId} className="border-t border-border px-4 py-5">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <p className="text-sm text-muted-foreground">
-              Konsensus skládá modely a API do jednoho výstupu; pozorování slouží jako kontrolní vrstva.
+              Konsensus skládá modely a API do jednoho výstupu; čerstvá měření z blízkých stanic pak upřesňují aktuální teplotu, vlhkost a rosný bod.
               {updatedAt ? ` Aktualizováno ${formatDateTime(updatedAt)}.` : ''}
               {offline ? ' Zobrazuji offline data.' : ''}
             </p>

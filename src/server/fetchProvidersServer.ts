@@ -24,10 +24,11 @@ import { normalizeYr } from '../api/normalizers/yr'
 import { fetchBrightsky } from '../api/brightsky'
 import { fetchOpenSenseMap } from '../api/opensensemap'
 import { PROVIDERS } from '../config/providers'
-import { buildResult, locationInCoverage } from '../utils/consensusCore'
+import { buildResult, locationInCoverage, OBSERVATION_SOURCE_IDS } from '../utils/consensusCore'
 import { numberOrNull } from '../utils/weatherMath'
 import type { LegacyHandler } from './adaptVercelHandler'
 import { runLegacyJson } from './runLegacyHandler'
+import { settleWithQuorum } from './settleWithQuorum'
 
 import handlerAccuweather from '../../handlers/accuweather'
 import handlerAladin from '../../handlers/aladin'
@@ -60,6 +61,14 @@ const OPEN_METEO_HOST = 'https://api.open-meteo.com'
 const ENSEMBLE_METEO_HOST = 'https://ensemble-api.open-meteo.com'
 const PROVIDER_TIMEOUT_MS = 4500
 const SECONDARY_TIMEOUT_MS = 3000
+// One slow upstream must not hold the page: past this point we answer as soon as enough models are in.
+const SOFT_DEADLINE_MS = 1100
+const FORECAST_QUORUM = 8
+// Late answers land here too, so the follow-up request is complete and instant.
+const MODEL_CACHE_MS = 5 * 60 * 1000
+const STATION_CACHE_MS = 3 * 60 * 1000
+const FAILURE_CACHE_MS = 45 * 1000
+const MAX_CACHED_RUNS = 600
 
 const CURRENT_FIELDS = [
   'temperature_2m',
@@ -99,6 +108,9 @@ const ENSEMBLE_MEAN_FIELDS = [
 ].join(',')
 
 type Normalizer = (data: unknown) => unknown
+type ProviderRun = { startedAt: number; ttlMs: number; promise: Promise<any> }
+
+const providerRuns = new Map<string, ProviderRun>()
 
 const PROXY_PROVIDERS: Record<string, { handler: LegacyHandler; normalize: Normalizer }> = {
   chmi: { handler: handlerChmi, normalize: normalizeCHMI },
@@ -134,7 +146,7 @@ function timeoutMs(provider: { weight?: number }) {
   return weight !== null && weight >= 3 ? PROVIDER_TIMEOUT_MS : SECONDARY_TIMEOUT_MS
 }
 
-async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+export async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
     return await Promise.race([
@@ -184,6 +196,39 @@ async function fetchOpenMeteoEnsembleServer(location: { lat: number; lon: number
   return normalizeOpenMeteo(await fetchOpenMeteoJson(`${ENSEMBLE_METEO_HOST}/v1/ensemble?${params}`))
 }
 
+function pruneProviderRuns(now: number) {
+  for (const [key, run] of providerRuns) {
+    if (now - run.startedAt >= run.ttlMs) providerRuns.delete(key)
+  }
+  while (providerRuns.size >= MAX_CACHED_RUNS) {
+    providerRuns.delete(providerRuns.keys().next().value as string)
+  }
+}
+
+/** Shares one upstream call between concurrent requests and recent repeats for the same ~1 km cell. */
+function cachedProviderRun(
+  provider: (typeof PROVIDERS)[number],
+  location: { lat: number; lon: number },
+  run: () => Promise<unknown>,
+) {
+  const key = `${provider.id}:${location.lat.toFixed(2)},${location.lon.toFixed(2)}`
+  const now = Date.now()
+  const existing = providerRuns.get(key)
+  if (existing && now - existing.startedAt < existing.ttlMs) return existing.promise
+
+  const entry: ProviderRun = {
+    startedAt: now,
+    ttlMs: OBSERVATION_SOURCE_IDS.has(provider.id) ? STATION_CACHE_MS : MODEL_CACHE_MS,
+    promise: run(),
+  }
+  entry.promise.catch(() => {
+    entry.ttlMs = FAILURE_CACHE_MS
+  })
+  pruneProviderRuns(now)
+  providerRuns.set(key, entry)
+  return entry.promise
+}
+
 async function fetchOneProvider(provider: (typeof PROVIDERS)[number], location: { lat: number; lon: number }) {
   if (!locationInCoverage(provider, location)) {
     return { providerStatus: 'not-applicable', error: 'Zdroj nemá pro tuto polohu pokrytí.' }
@@ -210,21 +255,37 @@ async function fetchOneProvider(provider: (typeof PROVIDERS)[number], location: 
     return wired.normalize(raw)
   }
 
-  return withTimeout(run(), budget, provider.name)
+  // The budget belongs to the shared run, not each request: a hung upstream fails once for everybody.
+  return cachedProviderRun(provider, location, () => withTimeout(run(), budget, provider.name))
 }
 
-/** Fan-in all enabled providers in-process and build consensus. */
+function isForecastAnswer(provider: (typeof PROVIDERS)[number], result: any) {
+  return (
+    !OBSERVATION_SOURCE_IDS.has(provider.id) &&
+    result?.status === 'fulfilled' &&
+    numberOrNull(result.value?.temperature) !== null
+  )
+}
+
+/**
+ * Fan-in all enabled providers in-process and build consensus.
+ * `partial` tells the client that stragglers were left out and a follow-up request will include them.
+ */
 export async function buildServerConsensus(location: { lat: number; lon: number }) {
   const enabled = PROVIDERS.filter((provider) => provider.enabled)
-  const settled = await Promise.all(
-    enabled.map(async (provider) => {
-      try {
-        const value = await fetchOneProvider(provider, location)
-        return { status: 'fulfilled' as const, value }
-      } catch (reason) {
-        return { status: 'rejected' as const, reason }
-      }
-    }),
+  const settled: any[] = enabled.map(() => null)
+  const tasks = enabled.map(async (provider, index) => {
+    try {
+      settled[index] = { status: 'fulfilled', value: await fetchOneProvider(provider, location) }
+    } catch (reason) {
+      settled[index] = { status: 'rejected', reason }
+    }
+  })
+
+  await settleWithQuorum(
+    tasks,
+    () => enabled.filter((provider, index) => isForecastAnswer(provider, settled[index])).length >= FORECAST_QUORUM,
+    SOFT_DEADLINE_MS,
   )
-  return buildResult(settled)
+  return { ...buildResult(settled), partial: settled.includes(null) }
 }

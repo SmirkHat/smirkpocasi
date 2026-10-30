@@ -21,7 +21,7 @@ Each row can be treated as a separate model source in the consensus engine, if t
 | Model | Operator | Czech resolution | Update | Range | Endpoint | Czech weight | Status |
 | --- | --- | ---: | --- | --- | --- | ---: | --- |
 | ECMWF IFS HRES | ECMWF | 9 km | 6h | 15 days | `/v1/ecmwf` | 5 | Active, use hourly fallback because `current` may be absent. |
-| ECMWF AIFS | ECMWF | 25 km | 6h | 15 days | `/v1/ecmwf?models=ecmwf_aifs025` | 4 | Active. Open-Meteo model id is `ecmwf_aifs025`, not `aifs025`. |
+| ECMWF AIFS | ECMWF | 25 km | 6h | 15 days | `/v1/ecmwf?models=ecmwf_aifs025_single` | 4 | Active. Open-Meteo model id is `ecmwf_aifs025_single`; `ecmwf_aifs025` and `aifs025` return no data. |
 | DWD ICON-EU | DWD | 7 km | 3h | 5 days | `/v1/dwd-icon` | 5 | Active. |
 | DWD ICON-D2 | DWD | 2 km | 3h | 2 days | `/v1/dwd-icon?models=icon_d2` | 5 | Active where data exists. |
 | DWD ICON-EU EPS Mean | DWD | 13 km | 6h | 5 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=dwd_icon_eu_eps_ensemble_mean` | 4 | Active. Ensemble mean source with `temperature_2m_spread` for uncertainty. |
@@ -34,7 +34,7 @@ Each row can be treated as a separate model source in the consensus engine, if t
 | UK Met Office | UKMO | 2 km | 6h | 7 days | `/v1/ukmo` | 3 | Disabled: current Open-Meteo public endpoint returned 404 during testing. |
 | NOAA GFS | NOAA | 13–25 km | 6h | 16 days | `/v1/gfs` | 3 | Active as a broad global baseline. |
 | NOAA HRRR | NOAA | US only | 1h | 2 days | `/v1/gfs?models=hrrr` | 1 | Not useful for Czech locations. |
-| AI GFS GraphCast | NOAA + Google | 25 km | 6h | 10 days | `/v1/gfs?models=gfs_graphcast025` | 3 | Active. Tested for Czech locations through Open-Meteo. |
+| AI GFS GraphCast | NOAA + Google | 25 km | 6h | 10 days | `/v1/gfs?models=gfs_graphcast025` | 3 | Disabled. Open-Meteo currently returns only nulls for it. |
 | NOAA GEFS 0.25° Mean | NOAA | 25 km | 6h | 10 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=ncep_gefs025_ensemble_mean` | 2 | Active. Low-weight global ensemble mean. |
 | GEM Global | MSC Canada | Global | 6h | 10 days | `/v1/gem` | 2 | Active as a low-weight independent global model. |
 | GEM GEPS Mean | MSC Canada | 25 km | 12h | 16 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=cmc_gem_geps_ensemble_mean` | 2 | Active. Low-weight global ensemble mean. |
@@ -197,7 +197,7 @@ These providers need no user API key and are included in the consensus or source
 | Open-Meteo Ensemble Mean | Probabilistic model mean | `src/api/openmeteo.js` | ICON-EU EPS, GEFS 0.25, GEM GEPS, ECMWF IFS EPS. Uses mean values plus temperature spread. |
 | Yr.no / MET Norway | Forecast provider | `/api/yr`, `src/api/yr.js` | Proxied for required User-Agent. Uses Locationforecast `complete` and normalizes symbol code, precipitation range/probability, cloud layers, fog fraction, wind, pressure, dew point, and UV clear-sky. |
 | wttr.in | Simple forecast/current fallback | `/api/wttr`, `src/api/wttr.js` | Low weight. Good fallback, not a precision source. |
-| openSenseMap | Nearby station observations | direct client fetch | Observation source only; excluded from forecast median unless it is the only usable data. |
+| openSenseMap | Nearby station observations | direct client fetch | Observation source only; excluded from the forecast aggregate, but fresh nearby readings are blended into the current temperature, humidity and dew point (trust 0.4, as a citizen-science station). |
 | ČHMÚ radar | Map layer | `/api/chmi-radar` | Default Czech radar; RainViewer remains a toggle. |
 | ČHMÚ warnings | CAP alerts | `/api/warnings` | Home banner + radar badge. |
 | ČHMÚ AQI | Air quality | `/api/chmi-aqi` | Primary; Open-Meteo CAMS fallback. |

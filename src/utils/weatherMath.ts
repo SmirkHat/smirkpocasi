@@ -237,6 +237,35 @@ export function iconNameToWeatherCode(iconName) {
 
 const SUN_TZ = 'Europe/Prague';
 
+const PRAGUE_OFFSET_FORMAT = new Intl.DateTimeFormat('en-US', { timeZone: SUN_TZ, timeZoneName: 'longOffset' });
+const pragueTimeCache = new Map();
+
+function pragueOffsetMs(utcMs) {
+  const zone = PRAGUE_OFFSET_FORMAT.formatToParts(utcMs).find((part) => part.type === 'timeZoneName')?.value;
+  const match = String(zone).match(/([+-])(\d{2}):(\d{2})/);
+  if (!match) return 0;
+  const minutes = Number(match[2]) * 60 + Number(match[3]);
+  return (match[1] === '-' ? -minutes : minutes) * 60 * 1000;
+}
+
+/**
+ * Zoneless timestamps from our sources are Prague wall clock (we request that timezone), so reading
+ * them in the browser's zone would shift them against absolute-time sources for anyone abroad.
+ */
+export function parsePragueTime(value) {
+  const text = String(value).trim().replace(' ', 'T');
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text) || /[zZ]|[+-]\d{2}:?\d{2}$/.test(text)) return new Date(text);
+
+  let epoch = pragueTimeCache.get(text);
+  if (epoch === undefined) {
+    const asUtc = Date.parse(`${text.length === 16 ? `${text}:00` : text}Z`);
+    epoch = asUtc - pragueOffsetMs(asUtc - pragueOffsetMs(asUtc));
+    if (pragueTimeCache.size > 2000) pragueTimeCache.clear();
+    pragueTimeCache.set(text, epoch);
+  }
+  return new Date(epoch);
+}
+
 /** Clock minutes since local midnight (0–1439) in `timeZone`. */
 export function toLocalDayMinutes(value, timeZone = SUN_TZ) {
   if (value == null || value === '') return null;

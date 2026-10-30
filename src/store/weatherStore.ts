@@ -5,7 +5,11 @@ export type WeatherLocation = {
   lat: number
   lon: number
   label?: string
+  fullName?: string
   source?: string
+  accuracyMeters?: number
+  /** The real name is still being looked up from the coordinates. Never persisted. */
+  pendingName?: boolean
 }
 
 type WeatherCachePayload = {
@@ -21,6 +25,9 @@ type WeatherStore = {
   weather: WeatherCachePayload | null
   weatherUpdatedAt: string | null
   hydrated: boolean
+  /** Waiting for GPS to answer; a better position may still replace the current one. */
+  locating: boolean
+  setLocating: (locating: boolean) => void
   hydrateFromStorage: () => void
   setLocation: (location: WeatherLocation) => void
   addFavorite: (location: WeatherLocation) => void
@@ -31,8 +38,6 @@ type WeatherStore = {
 const FAVORITES_KEY = 'smirkpocasi:favorites'
 export const LOCATION_KEY = 'smirkpocasi:selected-location'
 const WEATHER_CACHE_KEY = 'smirkpocasi:last-weather'
-/** Set after first-launch GPS → IP → Praha cascade (or when a saved location already exists). */
-export const LOCATION_BOOTSTRAP_KEY = 'smirkpocasi:location-bootstrapped'
 
 export const DEFAULT_LOCATION: WeatherLocation = {
   name: 'Praha',
@@ -58,7 +63,20 @@ function readJson<T>(key: string, fallback: T): T {
 
 function writeJson(key: string, value: unknown) {
   if (!canUseStorage()) return
-  localStorage.setItem(key, JSON.stringify(value))
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // Full or blocked storage only costs persistence; the app keeps working from memory.
+  }
+}
+
+function readSavedLocation() {
+  const saved = readJson<WeatherLocation | null>(LOCATION_KEY, null)
+  return Number.isFinite(saved?.lat) && Number.isFinite(saved?.lon) && saved?.name ? saved : null
+}
+
+export function hasSavedLocation() {
+  return readSavedLocation() != null
 }
 
 export const useWeatherStore = create<WeatherStore>((set, get) => ({
@@ -67,11 +85,17 @@ export const useWeatherStore = create<WeatherStore>((set, get) => ({
   weather: null,
   weatherUpdatedAt: null,
   hydrated: false,
+  locating: false,
+  setLocating(locating) {
+    set({ locating })
+  },
   hydrateFromStorage() {
     if (get().hydrated || !canUseStorage()) return
     const weather = readJson<WeatherCachePayload | null>(WEATHER_CACHE_KEY, null)
+    const current = get().location
     set({
-      location: readJson(LOCATION_KEY, defaultLocation),
+      // First launch hydrates right after detection published, with state storage cannot hold.
+      location: current === defaultLocation ? (readSavedLocation() ?? current) : current,
       favorites: readJson(FAVORITES_KEY, [defaultLocation]),
       weather,
       weatherUpdatedAt: weather?.updatedAt || null,
@@ -79,7 +103,7 @@ export const useWeatherStore = create<WeatherStore>((set, get) => ({
     })
   },
   setLocation(location) {
-    writeJson(LOCATION_KEY, location)
+    writeJson(LOCATION_KEY, { ...location, pendingName: undefined })
     set({ location })
   },
   addFavorite(location) {

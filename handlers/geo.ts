@@ -4,6 +4,7 @@
  */
 
 const USER_AGENT = 'SmirkPocasi/1.0 (https://smirkhat.org; weather app)'
+const IP_LOOKUP_TIMEOUT_MS = 1500
 
 /** Country → approx capital coords when headers only expose a country code. */
 const COUNTRY_FALLBACK = {
@@ -91,7 +92,8 @@ function buildResult({ name, lat, lon, country, region, city, source, accuracy }
   }
 }
 
-function fromEdgeHeaders(req) {
+/** City-level coordinates from the edge, when the platform provides them. */
+function fromEdgeCoordinates(req) {
   const vercelLat = finiteNumber(header(req, 'x-vercel-ip-latitude'))
   const vercelLon = finiteNumber(header(req, 'x-vercel-ip-longitude'))
   const vercelCity = decodeHeaderValue(header(req, 'x-vercel-ip-city'))
@@ -130,16 +132,24 @@ function fromEdgeHeaders(req) {
     })
   }
 
+  return null
+}
+
+/** Only a country code is known (e.g. Cloudflare free plan): its capital is a last resort. */
+function fromEdgeCountry(req) {
+  const vercelCountry = header(req, 'x-vercel-ip-country').toUpperCase()
+  const cfCountry = header(req, 'cf-ipcountry').toUpperCase()
   const country = vercelCountry || cfCountry
   if (country && COUNTRY_FALLBACK[country]) {
+    // Never pair a city header with capital coordinates: the name would lie about the forecast shown.
     const fallback = COUNTRY_FALLBACK[country]
     return buildResult({
-      name: vercelCity || cfCity || fallback.name,
+      name: fallback.name,
       lat: fallback.lat,
       lon: fallback.lon,
       country,
-      region: vercelRegion || cfRegion || null,
-      city: vercelCity || cfCity || fallback.name,
+      region: null,
+      city: fallback.name,
       source: vercelCountry ? 'vercel-country' : 'cloudflare-country',
       accuracy: 'country',
     })
@@ -155,6 +165,7 @@ async function fromGeoJs(ip) {
 
   const response = await fetch(url, {
     headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
+    signal: AbortSignal.timeout(IP_LOOKUP_TIMEOUT_MS),
   })
   if (!response.ok) throw new Error(`geojs ${response.status}`)
   const data = await response.json()
@@ -190,24 +201,18 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, max-age=300')
   if (req.method === 'OPTIONS') return res.status(204).end()
 
-  try {
-    const edge = fromEdgeHeaders(req)
-    if (edge) {
-      return res.status(200).json(edge)
-    }
-
-    const ip = clientIp(req)
-    const ipGeo = await fromGeoJs(ip)
-    if (ipGeo) {
-      return res.status(200).json(ipGeo)
-    }
-
-    return res.status(404).json({
-      error: 'Polohu z IP se nepodařilo odhadnout.',
-    })
-  } catch (error) {
-    return res.status(502).json({
-      error: error.message || 'Geo lookup failed',
-    })
+  const edge = fromEdgeCoordinates(req)
+  if (edge) {
+    return res.status(200).json(edge)
   }
+
+  const ipGeo = await fromGeoJs(clientIp(req)).catch(() => null)
+  const best = ipGeo || fromEdgeCountry(req)
+  if (best) {
+    return res.status(200).json(best)
+  }
+
+  return res.status(404).json({
+    error: 'Polohu z IP se nepodařilo odhadnout.',
+  })
 }
