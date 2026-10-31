@@ -46,6 +46,35 @@ describe('/api/geo', () => {
     const { body } = await call({ 'cf-ipcountry': 'CZ', 'x-forwarded-for': '85.70.1.1' })
     expect(body.name).toBe('Klatovy')
     expect(body.source).toBe('geojs')
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/85.70.1.1.json'),
+      expect.any(Object),
+    )
+  })
+
+  it('skips private proxy hops and looks up the visitor IP', async () => {
+    mockGeoJs({ latitude: '49.75', longitude: '13.38', city: 'Plzen', country: 'Czechia' })
+    const { body } = await call({
+      'x-forwarded-for': '85.70.1.1, 172.18.0.1',
+      'x-real-ip': '172.18.0.1',
+    })
+    expect(body.name).toBe('Plzen')
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/85.70.1.1.json'),
+      expect.any(Object),
+    )
+  })
+
+  it('does not geolocate the API host when only a Docker hop is known', async () => {
+    mockGeoJs({ latitude: '50.11', longitude: '8.68', city: 'Frankfurt', country: 'Germany' })
+    const { status, body } = await call({
+      'cf-ipcountry': 'CZ',
+      'x-forwarded-for': '172.18.0.5',
+    })
+    expect(fetch).not.toHaveBeenCalled()
+    expect(status).toBe(200)
+    expect(body.name).toBe('Praha')
+    expect(body.source).toBe('cloudflare-country')
   })
 
   it('falls back to the capital, under its own name, when the IP lookup fails', async () => {
@@ -61,5 +90,6 @@ describe('/api/geo', () => {
     mockGeoJs({}, false)
     const { status } = await call({})
     expect(status).toBe(404)
+    expect(fetch).not.toHaveBeenCalled()
   })
 })

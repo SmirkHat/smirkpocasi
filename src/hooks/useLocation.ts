@@ -73,17 +73,68 @@ function readFastPosition(): Promise<GeolocationPosition | GeolocationPositionEr
   })
 }
 
-async function fetchIpLocation(): Promise<WeatherLocation> {
-  const response = await fetch(apiUrl('/api/geo'), { signal: timeoutSignal(IP_TIMEOUT_MS) })
-  if (!response.ok) throw new Error(`Geo endpoint ${response.status}`)
-  const payload = await response.json()
-  if (payload?.lat == null || payload?.lon == null) throw new Error('Geo endpoint bez souřadnic')
+function locationFromGeoPayload(payload: {
+  name?: string
+  lat?: number
+  lon?: number
+  label?: string
+  source?: string
+}): WeatherLocation {
+  if (payload?.lat == null || payload?.lon == null) throw new Error('Geo payload bez souřadnic')
   return {
-    name: payload.name,
+    name: payload.name || 'Přibližná poloha',
     lat: payload.lat,
     lon: payload.lon,
     ...(payload.label ? { label: payload.label } : {}),
     source: payload.source || 'ip',
+  }
+}
+
+/** Browser → geojs sees the visitor IP. The API host must not call the bare geojs URL (that is Frankfurt). */
+async function fetchBrowserGeoJs(): Promise<WeatherLocation> {
+  const response = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+    headers: { Accept: 'application/json' },
+    signal: timeoutSignal(IP_TIMEOUT_MS),
+  })
+  if (!response.ok) throw new Error(`geojs ${response.status}`)
+  const data = await response.json()
+  const lat = Number(data.latitude)
+  const lon = Number(data.longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('geojs bez souřadnic')
+  const city = String(data.city || '').trim()
+  const region = String(data.region || '').trim()
+  const country = String(data.country || data.country_code || '').trim()
+  const label = [region, country].filter(Boolean).join(' · ')
+  return {
+    name: city || 'Přibližná poloha',
+    lat: Number(lat.toFixed(5)),
+    lon: Number(lon.toFixed(5)),
+    ...(label ? { label } : {}),
+    source: 'geojs',
+  }
+}
+
+async function fetchIpLocation(): Promise<WeatherLocation> {
+  let weak: WeatherLocation | null = null
+
+  try {
+    const response = await fetch(apiUrl('/api/geo'), { signal: timeoutSignal(IP_TIMEOUT_MS) })
+    if (response.ok) {
+      const payload = await response.json()
+      const location = locationFromGeoPayload(payload)
+      // City from the visitor IP (or edge) is done. Country-capital is only a last resort.
+      if (payload.accuracy === 'ip') return location
+      weak = location
+    }
+  } catch {
+    // Try the browser next.
+  }
+
+  try {
+    return await fetchBrowserGeoJs()
+  } catch {
+    if (weak) return weak
+    throw new Error('Geo endpoint nedostupný')
   }
 }
 

@@ -56,27 +56,42 @@ function finiteNumber(value) {
   return Number.isFinite(n) ? n : null
 }
 
-function clientIp(req) {
-  const forwarded = header(req, 'x-forwarded-for')
-  if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim()
-    if (first) return first
-  }
-  return (
-    header(req, 'x-real-ip') ||
-    header(req, 'cf-connecting-ip') ||
-    header(req, 'x-vercel-forwarded-for').split(',')[0]?.trim() ||
-    ''
-  )
-}
-
 function isPrivateIp(ip) {
   if (!ip) return true
-  if (ip === '::1' || ip === '127.0.0.1') return true
-  if (ip.startsWith('10.') || ip.startsWith('192.168.') || ip.startsWith('127.')) return true
-  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)) return true
-  if (ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80')) return true
+  // Strip IPv6 brackets and zone ids; map IPv4-mapped IPv6 (::ffff:1.2.3.4).
+  let value = ip.trim().toLowerCase()
+  if (value.startsWith('[')) value = value.slice(1, value.indexOf(']')) || value
+  const zone = value.indexOf('%')
+  if (zone >= 0) value = value.slice(0, zone)
+  if (value.startsWith('::ffff:')) value = value.slice(7)
+
+  if (value === '::1' || value === '127.0.0.1') return true
+  if (value.startsWith('10.') || value.startsWith('192.168.') || value.startsWith('127.')) return true
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(value)) return true
+  if (value.startsWith('fc') || value.startsWith('fd') || value.startsWith('fe80')) return true
   return false
+}
+
+/**
+ * First public address from the proxy chain. Never the Docker/Caddy hop — looking that
+ * up (or calling geojs with no IP) returns the API host city, e.g. Frankfurt.
+ */
+function clientIp(req) {
+  const candidates = [
+    ...header(req, 'x-forwarded-for').split(','),
+    header(req, 'x-real-ip'),
+    header(req, 'cf-connecting-ip'),
+    header(req, 'true-client-ip'),
+    header(req, 'fly-client-ip'),
+    ...header(req, 'x-vercel-forwarded-for').split(','),
+  ]
+    .map((value) => value.trim())
+    .filter(Boolean)
+
+  for (const candidate of candidates) {
+    if (!isPrivateIp(candidate)) return candidate
+  }
+  return ''
 }
 
 function buildResult({ name, lat, lon, country, region, city, source, accuracy }) {
@@ -159,11 +174,10 @@ function fromEdgeCountry(req) {
 }
 
 async function fromGeoJs(ip) {
-  const url = ip && !isPrivateIp(ip)
-    ? `https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`
-    : 'https://get.geojs.io/v1/ip/geo.json'
+  // Bare /v1/ip/geo.json geolocates this server's egress IP (the VPS), not the visitor.
+  if (!ip || isPrivateIp(ip)) return null
 
-  const response = await fetch(url, {
+  const response = await fetch(`https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`, {
     headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
     signal: AbortSignal.timeout(IP_LOOKUP_TIMEOUT_MS),
   })

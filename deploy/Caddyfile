@@ -4,6 +4,8 @@
 
 api.pocasi.smht.eu {
 	encode gzip
+	# reverse_proxy sets X-Forwarded-For to the visitor. /api/geo needs that; without a public
+	# client IP it must not look up this VPS (that is how Frankfurt showed up as "Moje poloha").
 	reverse_proxy app:3000
 }
 
