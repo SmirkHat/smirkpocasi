@@ -73,6 +73,12 @@ function buildSourceTable(stops) {
   return entries;
 }
 
+function isNearGrayscale(red, green, blue) {
+  // Canvas color management often nudges R/G/B by 1–2 on "raw" tiles. Exact equality then fails,
+  // and the Universal Blue reverse map turns light rain into ~40 dBZ orange.
+  return Math.abs(red - green) <= 2 && Math.abs(green - blue) <= 2 && Math.abs(red - blue) <= 2;
+}
+
 function isProbablyRawTile(pixels) {
   let checked = 0;
   let grayscale = 0;
@@ -85,7 +91,7 @@ function isProbablyRawTile(pixels) {
     if (alpha === 0) continue;
 
     checked += 1;
-    if (red === green && green === blue) grayscale += 1;
+    if (isNearGrayscale(red, green, blue)) grayscale += 1;
   }
 
   return checked > 16 && grayscale / checked > 0.9;
@@ -111,15 +117,20 @@ function estimateDbzFromUniversalBlue(red, green, blue, alpha) {
   return closest.dbz;
 }
 
-function colorizeRadarTile(imageData, colorTable) {
+function colorizeRadarTile(imageData, colorTable, { forceRaw = false } = {}) {
   const pixels = imageData.data;
-  const rawTile = isProbablyRawTile(pixels);
+  const rawTile = forceRaw || isProbablyRawTile(pixels);
 
   for (let index = 0; index < pixels.length; index += 4) {
     const sourceAlpha = pixels[index + 3];
     if (sourceAlpha === 0) continue;
 
-    const tableIndex = rawTile ? pixels[index] * 4 : (estimateDbzFromUniversalBlue(pixels[index], pixels[index + 1], pixels[index + 2], sourceAlpha) + 32) * 4;
+    // LibreWXR scheme 0 is RainViewer-compatible raw (gray ≈ dBZ + 32). Averaging R/G/B
+    // absorbs the 1–2 level canvas drift that would otherwise pick the wrong table row.
+    const rawValue = rawTile
+      ? Math.round((pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3)
+      : estimateDbzFromUniversalBlue(pixels[index], pixels[index + 1], pixels[index + 2], sourceAlpha) + 32;
+    const tableIndex = Math.max(0, Math.min(255, rawValue)) * 4;
     const targetAlpha = colorTable[tableIndex + 3];
 
     if (!rawTile && targetAlpha === 0) {
@@ -195,7 +206,8 @@ function RainviewerFrame({ frame }) {
         try {
           context.drawImage(image, 0, 0);
           const imageData = context.getImageData(0, 0, 256, 256);
-          colorizeRadarTile(imageData, colorTable);
+          // LibreWXR scheme 0 is raw reflectivity; never reverse-map it as Universal Blue.
+          colorizeRadarTile(imageData, colorTable, { forceRaw: frame.source === 'librewxr' });
           context.putImageData(imageData, 0, 0);
           done(null, canvas);
         } catch (error) {
@@ -359,7 +371,7 @@ function LocationMarker({ position, label }) {
 
 const RAINVIEWER_CACHE_KEY = 'smirkpocasi:rainviewer-frames-v7';
 const RAINVIEWER_CACHE_TTL = 5 * 60 * 1000;
-const LIBREWXR_CACHE_KEY = 'smirkpocasi:librewxr-frames-v1';
+const LIBREWXR_CACHE_KEY = 'smirkpocasi:librewxr-frames-v2';
 const LIBREWXR_CACHE_TTL = 5 * 60 * 1000;
 const CHMI_CACHE_KEY = 'smirkpocasi:chmi-radar-frames-v6';
 const CHMI_CACHE_TTL = 2 * 60 * 1000;
