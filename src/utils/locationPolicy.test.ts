@@ -3,7 +3,9 @@ import {
   canKeepPlaceName,
   decidePublish,
   distanceMeters,
+  guessLocationFromLanguage,
   guessLocationFromTimezone,
+  guessWeakLocation,
   isAutoLocation,
 } from './locationPolicy'
 
@@ -67,8 +69,16 @@ describe('location helpers', () => {
     expect(guessLocationFromTimezone(undefined)).toBeNull()
   })
 
+  it('falls back from the UI language when the time zone is unknown', () => {
+    expect(guessLocationFromLanguage('cs-CZ')?.name).toBe('Praha')
+    expect(guessLocationFromLanguage('sk')?.source).toBe('language')
+    expect(guessLocationFromLanguage('en-US')).toBeNull()
+    expect(guessWeakLocation('UTC', 'cs-CZ')?.name).toBe('Praha')
+    expect(guessWeakLocation('Europe/Prague', 'sk')?.source).toBe('timezone')
+  })
+
   it('counts every automatic source as replaceable, and anything else as manual', () => {
-    for (const source of ['gps', 'default', 'geojs', 'timezone', 'cloudflare-country']) {
+    for (const source of ['gps', 'default', 'geojs', 'timezone', 'language', 'cloudflare-country']) {
       expect(isAutoLocation({ source })).toBe(true)
     }
     for (const source of ['favorite', 'nominatim', 'photon', undefined]) {

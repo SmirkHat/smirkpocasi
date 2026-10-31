@@ -5,6 +5,7 @@ export const GPS_PLACEHOLDER_NAME = 'Moje poloha'
 
 const RANK_BY_SOURCE: Record<string, number> = {
   default: 0,
+  language: 1,
   timezone: 1,
   'vercel-country': 1,
   'cloudflare-country': 1,
@@ -94,4 +95,36 @@ export function canKeepPlaceName(current: RankedLocation, next: Coordinates) {
 export function guessLocationFromTimezone(timeZone: string | undefined) {
   const capital = timeZone ? TIMEZONE_CAPITALS[timeZone] : null
   return capital ? { ...capital, source: 'timezone' } : null
+}
+
+/** UI language of the browser — weaker than a time zone, useful when the zone is UTC or unknown. */
+const LANGUAGE_CAPITALS: Record<string, { name: string } & Coordinates> = {
+  cs: { name: 'Praha', lat: 50.0755, lon: 14.4378 },
+  sk: { name: 'Bratislava', lat: 48.1486, lon: 17.1077 },
+  de: { name: 'Berlín', lat: 52.52, lon: 13.405 },
+  pl: { name: 'Varšava', lat: 52.2297, lon: 21.0122 },
+  hu: { name: 'Budapešť', lat: 47.4979, lon: 19.0402 },
+  sl: { name: 'Lublaň', lat: 46.0569, lon: 14.5058 },
+  hr: { name: 'Záhřeb', lat: 45.815, lon: 15.9819 },
+  it: { name: 'Řím', lat: 41.9028, lon: 12.4964 },
+  fr: { name: 'Paříž', lat: 48.8566, lon: 2.3522 },
+  es: { name: 'Madrid', lat: 40.4168, lon: -3.7038 },
+  nl: { name: 'Amsterdam', lat: 52.3676, lon: 4.9041 },
+  uk: { name: 'Kyjev', lat: 50.4501, lon: 30.5234 },
+  ro: { name: 'Bukurešť', lat: 44.4268, lon: 26.1025 },
+}
+
+export function guessLocationFromLanguage(language: string | undefined) {
+  const primary = String(language || '')
+    .trim()
+    .toLowerCase()
+    .split(/[-_]/)[0]
+  if (!primary) return null
+  const capital = LANGUAGE_CAPITALS[primary]
+  return capital ? { ...capital, source: 'language' } : null
+}
+
+/** Time zone first (Europe/Prague), then UI language (cs). */
+export function guessWeakLocation(timeZone?: string, language?: string) {
+  return guessLocationFromTimezone(timeZone) || guessLocationFromLanguage(language)
 }

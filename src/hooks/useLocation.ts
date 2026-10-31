@@ -5,7 +5,7 @@ import {
   GPS_PLACEHOLDER_NAME,
   canKeepPlaceName,
   decidePublish,
-  guessLocationFromTimezone,
+  guessWeakLocation,
   isPreciseLocation,
   locationRank,
 } from '../utils/locationPolicy'
@@ -262,8 +262,15 @@ async function applyEstimate(detection: Detection): Promise<string | null> {
 
   // Replacing a place the user chose with a capital would be worse than saying it failed.
   if (!detection.options.force && locationRank(store().location) === 0) {
-    const guess = guessLocationFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-    if (guess) publishFix(detection, guess)
+    const guess = guessWeakLocation(
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      typeof navigator !== 'undefined' ? navigator.language : undefined,
+    )
+    if (guess) {
+      publishFix(detection, guess)
+      announceFirstPublish(detection)
+      return guess.source ?? null
+    }
   }
   announceFirstPublish(detection)
   return null
