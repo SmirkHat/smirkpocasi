@@ -324,7 +324,9 @@ function Recenter({ center, zoom }) {
     });
     return () => {
       window.cancelAnimationFrame(raf);
-      map.stop();
+      // Leaving the page removes the map before this runs, and stopping a removed map throws,
+      // which takes the next page down with it.
+      if (map.getContainer().isConnected) map.stop();
     };
   }, [center, map, zoom]);
 

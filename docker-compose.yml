@@ -14,6 +14,10 @@ services:
       PORT: 3000
       # Allow the Vercel (or other) frontend origin when this host is API-only.
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # Forecast accuracy benchmark, see docs/benchmark.md. Needs the volume below to survive rebuilds.
+      BENCHMARK_DATA_DIR: /data/benchmark
+    volumes:
+      - benchmark_data:/data/benchmark
     expose:
       - '3000'
     healthcheck:
@@ -45,5 +49,6 @@ services:
         condition: service_healthy
 
 volumes:
+  benchmark_data:
   caddy_data:
   caddy_config:

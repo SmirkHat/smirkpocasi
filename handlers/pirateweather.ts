@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Keep `daily` for sunrise/sunset; skip bulky minutely/hourly/alerts.
-  const params = new URLSearchParams({ units: 'si', exclude: 'minutely,hourly,alerts' });
+  // `daily` carries sunrise/sunset and `hourly` is what the accuracy benchmark verifies.
+  const params = new URLSearchParams({ units: 'si', exclude: 'minutely,alerts' });
 
   try {
     const response = await fetch(`https://api.pirateweather.net/forecast/${key}/${lat},${lon}?${params}`);

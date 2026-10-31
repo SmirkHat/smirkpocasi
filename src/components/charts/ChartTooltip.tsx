@@ -3,7 +3,8 @@ export function ChartTooltip({ active, payload, label, formatter }) {
 
   const rows = payload
     .map((entry) => {
-      if (entry.value == null || entry.value === '') return null;
+      // A custom tooltip gets every series, including those marked tooltipType="none".
+      if (entry.type === 'none' || entry.value == null || entry.value === '') return null;
       const formatted = formatter
         ? formatter(entry.value, entry.name, entry)
         : `${entry.name}: ${entry.value}`;

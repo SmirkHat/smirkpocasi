@@ -109,7 +109,7 @@ export const PROVIDERS = [
     id: 'ecmwf_ifs',
     name: 'ECMWF IFS',
     enabled: true,
-    weight: 5,
+    weight: 3,
     endpoint: '/v1/ecmwf',
     fetchFn: fetchOpenMeteoModel
   },
@@ -117,16 +117,18 @@ export const PROVIDERS = [
     id: 'ecmwf_aifs',
     name: 'ECMWF AIFS',
     enabled: true,
-    weight: 4,
+    weight: 3,
     endpoint: '/v1/ecmwf',
     model: 'ecmwf_aifs025_single',
     fetchFn: fetchOpenMeteoModel
   },
   {
-    id: 'icon_eu',
-    name: 'DWD ICON-EU',
+    // No model means DWD's own blend: ICON-D2, then ICON-EU, then global. It repeats ICON-D2 for two days on purpose:
+    // together they give the best short-range model a high weight that drops once it runs out.
+    id: 'icon_seamless',
+    name: 'DWD ICON',
     enabled: true,
-    weight: 5,
+    weight: 3,
     endpoint: '/v1/dwd-icon',
     fetchFn: fetchOpenMeteoModel
   },
@@ -145,24 +147,26 @@ export const PROVIDERS = [
     name: 'DWD ICON-EU EPS Mean',
     type: 'Ensemble mean',
     enabled: true,
-    weight: 4,
+    weight: 3,
     model: 'dwd_icon_eu_eps_ensemble_mean',
     coverage: { latMin: 34, latMax: 72, lonMin: -12, lonMax: 45 },
     fetchFn: fetchOpenMeteoEnsembleMean
   },
   {
+    // Named explicitly, because the blend silently turns into ARPEGE past 48 h and everywhere east of about 14.7°E.
     id: 'arome',
     name: 'Météo-France AROME',
     enabled: true,
-    weight: 4,
+    weight: 6,
     endpoint: '/v1/meteofrance',
+    model: 'meteofrance_arome_france',
     fetchFn: fetchOpenMeteoModel
   },
   {
     id: 'arpege',
     name: 'Météo-France ARPEGE',
     enabled: true,
-    weight: 3,
+    weight: 2,
     endpoint: '/v1/meteofrance',
     model: 'arpege_europe',
     coverage: { latMin: 20, latMax: 75, lonMin: -20, lonMax: 50 },
@@ -172,7 +176,7 @@ export const PROVIDERS = [
     id: 'gfs',
     name: 'NOAA GFS',
     enabled: true,
-    weight: 3,
+    weight: 2,
     endpoint: '/v1/gfs',
     fetchFn: fetchOpenMeteoModel
   },
@@ -199,7 +203,7 @@ export const PROVIDERS = [
     id: 'gem',
     name: 'GEM Global',
     enabled: true,
-    weight: 2,
+    weight: 1,
     endpoint: '/v1/gem',
     fetchFn: fetchOpenMeteoModel
   },
@@ -208,7 +212,7 @@ export const PROVIDERS = [
     name: 'GEM GEPS Mean',
     type: 'Ensemble mean',
     enabled: true,
-    weight: 2,
+    weight: 1,
     model: 'cmc_gem_geps_ensemble_mean',
     fetchFn: fetchOpenMeteoEnsembleMean
   },
@@ -222,18 +226,41 @@ export const PROVIDERS = [
     fetchFn: fetchOpenMeteoEnsembleMean
   },
   {
-    id: 'jma',
-    name: 'JMA GSM/MSM',
+    // Harmonie stops at about 60 h. The *_seamless variants carry on as a copy of ECMWF IFS, so they would count it twice.
+    id: 'knmi_harmonie',
+    name: 'KNMI HARMONIE',
+    enabled: true,
+    weight: 1,
+    endpoint: '/v1/forecast',
+    model: 'knmi_harmonie_arome_europe',
+    attribution: 'KNMI přes Open-Meteo (CC BY 4.0)',
+    fetchFn: fetchOpenMeteoModel
+  },
+  {
+    id: 'dmi_harmonie',
+    name: 'DMI HARMONIE',
     enabled: true,
     weight: 2,
+    endpoint: '/v1/forecast',
+    model: 'dmi_harmonie_arome_europe',
+    attribution: 'DMI přes Open-Meteo (CC BY 4.0)',
+    fetchFn: fetchOpenMeteoModel
+  },
+  {
+    id: 'jma',
+    name: 'JMA GSM/MSM',
+    // Worst model against ČHMÚ stations (wind off by 6 km/h), and the consensus improved without it.
+    enabled: false,
+    weight: 1,
     endpoint: '/v1/jma',
     fetchFn: fetchOpenMeteoModel
   },
   {
     id: 'cma',
     name: 'CMA GRAPES',
-    enabled: true,
-    weight: 2,
+    // Worst temperature against ČHMÚ stations, and the consensus improved without it.
+    enabled: false,
+    weight: 1,
     endpoint: '/v1/cma',
     fetchFn: fetchOpenMeteoModel
   },

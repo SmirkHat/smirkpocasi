@@ -4,6 +4,11 @@ export function numberOrNull(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+/** Magnus, hPa. Over water even below freezing, because that is how meteorological relative humidity is defined. */
+function saturationVaporPressure(temperature) {
+  return 6.1094 * Math.exp((17.625 * temperature) / (243.04 + temperature));
+}
+
 export function calculateDewPoint(temperature, humidity) {
   const temp = numberOrNull(temperature);
   const relativeHumidity = numberOrNull(humidity);
@@ -15,54 +20,69 @@ export function calculateDewPoint(temperature, humidity) {
   return (b * gamma) / (a - gamma);
 }
 
+export function calculateRelativeHumidity(temperature, dewPoint) {
+  const temp = numberOrNull(temperature);
+  const dew = numberOrNull(dewPoint);
+  if (temp === null || dew === null) return null;
+
+  return Math.min(100, (100 * saturationVaporPressure(dew)) / saturationVaporPressure(temp));
+}
+
+/**
+ * Steadman's apparent temperature on its own. Switching to wind chill at 10 °C and 4.8 km/h made the
+ * result jump by almost 2 °C at both edges, and it landed further from what the models report.
+ */
 export function calculateApparentTemperature(temperature, humidity, windSpeed) {
   const temp = numberOrNull(temperature);
   const relativeHumidity = numberOrNull(humidity);
   const wind = numberOrNull(windSpeed);
-  if (temp === null) return null;
+  if (temp === null || relativeHumidity === null || wind === null) return null;
 
-  if (temp <= 10 && wind !== null && wind > 4.8) {
-    const windFactor = wind ** 0.16;
-    return 13.12 + 0.6215 * temp - 11.37 * windFactor + 0.3965 * temp * windFactor;
-  }
-
-  if (relativeHumidity === null || wind === null) return null;
-
-  const vaporPressure = (relativeHumidity / 100) * 6.105 * Math.exp((17.27 * temp) / (237.7 + temp));
+  const vaporPressure = (relativeHumidity / 100) * saturationVaporPressure(temp);
   return temp + 0.33 * vaporPressure - 0.7 * (wind / 3.6) - 4;
 }
 
+/** hPa per °C at 1000 hPa. Surface pressure shifts the result by only 0.15 °C per 60 hPa, and we only know it reduced to sea level. */
+const PSYCHROMETRIC_CONSTANT = 0.66;
+
+/**
+ * Solves the psychrometric equation. Stull's shortcut is off by up to 0.7 °C in ordinary weather
+ * and can land outside the dew point to temperature range the wet bulb must stay in.
+ */
 export function calculateWetBulbTemperature(temperature, humidity) {
   const temp = numberOrNull(temperature);
   const relativeHumidity = numberOrNull(humidity);
   if (temp === null || relativeHumidity === null || relativeHumidity <= 0) return null;
 
-  return (
-    temp * Math.atan(0.151977 * Math.sqrt(relativeHumidity + 8.313659)) +
-    Math.atan(temp + relativeHumidity) -
-    Math.atan(relativeHumidity - 1.676331) +
-    0.00391838 * relativeHumidity ** 1.5 * Math.atan(0.023101 * relativeHumidity) -
-    4.686035
-  );
+  const humidityPercent = Math.min(relativeHumidity, 100);
+  const vaporPressure = (humidityPercent / 100) * saturationVaporPressure(temp);
+  let low = calculateDewPoint(temp, humidityPercent);
+  let high = temp;
+  for (let step = 0; step < 20; step += 1) {
+    const middle = (low + high) / 2;
+    if (saturationVaporPressure(middle) - PSYCHROMETRIC_CONSTANT * (temp - middle) > vaporPressure) high = middle;
+    else low = middle;
+  }
+  return (low + high) / 2;
 }
 
+/** kPa */
 export function calculateVaporPressureDeficit(temperature, humidity) {
   const temp = numberOrNull(temperature);
   const relativeHumidity = numberOrNull(humidity);
   if (temp === null || relativeHumidity === null || relativeHumidity < 0) return null;
 
-  const saturation = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
-  const actual = saturation * Math.min(relativeHumidity, 100) / 100;
-  return Math.max(0, saturation - actual);
+  return (saturationVaporPressure(temp) / 10) * (1 - Math.min(relativeHumidity, 100) / 100);
 }
 
+/** g/m³ */
 export function calculateAbsoluteHumidity(temperature, humidity) {
   const temp = numberOrNull(temperature);
   const relativeHumidity = numberOrNull(humidity);
   if (temp === null || relativeHumidity === null || relativeHumidity < 0) return null;
 
-  const saturation = 6.112 * Math.exp((17.67 * temp) / (temp + 243.5));
-  return (saturation * Math.min(relativeHumidity, 100) * 2.1674) / (273.15 + temp);
+  const vaporPressure = saturationVaporPressure(temp) * (Math.min(relativeHumidity, 100) / 100);
+  return (216.74 * vaporPressure) / (273.15 + temp);
 }
 
 const WMO_WEATHER_CODES = new Set([0, 1, 2, 3, 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]);

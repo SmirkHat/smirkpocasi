@@ -16,31 +16,35 @@ Community feedback from Python/weather API discussions strongly favors Open-Mete
 
 ## Open-Meteo NWP model endpoints
 
+Czech weights below come from a backtest against 12 ČHMÚ stations over January, April, July and September 2026, using archived runs from Open-Meteo's Previous Runs API at 0, 1, 2, 3 and 5 days ahead. Ensemble means, Aladin, Yr and the commercial APIs have no such archive, so their weights are judgement, not measurement. An ensemble mean never weighs more than its parent model.
+
+Endpoints without `models` are seamless blends, not one model. `/v1/dwd-icon` is ICON-D2 for about 48 h, then ICON-EU, then global. `/v1/meteofrance` is AROME where it exists (west of about 14.7°E, up to about 48 h) and ARPEGE everywhere else. `knmi_seamless`, `dmi_seamless` and `metno_seamless` fall back to ECMWF IFS, and MET Norway has no data over Czechia at all, so it is a pure IFS copy here. A point outside a regional grid gets HTTP 400 `No data is available for this location`, which we report as "out of coverage".
+
 Each row can be treated as a separate model source in the consensus engine, if the endpoint is available for the selected location and returns the required variables.
 
 | Model | Operator | Czech resolution | Update | Range | Endpoint | Czech weight | Status |
 | --- | --- | ---: | --- | --- | --- | ---: | --- |
-| ECMWF IFS HRES | ECMWF | 9 km | 6h | 15 days | `/v1/ecmwf` | 5 | Active, use hourly fallback because `current` may be absent. |
-| ECMWF AIFS | ECMWF | 25 km | 6h | 15 days | `/v1/ecmwf?models=ecmwf_aifs025_single` | 4 | Active. Open-Meteo model id is `ecmwf_aifs025_single`; `ecmwf_aifs025` and `aifs025` return no data. |
-| DWD ICON-EU | DWD | 7 km | 3h | 5 days | `/v1/dwd-icon` | 5 | Active. |
-| DWD ICON-D2 | DWD | 2 km | 3h | 2 days | `/v1/dwd-icon?models=icon_d2` | 5 | Active where data exists. |
-| DWD ICON-EU EPS Mean | DWD | 13 km | 6h | 5 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=dwd_icon_eu_eps_ensemble_mean` | 4 | Active. Ensemble mean source with `temperature_2m_spread` for uncertainty. |
+| ECMWF IFS HRES | ECMWF | 9 km | 6h | 15 days | `/v1/ecmwf` | 3 | Active, use hourly fallback because `current` may be absent. |
+| ECMWF AIFS | ECMWF | 25 km | 6h | 15 days | `/v1/ecmwf?models=ecmwf_aifs025_single` | 3 | Active. Open-Meteo model id is `ecmwf_aifs025_single`. Better temperature than IFS at every tested lead. |
+| DWD ICON | DWD | 2 km, then 7 km, then global | 3h | 7+ days | `/v1/dwd-icon` | 3 | Active. Deliberately overlaps ICON-D2: their sum gives ICON 8 for two days and 3 after. |
+| DWD ICON-D2 | DWD | 2 km | 3h | 2 days | `/v1/dwd-icon?models=icon_d2` | 5 | Active where data exists. Best short-range temperature of all tested models. |
+| DWD ICON-EU EPS Mean | DWD | 13 km | 6h | 5 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=dwd_icon_eu_eps_ensemble_mean` | 3 | Active. Ensemble mean source with `temperature_2m_spread` for uncertainty. |
 | Aladin / ČHMÚ | ČHMÚ | 2.3 km | 6h | 54 hours | `/api/aladin` | 5 | Active through proxy because browser CORS is unreliable. |
-| Météo-France AROME | Météo-France | 1.3 km | 3h | 2 days | `/v1/meteofrance` | 4 | Active. |
-| Météo-France ARPEGE | Météo-France | 11 km | 6h | 4 days | `/v1/meteofrance?models=arpege_europe` | 3 | Active. |
-| KNMI HARMONIE | KNMI | 2 km | 1h | 2.5 days | `/v1/knmi` | 4 | Disabled: current Open-Meteo public endpoint returned 404 during testing. |
-| DMI HARMONIE | DMI | 2 km | 3h | 2.5 days | `/v1/dmi` | 4 | Disabled: current Open-Meteo public endpoint returned 404 during testing. |
-| MET Norway | MET Norway | 1 km | 1h | 2.5 days | `/v1/metno` | 3 | Disabled via Open-Meteo for Czech locations; use Yr.no proxy instead. |
-| UK Met Office | UKMO | 2 km | 6h | 7 days | `/v1/ukmo` | 3 | Disabled: current Open-Meteo public endpoint returned 404 during testing. |
-| NOAA GFS | NOAA | 13–25 km | 6h | 16 days | `/v1/gfs` | 3 | Active as a broad global baseline. |
+| Météo-France AROME | Météo-France | 1.3 km | 3h | 2 days | `/v1/meteofrance?models=meteofrance_arome_france` | 6 | Active west of about 14.7°E (Prague, western Bohemia). Out of coverage further east. |
+| Météo-France ARPEGE | Météo-France | 11 km | 6h | 4 days | `/v1/meteofrance?models=arpege_europe` | 2 | Active. |
+| KNMI HARMONIE | KNMI | 2 km | 1h | 2.5 days | `/v1/forecast?models=knmi_harmonie_arome_europe` | 1 | Active. CC BY 4.0. `/v1/knmi` returns 404, `models=` works. |
+| DMI HARMONIE | DMI | 2 km | 3h | 2.5 days | `/v1/forecast?models=dmi_harmonie_arome_europe` | 2 | Active. CC BY 4.0. `/v1/dmi` returns 404, `models=` works. |
+| MET Norway | MET Norway | 1 km | 1h | 2.5 days | `/v1/forecast?models=metno_seamless` | 3 | Disabled via Open-Meteo for Czech locations: identical to ECMWF IFS here. Use Yr.no proxy instead. |
+| UK Met Office | UKMO | 10 km over CZ | 6h | 6.5 days | `/v1/forecast?models=ukmo_seamless` | - | Works, but disabled: CC BY-SA 4.0, whose share-alike could reach the whole consensus. Would cut wind errors by about 1 % at 3-5 days, with no gain in temperature. |
+| NOAA GFS | NOAA | 13–25 km | 6h | 16 days | `/v1/gfs` | 2 | Active as a broad global baseline. |
 | NOAA HRRR | NOAA | US only | 1h | 2 days | `/v1/gfs?models=hrrr` | 1 | Not useful for Czech locations. |
 | AI GFS GraphCast | NOAA + Google | 25 km | 6h | 10 days | `/v1/gfs?models=gfs_graphcast025` | 3 | Disabled. Open-Meteo currently returns only nulls for it. |
 | NOAA GEFS 0.25° Mean | NOAA | 25 km | 6h | 10 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=ncep_gefs025_ensemble_mean` | 2 | Active. Low-weight global ensemble mean. |
-| GEM Global | MSC Canada | Global | 6h | 10 days | `/v1/gem` | 2 | Active as a low-weight independent global model. |
-| GEM GEPS Mean | MSC Canada | 25 km | 12h | 16 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=cmc_gem_geps_ensemble_mean` | 2 | Active. Low-weight global ensemble mean. |
+| GEM Global | MSC Canada | Global | 6h | 10 days | `/v1/gem` | 1 | Active as a low-weight independent global model. |
+| GEM GEPS Mean | MSC Canada | 25 km | 12h | 16 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=cmc_gem_geps_ensemble_mean` | 1 | Active. Low-weight global ensemble mean. |
 | ECMWF IFS EPS Mean | ECMWF | 25 km | 6h | 15 days | `https://ensemble-api.open-meteo.com/v1/ensemble?models=ecmwf_ifs025_ensemble_mean` | 3 | Active. Ensemble mean, separate from deterministic IFS HRES. |
-| JMA GSM/MSM | JMA | Coarse over CZ | 3–6h | 4 days | `/v1/jma` | 2 | Active as a low-weight independent global/regional model. |
-| CMA GRAPES | CMA | 15 km | 6h | 10 days | `/v1/cma` | 2 | Active as a low-weight independent global model. |
+| JMA GSM/MSM | JMA | Coarse over CZ | 3–6h | 4 days | `/v1/jma` | - | Disabled: wind error 6 km/h against 3-4 for the others, and the consensus improved without it. |
+| CMA GRAPES | CMA | 15 km | 6h | 10 days | `/v1/cma` | - | Disabled: worst temperature of the tested models, and the consensus improved without it. |
 | BOM ACCESS-G | BOM Australia | 12 km | 6h | 10 days | `/v1/bom` | 2 | Disabled: tested endpoint returned null for Czech current forecast. |
 
 ## Good candidates without API keys
@@ -57,6 +61,10 @@ Each row can be treated as a separate model source in the consensus engine, if t
 | openSenseMap | Personal weather stations | Free, no key | Yes | Interesting future layer for community observations. |
 | 7Timer! | Astro/weather forecast | Free, no key | Unknown | Niche source; lower priority. |
 | wttr.in | Simple weather output, text/JSON formats | Free, no key | Likely usable | Good fallback/demo source, not a precision provider for Czech consensus. |
+
+## Own accuracy benchmark
+
+`/benchmark` measures these sources against ČHMÚ stations, see [benchmark.md](benchmark.md). For Czech locations, trust its numbers over the global table below once it has enough data.
 
 ## ForecastWatch benchmark references
 

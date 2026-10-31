@@ -37,17 +37,22 @@ function iconNumber(value) {
   return icon === null ? null : Math.round(icon);
 }
 
+/** The list starts with yesterday, so the first row is not today. */
+function todayRow(data) {
+  const today = String(data?.place?.localNow ?? '').slice(0, 10);
+  return Array.isArray(data?.daily) ? data.daily.find((day) => day?.localDate === today) ?? null : null;
+}
+
 export function normalizePocasiCz(data) {
   const current = currentBlock(data);
   const icon = iconNumber(current.icon);
-  const daily = Array.isArray(data?.daily) ? data.daily[0] : null;
+  const daily = todayRow(data);
 
   return {
     id: 'pocasicz',
     temperature: numberOrNull(current.temp),
     apparentTemperature: numberOrNull(current.feelTemp),
     precipitation: numberOrNull(current.precip),
-    precipitationDaily: numberOrNull(daily?.precip),
     windSpeed: metersPerSecondToKmh(current.wind),
     windDirection: numberOrNull(current.windDir),
     windGust: metersPerSecondToKmh(current.windGust),

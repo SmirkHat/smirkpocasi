@@ -13,6 +13,7 @@ import {
   calculateAbsoluteHumidity,
   calculateApparentTemperature,
   calculateDewPoint,
+  calculateRelativeHumidity,
   calculateVaporPressureDeficit,
   calculateWetBulbTemperature,
   iconNameToWeatherCode,
@@ -26,7 +27,6 @@ const FIELDS = [
   'temperature',
   'apparentTemperature',
   'dewPoint',
-  'wetBulbTemperature',
   'precipitation',
   'precipitationProbability',
   'windSpeed',
@@ -38,10 +38,6 @@ const FIELDS = [
   'fogArea',
   'visibility',
   'uvIndex',
-  'vaporPressureDeficit',
-  'absoluteHumidity',
-  'sunrise',
-  'sunset',
 ];
 export const OBSERVATION_SOURCE_IDS = new Set([
   'opensensemap',
@@ -56,7 +52,7 @@ export const OBSERVATION_SOURCE_IDS = new Set([
   'inpocasi',
 ]);
 const PERSONAL_STATION_IDS = new Set(['opensensemap', 'inpocasi', 'netatmo', 'wunderground']);
-const OBSERVATION_BLEND_FIELDS = ['temperature', 'humidity', 'dewPoint'];
+const OBSERVATION_BLEND_FIELDS = ['temperature', 'dewPoint'];
 const OBSERVATION_MAX_AGE_MINUTES = 90;
 const OBSERVATION_MAX_DISTANCE_KM = 50;
 const OBSERVATION_MAX_BLEND = 0.8;
@@ -66,7 +62,6 @@ const FIELD_LIMITS = {
   temperature: [-70, 60],
   apparentTemperature: [-85, 75],
   dewPoint: [-85, 45],
-  wetBulbTemperature: [-85, 50],
   precipitation: [0, 250],
   precipitationProbability: [0, 100],
   windSpeed: [0, 250],
@@ -78,17 +73,11 @@ const FIELD_LIMITS = {
   fogArea: [0, 100],
   visibility: [0, 100000],
   uvIndex: [0, 20],
-  vaporPressureDeficit: [0, 20],
-  absoluteHumidity: [0, 80],
-  // Minutes since local midnight (Europe/Prague).
-  sunrise: [0, 24 * 60 - 1],
-  sunset: [0, 24 * 60 - 1],
 };
 const OUTLIER_TOLERANCE = {
   temperature: 4,
   apparentTemperature: 5,
   dewPoint: 6,
-  wetBulbTemperature: 5,
   precipitation: 25,
   precipitationProbability: 45,
   windSpeed: 18,
@@ -99,16 +88,11 @@ const OUTLIER_TOLERANCE = {
   fogArea: 45,
   visibility: 20000,
   uvIndex: 4,
-  vaporPressureDeficit: 1.2,
-  absoluteHumidity: 5,
-  sunrise: 20,
-  sunset: 20,
 };
 const FIELD_LABELS = {
   temperature: 'teplota',
   apparentTemperature: 'pocitově',
   dewPoint: 'rosný bod',
-  wetBulbTemperature: 'mokrá teplota',
   precipitation: 'srážky',
   precipitationProbability: 'pravděpodobnost srážek',
   windSpeed: 'vítr',
@@ -120,10 +104,6 @@ const FIELD_LABELS = {
   fogArea: 'mlha',
   visibility: 'viditelnost',
   uvIndex: 'UV',
-  vaporPressureDeficit: 'VPD',
-  absoluteHumidity: 'abs. vlhkost',
-  sunrise: 'východ slunce',
-  sunset: 'západ slunce',
 };
 
 function sourceWeight(source) {
@@ -395,18 +375,30 @@ function blendObservations(consensus, sources, now) {
   if (blended.temperature && hasNumber(consensus.apparentTemperature)) {
     consensus.apparentTemperature += consensus.temperature - modelTemperature;
   }
-  if (blended.temperature || blended.humidity) {
-    const derived = {
-      wetBulbTemperature: calculateWetBulbTemperature(consensus.temperature, consensus.humidity),
-      vaporPressureDeficit: calculateVaporPressureDeficit(consensus.temperature, consensus.humidity),
-      absoluteHumidity: calculateAbsoluteHumidity(consensus.temperature, consensus.humidity),
-    };
-    for (const [field, value] of Object.entries(derived)) {
-      if (hasNumber(value)) consensus[field] = value;
-    }
-  }
 
   return blended;
+}
+
+/**
+ * Everything here follows from the final temperature and dew point. Averaging it per source would count one
+ * calculation as twenty opinions and leave numbers on screen that contradict each other. Dew point is the base
+ * because against ČHMÚ stations it beat averaging humidity directly, on both humidity and dew point.
+ */
+function deriveHumidityValues(consensus) {
+  const humidity = calculateRelativeHumidity(consensus.temperature, consensus.dewPoint);
+  if (humidity !== null) consensus.humidity = humidity;
+  consensus.wetBulbTemperature = calculateWetBulbTemperature(consensus.temperature, consensus.humidity);
+  consensus.vaporPressureDeficit = calculateVaporPressureDeficit(consensus.temperature, consensus.humidity);
+  consensus.absoluteHumidity = calculateAbsoluteHumidity(consensus.temperature, consensus.humidity);
+}
+
+/**
+ * Sunrise and sunset are astronomy, so sources differ only by rounding and by the coordinates they snapped to.
+ * Open-Meteo computes them for the exact point we asked about.
+ */
+function sunTimesSource(sources) {
+  const complete = sources.filter((source) => hasNumber(source.sunrise) && hasNumber(source.sunset));
+  return complete.find((source) => OPEN_METEO_SOURCE_IDS.has(source.id)) ?? complete[0] ?? null;
 }
 
 /** Fresh rain gauges outrank what the models expected to be happening right now. */
@@ -502,6 +494,10 @@ export function buildResult(settled, now = Date.now()) {
   const currentRain = buildCurrentRain(sources, now);
   const divergence = weightedStandardDeviation(entriesByField.get('temperature') || []);
   const blended = forecastSources.length ? blendObservations(consensus, sources, now) : {};
+  deriveHumidityValues(consensus);
+  const sunSource = sunTimesSource(consensusSources);
+  consensus.sunrise = sunSource?.sunrise ?? null;
+  consensus.sunset = sunSource?.sunset ?? null;
   consensus.weatherCode = reconcileWeatherCode(consensus.weatherCode, currentRain, consensus.temperature);
   Object.values(blended).forEach(({ entries }) => {
     entries.forEach((entry) => includedSourceIds.add(entry.source.id));
@@ -517,6 +513,15 @@ export function buildResult(settled, now = Date.now()) {
   );
   for (const [field, { entries }] of Object.entries(blended)) {
     fieldSources[field] = [...fieldSources[field], ...serializeFieldEntries(entries)];
+  }
+  // Stations reach humidity through the dew point, so name them under humidity too, with the value they measured.
+  const humidityStations = (blended.dewPoint?.entries ?? [])
+    .filter((entry) => hasNumber(entry.source.humidity))
+    .map((entry) => ({ ...entry, value: entry.source.humidity }));
+  fieldSources.humidity = [...fieldSources.humidity, ...serializeFieldEntries(humidityStations)];
+  if (sunSource) {
+    fieldSources.sunrise = serializeFieldEntries([{ source: sunSource, value: sunSource.sunrise, weight: 1 }]);
+    fieldSources.sunset = serializeFieldEntries([{ source: sunSource, value: sunSource.sunset, weight: 1 }]);
   }
   fieldSources.weatherCode = serializeFieldEntries(weatherCodeEntries);
   fieldSources.precipitationGroups = precipitationGroups;
@@ -540,8 +545,9 @@ export function buildResult(settled, now = Date.now()) {
 }
 
 const OPEN_METEO_SOURCE_IDS = new Set([
-  'ecmwf_ifs', 'ecmwf_aifs', 'icon_eu', 'icon_d2', 'icon_eu_eps_mean', 'arome', 'arpege',
+  'ecmwf_ifs', 'ecmwf_aifs', 'icon_seamless', 'icon_d2', 'icon_eu_eps_mean', 'arome', 'arpege',
   'gfs', 'graphcast', 'gefs025_mean', 'gem', 'gem_geps_mean', 'ecmwf_ifs_eps_mean', 'jma', 'cma',
+  'knmi_harmonie', 'dmi_harmonie',
 ]);
 
 /** mm/h, whatever interval the source reports over. */

@@ -103,6 +103,10 @@ CORS_ORIGINS=https://pocasi.smht.eu
 
 Non-`/api/*` requests then return 404 JSON, or redirect to `FRONTEND_URL` when set.
 
+### Forecast accuracy benchmark
+
+`/benchmark` fills itself on a long-running API host where `BENCHMARK_DATA_DIR` is set. `docker-compose.yml` already sets it with a named volume. On Dokploy, add a volume mount at `/data/benchmark` first, or every redeploy deletes the data. See [docs/benchmark.md](docs/benchmark.md).
+
 ### Cloudflare Workers
 
 Use the Cloudflare Vite plugin path from [Start hosting docs](https://tanstack.com/start/latest/docs/framework/react/guide/hosting). A starter `wrangler.jsonc` is included. Swap the Vite Cloudflare plugin in for Nitro when targeting Workers (do not run both plugins at once).
@@ -114,6 +118,7 @@ Keep private values in `.env`; use `.env.example` as the public template.
 ## Data attribution
 
 - Weather forecast: Open-Meteo
+- Forecast accuracy benchmark: ČHMÚ OpenData (measurements), Open-Meteo Previous Runs (archived model runs)
 - Optional experimental forecast: Počasí.cz / Seznam.cz, described by Seznam as using data from Windy.com
 - Maps: OpenStreetMap contributors
 - Radar: LibreWXR (data CC-BY-4.0, see https://librewxr.net/terms), ČHMÚ OpenData (MAX_Z), optional RainViewer tiles

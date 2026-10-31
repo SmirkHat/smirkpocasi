@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { HiArrowTopRightOnSquare, HiBeaker, HiChevronDown, HiChevronUp } from 'react-icons/hi2';
 import { WiThermometer } from 'react-icons/wi';
 import { Badge } from '@/components/ui/badge';
@@ -261,19 +262,19 @@ const expertMetrics = [
     key: 'wetBulbTemperature',
     label: 'Mokrá teplota',
     format: formatTemperature,
-    description: 'Odhad chladicího efektu odpařování z teploty a relativní vlhkosti.'
+    description: 'Chladicí efekt odpařování. Počítá se z výsledné teploty a vlhkosti.'
   },
   {
     key: 'vaporPressureDeficit',
     label: 'Deficit páry (VPD)',
     format: formatVaporPressureDeficit,
-    description: 'Deficit tlaku vodní páry. Vyšší hodnota znamená sušší vzduch a rychlejší vysušování.'
+    description: 'Vyšší hodnota znamená sušší vzduch a rychlejší vysušování. Počítá se z výsledné teploty a vlhkosti.'
   },
   {
     key: 'absoluteHumidity',
     label: 'Absolutní vlhkost',
     format: formatAbsoluteHumidity,
-    description: 'Kolik gramů vodní páry je přibližně v metru krychlovém vzduchu.'
+    description: 'Kolik gramů vodní páry je v metru krychlovém vzduchu. Počítá se z výsledné teploty a vlhkosti.'
   }
 ];
 
@@ -524,7 +525,10 @@ export default function NerdZone({
             <section aria-label="Zdroje počasí" className="flex flex-col gap-2">
               <h3 className="text-sm font-semibold text-foreground">Zdroje počasí</h3>
               <p className="text-xs text-muted-foreground">
-                Stav zahrnuje i to, jestli zdroj vstupuje do konsensu. Detaily se otevřou pod řádkem zdroje.
+                Stav zahrnuje i to, jestli zdroj vstupuje do konsensu. Detaily se otevřou pod řádkem zdroje.{' '}
+                <Link to="/benchmark" className="font-medium text-foreground underline underline-offset-2">
+                  Přesnost zdrojů proti stanicím ČHMÚ
+                </Link>
               </p>
               <ApiSourcesTable rows={rows} />
             </section>

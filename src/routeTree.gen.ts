@@ -10,12 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BenchmarkRouteImport } from './routes/benchmark'
 import { Route as HydroRouteImport } from './routes/hydro'
 import { Route as RadarRouteImport } from './routes/radar'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ApiAccuweatherRouteImport } from './routes/api/accuweather'
 import { Route as ApiAladinRouteImport } from './routes/api/aladin'
 import { Route as ApiAviationRouteImport } from './routes/api/aviation'
+import { Route as ApiBenchmarkRouteImport } from './routes/api/benchmark'
 import { Route as ApiBmkgRouteImport } from './routes/api/bmkg'
 import { Route as ApiChmiRouteImport } from './routes/api/chmi'
 import { Route as ApiChmiAqiRouteImport } from './routes/api/chmi-aqi'
@@ -61,6 +63,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BenchmarkRoute = BenchmarkRouteImport.update({
+  id: '/benchmark',
+  path: '/benchmark',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HydroRoute = HydroRouteImport.update({
   id: '/hydro',
   path: '/hydro',
@@ -89,6 +96,11 @@ const ApiAladinRoute = ApiAladinRouteImport.update({
 const ApiAviationRoute = ApiAviationRouteImport.update({
   id: '/api/aviation',
   path: '/api/aviation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBenchmarkRoute = ApiBenchmarkRouteImport.update({
+  id: '/api/benchmark',
+  path: '/api/benchmark',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiBmkgRoute = ApiBmkgRouteImport.update({
@@ -289,12 +301,14 @@ const ApiYrRoute = ApiYrRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/benchmark': typeof BenchmarkRoute
   '/hydro': typeof HydroRoute
   '/radar': typeof RadarRoute
   '/settings': typeof SettingsRoute
   '/api/accuweather': typeof ApiAccuweatherRoute
   '/api/aladin': typeof ApiAladinRoute
   '/api/aviation': typeof ApiAviationRoute
+  '/api/benchmark': typeof ApiBenchmarkRoute
   '/api/bmkg': typeof ApiBmkgRoute
   '/api/chmi': typeof ApiChmiRoute
   '/api/chmi-aqi': typeof ApiChmiAqiRoute
@@ -337,12 +351,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/benchmark': typeof BenchmarkRoute
   '/hydro': typeof HydroRoute
   '/radar': typeof RadarRoute
   '/settings': typeof SettingsRoute
   '/api/accuweather': typeof ApiAccuweatherRoute
   '/api/aladin': typeof ApiAladinRoute
   '/api/aviation': typeof ApiAviationRoute
+  '/api/benchmark': typeof ApiBenchmarkRoute
   '/api/bmkg': typeof ApiBmkgRoute
   '/api/chmi': typeof ApiChmiRoute
   '/api/chmi-aqi': typeof ApiChmiAqiRoute
@@ -386,12 +402,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/benchmark': typeof BenchmarkRoute
   '/hydro': typeof HydroRoute
   '/radar': typeof RadarRoute
   '/settings': typeof SettingsRoute
   '/api/accuweather': typeof ApiAccuweatherRoute
   '/api/aladin': typeof ApiAladinRoute
   '/api/aviation': typeof ApiAviationRoute
+  '/api/benchmark': typeof ApiBenchmarkRoute
   '/api/bmkg': typeof ApiBmkgRoute
   '/api/chmi': typeof ApiChmiRoute
   '/api/chmi-aqi': typeof ApiChmiAqiRoute
@@ -436,12 +454,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/benchmark'
     | '/hydro'
     | '/radar'
     | '/settings'
     | '/api/accuweather'
     | '/api/aladin'
     | '/api/aviation'
+    | '/api/benchmark'
     | '/api/bmkg'
     | '/api/chmi'
     | '/api/chmi-aqi'
@@ -484,12 +504,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/benchmark'
     | '/hydro'
     | '/radar'
     | '/settings'
     | '/api/accuweather'
     | '/api/aladin'
     | '/api/aviation'
+    | '/api/benchmark'
     | '/api/bmkg'
     | '/api/chmi'
     | '/api/chmi-aqi'
@@ -532,12 +554,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/benchmark'
     | '/hydro'
     | '/radar'
     | '/settings'
     | '/api/accuweather'
     | '/api/aladin'
     | '/api/aviation'
+    | '/api/benchmark'
     | '/api/bmkg'
     | '/api/chmi'
     | '/api/chmi-aqi'
@@ -581,12 +605,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BenchmarkRoute: typeof BenchmarkRoute
   HydroRoute: typeof HydroRoute
   RadarRoute: typeof RadarRoute
   SettingsRoute: typeof SettingsRoute
   ApiAccuweatherRoute: typeof ApiAccuweatherRoute
   ApiAladinRoute: typeof ApiAladinRoute
   ApiAviationRoute: typeof ApiAviationRoute
+  ApiBenchmarkRoute: typeof ApiBenchmarkRoute
   ApiBmkgRoute: typeof ApiBmkgRoute
   ApiChmiRoute: typeof ApiChmiRoute
   ApiChmiAqiRoute: typeof ApiChmiAqiRoute
@@ -637,6 +663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/benchmark': {
+      id: '/benchmark'
+      path: '/benchmark'
+      fullPath: '/benchmark'
+      preLoaderRoute: typeof BenchmarkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hydro': {
       id: '/hydro'
       path: '/hydro'
@@ -677,6 +710,13 @@ declare module '@tanstack/react-router' {
       path: '/api/aviation'
       fullPath: '/api/aviation'
       preLoaderRoute: typeof ApiAviationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/benchmark': {
+      id: '/api/benchmark'
+      path: '/api/benchmark'
+      fullPath: '/api/benchmark'
+      preLoaderRoute: typeof ApiBenchmarkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/bmkg': {
@@ -957,12 +997,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BenchmarkRoute: BenchmarkRoute,
   HydroRoute: HydroRoute,
   RadarRoute: RadarRoute,
   SettingsRoute: SettingsRoute,
   ApiAccuweatherRoute: ApiAccuweatherRoute,
   ApiAladinRoute: ApiAladinRoute,
   ApiAviationRoute: ApiAviationRoute,
+  ApiBenchmarkRoute: ApiBenchmarkRoute,
   ApiBmkgRoute: ApiBmkgRoute,
   ApiChmiRoute: ApiChmiRoute,
   ApiChmiAqiRoute: ApiChmiAqiRoute,

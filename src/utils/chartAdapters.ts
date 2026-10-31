@@ -2,6 +2,7 @@ import { formatDay, formatHydroName, formatTemperature, formatTime } from './for
 import { adaptAladinHourlyPrecip, adaptAladinNowcast } from './hourlyForecast';
 
 function finite(value) {
+  if (value === null || value === undefined || value === '') return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }

@@ -76,6 +76,8 @@ type ForecastSeries = {
 type WeightedSourceValue = { value: number; weight: number; source: string };
 
 function finite(value: unknown): number | null {
+  // Number(null) is 0. Models past the end of their range send null, which would count as 0 °C and no rain.
+  if (value === null || value === undefined || value === '') return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }

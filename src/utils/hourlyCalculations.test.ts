@@ -36,6 +36,30 @@ describe('robustAggregateDetails', () => {
   })
 })
 
+describe('a model past the end of its range', () => {
+  const series = (id: string, temperature: (number | null)[], precipitation: (number | null)[], code: (number | null)[]) => ({
+    id,
+    name: id,
+    weight: 1,
+    kind: 'openmeteo',
+    data: {
+      time: ['2026-07-15T12:00', '2026-07-15T13:00'],
+      temperature_2m: temperature,
+      precipitation,
+      precipitation_probability: precipitation.map((value) => (value === null ? null : 80)),
+      wind_speed_10m: temperature.map((value) => (value === null ? null : 10)),
+      weather_code: code,
+    },
+  })
+
+  it('adds nothing to the merged hour, instead of 0 °C and no rain', () => {
+    const { days } = buildMergedForecastDays({
+      forecastSeries: [series('long', [30, 30], [2, 2], [61, 61]), series('short', [30, null], [2, null], [61, null])],
+    })
+    expect(days[0].hours[1]).toMatchObject({ temperature: 30, precipMm: 2, precipProb: 80, windSpeed: 10, weatherCode: 61 })
+  })
+})
+
 describe('hourly calculation audit', () => {
   const forecastSeries = [
     series('a', { temperature_2m: 10, precipitation: 0, wind_speed_10m: 10, wind_direction_10m: 90 }),

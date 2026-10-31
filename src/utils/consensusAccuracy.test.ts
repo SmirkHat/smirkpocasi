@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeAladin } from '../api/normalizers/aladin'
 import { normalizeOpenMeteo } from '../api/normalizers/openmeteo'
+import { normalizePocasiCz } from '../api/normalizers/pocasicz'
 import { buildMergedForecastDays } from './hourlyForecast'
 import { buildCurrentRain, buildPrecipitationGroups, buildResult } from './consensusCore'
 import { robustAggregate, robustMean, weatherCodeConsensus, weightedMedian } from './robustAggregate'
 import { PROVIDERS } from '../config/providers'
-import { parsePragueTime } from './weatherMath'
+import {
+  calculateAbsoluteHumidity,
+  calculateApparentTemperature,
+  calculateDewPoint,
+  calculateRelativeHumidity,
+  calculateVaporPressureDeficit,
+  calculateWetBulbTemperature,
+  parsePragueTime,
+} from './weatherMath'
 
 const NOW = Date.parse('2026-10-30T17:30:00Z')
 
@@ -197,6 +206,129 @@ describe('consensus with stations', () => {
 
   it('no longer ships the raw Yr payload', () => {
     expect(buildResult(settledFor(models), NOW)).not.toHaveProperty('yr')
+  })
+})
+
+describe('values computed from the final consensus', () => {
+  const enabled = PROVIDERS.filter((provider) => provider.enabled)
+  const observedAt = new Date(NOW - 10 * 60 * 1000).toISOString()
+
+  function settledFor(values: Record<string, Record<string, unknown>>) {
+    return enabled.map((provider) =>
+      values[provider.id]
+        ? { status: 'fulfilled', value: values[provider.id] }
+        : { status: 'fulfilled', value: { providerStatus: 'not-applicable' } },
+    )
+  }
+
+  it('keeps temperature, dew point and humidity consistent with each other', () => {
+    const { consensus } = buildResult(
+      settledFor({
+        ecmwf_ifs: { temperature: 6, dewPoint: 2, humidity: 60 },
+        icon_d2: { temperature: 9, dewPoint: 5, humidity: 90 },
+      }),
+      NOW,
+    )
+    expect(consensus.humidity).toBeCloseTo(calculateRelativeHumidity(consensus.temperature, consensus.dewPoint) as number)
+    expect(calculateDewPoint(consensus.temperature, consensus.humidity)).toBeCloseTo(consensus.dewPoint)
+  })
+
+  it('stays consistent after a station has moved temperature and dew point', () => {
+    const { consensus, fieldSources, observationBlend } = buildResult(
+      settledFor({
+        ecmwf_ifs: { temperature: 8, humidity: 70 },
+        icon_d2: { temperature: 8, humidity: 70 },
+        chmi: { temperature: 10, humidity: 60, observedAt, distanceKm: 3 },
+      }),
+      NOW,
+    )
+    expect(observationBlend.dewPoint.stations).toBe(1)
+    expect(consensus.humidity).toBeCloseTo(calculateRelativeHumidity(consensus.temperature, consensus.dewPoint) as number)
+    expect(fieldSources.humidity.map((entry: { id: string }) => entry.id)).toContain('chmi')
+  })
+
+  it('computes wet bulb, VPD and absolute humidity once instead of averaging what sources say', () => {
+    const { consensus, fieldSources } = buildResult(
+      settledFor({
+        ecmwf_ifs: { temperature: 8, humidity: 70, wetBulbTemperature: 30, vaporPressureDeficit: 15, absoluteHumidity: 70 },
+        icon_d2: { temperature: 8, humidity: 70 },
+      }),
+      NOW,
+    )
+    expect(consensus.wetBulbTemperature).toBeCloseTo(calculateWetBulbTemperature(consensus.temperature, consensus.humidity) as number)
+    expect(consensus.vaporPressureDeficit).toBeCloseTo(calculateVaporPressureDeficit(consensus.temperature, consensus.humidity) as number)
+    expect(consensus.absoluteHumidity).toBeCloseTo(calculateAbsoluteHumidity(consensus.temperature, consensus.humidity) as number)
+    expect(fieldSources.wetBulbTemperature).toBeUndefined()
+  })
+
+  it('takes sunrise and sunset from one Open-Meteo model instead of averaging every source', () => {
+    const { consensus, fieldSources } = buildResult(
+      settledFor({
+        weathercom: { temperature: 8, sunrise: 500, sunset: 900 },
+        ecmwf_ifs: { temperature: 8, sunrise: 400, sunset: 1000 },
+        icon_d2: { temperature: 8, sunrise: 400, sunset: 1000 },
+      }),
+      NOW,
+    )
+    expect(consensus.sunrise).toBe(400)
+    expect(consensus.sunset).toBe(1000)
+    expect(fieldSources.sunrise.map((entry: { id: string }) => entry.id)).toEqual(['ecmwf_ifs'])
+  })
+
+  it('still finds sunrise when no Open-Meteo model answered', () => {
+    const { consensus } = buildResult(settledFor({ weathercom: { temperature: 8, sunrise: 500, sunset: 900 } }), NOW)
+    expect(consensus.sunrise).toBe(500)
+  })
+})
+
+describe('humidity and feels-like formulas', () => {
+  it('keeps the wet bulb between dew point and temperature', () => {
+    for (let temperature = -25; temperature <= 38; temperature += 3) {
+      for (let humidity = 10; humidity <= 100; humidity += 5) {
+        const wetBulb = calculateWetBulbTemperature(temperature, humidity) as number
+        expect(wetBulb).toBeLessThanOrEqual(temperature + 0.001)
+        expect(wetBulb).toBeGreaterThanOrEqual((calculateDewPoint(temperature, humidity) as number) - 0.001)
+      }
+    }
+  })
+
+  it('matches a psychrometric table value', () => {
+    expect(calculateWetBulbTemperature(20, 50)).toBeCloseTo(13.8, 0)
+    expect(calculateWetBulbTemperature(10, 100)).toBeCloseTo(10)
+  })
+
+  it('reverses the dew point calculation', () => {
+    expect(calculateRelativeHumidity(15, calculateDewPoint(15, 64))).toBeCloseTo(64)
+    expect(calculateRelativeHumidity(5, 6)).toBe(100)
+  })
+
+  it('does not jump where the wind chill formula used to take over', () => {
+    const gap = (a: unknown, b: unknown) => Math.abs((a as number) - (b as number))
+    expect(gap(calculateApparentTemperature(10, 80, 20), calculateApparentTemperature(10.1, 80, 20))).toBeLessThan(0.3)
+    expect(gap(calculateApparentTemperature(5, 80, 4.8), calculateApparentTemperature(5, 80, 4.9))).toBeLessThan(0.3)
+  })
+
+  it('feels colder with more wind', () => {
+    expect(calculateApparentTemperature(5, 80, 30) as number).toBeLessThan(calculateApparentTemperature(5, 80, 5) as number)
+  })
+})
+
+describe('Počasí.cz', () => {
+  const data = {
+    current: { temp: 8 },
+    place: { localNow: '2026-10-31T08:08:37+01:00' },
+    daily: [
+      { localDate: '2026-10-30', sunrise: '06:35', sunset: '16:38' },
+      { localDate: '2026-10-31', sunrise: '06:37', sunset: '16:36' },
+    ],
+  }
+
+  it('reads today, not the first row, which is yesterday', () => {
+    expect(normalizePocasiCz(data).sunrise).toBe(6 * 60 + 37)
+  })
+
+  it('has no sun times rather than the wrong day', () => {
+    expect(normalizePocasiCz({ ...data, daily: [data.daily[0]] }).sunrise).toBeNull()
   })
 })
 
